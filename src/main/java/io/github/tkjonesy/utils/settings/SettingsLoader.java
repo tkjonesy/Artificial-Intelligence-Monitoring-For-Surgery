@@ -65,12 +65,6 @@ public class SettingsLoader {
         return settings;
     }
 
-    /**
-     * Synchronizes fields between defaultSettings and userSettings:
-     * 1. Any fields present in defaultSettings but missing in userSettings will be copied over
-     * 2. Any fields present in userSettings but not in defaultSettings will be removed
-     * Existing valid values in userSettings will be preserved
-     */
     private static void syncMissingFields(ProgramSettings userSettings, ProgramSettings defaultSettings) {
         try {
             // Get all fields from the ProgramSettings class
@@ -134,7 +128,12 @@ public class SettingsLoader {
         File settingsFile = new File(AIMS_SETTINGS_FILE_PATH);
         if (settingsFile.exists()) {
             try {
-                return objectMapper.readValue(settingsFile, ProgramSettings.class);
+                ProgramSettings settings = objectMapper.readValue(settingsFile, ProgramSettings.class);
+                if(settings.getNotZeroNum() == 0){
+                    return null;
+                }else{
+                    return settings;
+                }
             } catch (IOException e) {
                 System.err.println("Failed to load settings from file: " + e.getMessage());
             }

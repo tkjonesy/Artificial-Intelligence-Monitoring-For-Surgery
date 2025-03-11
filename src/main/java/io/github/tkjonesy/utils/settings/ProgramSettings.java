@@ -19,7 +19,6 @@ public class ProgramSettings {
 
 
     @Setter
-    @Getter
     private static ProgramSettings currentSettings;
 
     // Camera variables
@@ -84,8 +83,8 @@ public class ProgramSettings {
     @SettingsLabel(value = "numInputElements", type = Integer.class)
     private int numInputElements;
 
-    @SettingsLabel(value = "settingsUUID", type = UUID.class)
-    private UUID settingsUUID;
+    @SettingsLabel(value = "notZeroNum", type = Integer.class)
+    private int notZeroNum;
 
     // -------------------------------------------------------------------------
 

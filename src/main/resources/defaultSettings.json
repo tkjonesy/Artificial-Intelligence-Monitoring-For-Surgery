@@ -26,5 +26,7 @@
   "optimizationLevel": "ALL_OPT",
   "numInputElements": 1228800,
   "inputSize": 640,
-  "inputShape": [1, 3, 640, 640]
+  "inputShape": [1, 3, 640, 640],
+
+  "nonZeroNum": 1
 }
