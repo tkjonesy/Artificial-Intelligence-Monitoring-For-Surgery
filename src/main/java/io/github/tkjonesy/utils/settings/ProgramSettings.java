@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.UUID;
 
 @SuppressWarnings("unused")
 @Getter
@@ -83,6 +84,9 @@ public class ProgramSettings {
     @SettingsLabel(value = "numInputElements", type = Integer.class)
     private int numInputElements;
 
+    @SettingsLabel(value = "settingsUUID", type = UUID.class)
+    private UUID settingsUUID;
+
     // -------------------------------------------------------------------------
 
     public void updateSettings(HashMap<String, Object> newSettings) {
@@ -138,7 +142,7 @@ public class ProgramSettings {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return "ProgramSettings{" +
                 "cameraDeviceId=" + cameraDeviceId +
                 ", cameraFps=" + cameraFps +
@@ -151,7 +155,10 @@ public class ProgramSettings {
                 ", saveLogsCSV=" + saveLogsCSV +
                 ", modelPath='" + modelPath + '\'' +
                 ", labelPath='" + labelPath + '\'' +
+                ", boundingBoxColor=" + (boundingBoxColor != null ? boundingBoxColor.length : "null") +
                 ", showBoundingBoxes=" + showBoundingBoxes +
+                ", showLabels=" + showLabels +
+                ", showConfidences=" + showConfidences +
                 ", processEveryNthFrame=" + processEveryNthFrame +
                 ", bufferThreshold=" + bufferThreshold +
                 ", confThreshold=" + confThreshold +
@@ -159,7 +166,9 @@ public class ProgramSettings {
                 ", gpuDeviceId=" + gpuDeviceId +
                 ", nmsThreshold=" + nmsThreshold +
                 ", optimizationLevel=" + optimizationLevel +
+                ", inputSize=" + inputSize +
+                ", inputShape=" + (inputShape != null ? inputShape.length : "null") +
+                ", numInputElements=" + numInputElements +
                 '}';
     }
-
 }

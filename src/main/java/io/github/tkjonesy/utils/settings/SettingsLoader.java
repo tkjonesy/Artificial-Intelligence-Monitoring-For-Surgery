@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,6 +47,13 @@ public class SettingsLoader {
         // Save the settings to the file, then verify that the specified model and label files exist
         if(settings != null){
 
+            // Ensure all the values in the current settings are set. Compare to default settings.
+            // If not set, assign default values.
+            ProgramSettings defaultSettings = loadSettingsFromResource(objectMapper);
+            if (defaultSettings != null) {
+                syncMissingFields(settings, defaultSettings);
+            }
+
             if(settings.getFileDirectory() == null){
                 settings.setFileDirectory(DEFAULT_AIMS_SESSIONS_DIRECTORY);
             }
@@ -55,6 +63,49 @@ public class SettingsLoader {
         }
 
         return settings;
+    }
+
+    /**
+     * Synchronizes fields between defaultSettings and userSettings:
+     * 1. Any fields present in defaultSettings but missing in userSettings will be copied over
+     * 2. Any fields present in userSettings but not in defaultSettings will be removed
+     * Existing valid values in userSettings will be preserved
+     */
+    private static void syncMissingFields(ProgramSettings userSettings, ProgramSettings defaultSettings) {
+        try {
+            // Get all fields from the ProgramSettings class
+            Field[] fields = ProgramSettings.class.getDeclaredFields();
+
+            // Add missing fields from default settings
+            for (Field field : fields) {
+                field.setAccessible(true);
+                Object defaultValue = field.get(defaultSettings);
+                Object userValue = field.get(userSettings);
+
+                // If the user's value is null but the default has a value, copy it over
+                if (userValue == null && defaultValue != null) {
+                    System.out.println("Setting default value for field: " + field.getName());
+                    field.set(userSettings, defaultValue);
+                }
+            }
+
+            // Remove extra fields not defined in ProgramSettings
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(userSettings);
+            ProgramSettings cleanSettings = mapper.readValue(json, ProgramSettings.class);
+
+            // Copy all values from cleanSettings back to userSettings
+            for (Field field : fields) {
+                field.setAccessible(true);
+                Object cleanValue = field.get(cleanSettings);
+                field.set(userSettings, cleanValue);
+            }
+
+            System.out.println("Removed any extra settings not defined in ProgramSettings class");
+
+        } catch (IllegalAccessException | IOException e) {
+            System.err.println("Failed to sync settings fields: " + e.getMessage());
+        }
     }
 
     public static void initializeAIMsDirectories() {
