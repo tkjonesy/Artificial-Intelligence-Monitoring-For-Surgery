@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,8 +44,16 @@ public class SettingsLoader {
             settings = loadSettingsFromResource(objectMapper);
         }
 
+        System.out.println("Loaded settings." + settings);
         // Save the settings to the file, then verify that the specified model and label files exist
         if(settings != null){
+
+            // Ensure all the values in the current settings are set. Compare to default settings.
+            // If not set, assign default values.
+            ProgramSettings defaultSettings = loadSettingsFromResource(objectMapper);
+            if (defaultSettings != null) {
+                syncMissingFields(settings, defaultSettings);
+            }
 
             if(settings.getFileDirectory() == null){
                 settings.setFileDirectory(DEFAULT_AIMS_SESSIONS_DIRECTORY);
@@ -55,6 +64,43 @@ public class SettingsLoader {
         }
 
         return settings;
+    }
+
+    private static void syncMissingFields(ProgramSettings userSettings, ProgramSettings defaultSettings) {
+        try {
+            // Get all fields from the ProgramSettings class
+            Field[] fields = ProgramSettings.class.getDeclaredFields();
+
+            // Add missing fields from default settings
+            for (Field field : fields) {
+                field.setAccessible(true);
+                Object defaultValue = field.get(defaultSettings);
+                Object userValue = field.get(userSettings);
+
+                // If the user's value is null but the default has a value, copy it over
+                if (userValue == null && defaultValue != null) {
+                    System.out.println("Setting default value for field: " + field.getName());
+                    field.set(userSettings, defaultValue);
+                }
+            }
+
+            // Remove extra fields not defined in ProgramSettings
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(userSettings);
+            ProgramSettings cleanSettings = mapper.readValue(json, ProgramSettings.class);
+
+            // Copy all values from cleanSettings back to userSettings
+            for (Field field : fields) {
+                field.setAccessible(true);
+                Object cleanValue = field.get(cleanSettings);
+                field.set(userSettings, cleanValue);
+            }
+
+            System.out.println("Removed any extra settings not defined in ProgramSettings class");
+
+        } catch (IllegalAccessException | IOException e) {
+            System.err.println("Failed to sync settings fields: " + e.getMessage());
+        }
     }
 
     public static void initializeAIMsDirectories() {
@@ -83,7 +129,12 @@ public class SettingsLoader {
         File settingsFile = new File(AIMS_SETTINGS_FILE_PATH);
         if (settingsFile.exists()) {
             try {
-                return objectMapper.readValue(settingsFile, ProgramSettings.class);
+                ProgramSettings settings = objectMapper.readValue(settingsFile, ProgramSettings.class);
+                if(settings.getNotZeroNum() == 0){
+                    return null;
+                }else{
+                    return settings;
+                }
             } catch (IOException e) {
                 System.err.println("Failed to load settings from file: " + e.getMessage());
             }
@@ -94,7 +145,10 @@ public class SettingsLoader {
     private static ProgramSettings loadSettingsFromResource(ObjectMapper objectMapper) {
         try (InputStream inputStream = SettingsLoader.class.getResourceAsStream(RESOURCE_DEFAULT_SETTINGS_PATH)) {
             if (inputStream != null) {
-                return objectMapper.readValue(inputStream, ProgramSettings.class);
+                System.out.println("Loading default settings from resources.");
+                ProgramSettings defaultSettings = objectMapper.readValue(inputStream, ProgramSettings.class);
+                System.out.println("Default settings loaded."+defaultSettings);
+                return defaultSettings;
             } else {
                 System.err.println("Default settings file not found in resources.");
             }

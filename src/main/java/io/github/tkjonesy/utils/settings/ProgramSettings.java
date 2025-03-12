@@ -5,20 +5,22 @@ import io.github.tkjonesy.frontend.App;
 import io.github.tkjonesy.utils.annotations.SettingsLabel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.UUID;
 
 @SuppressWarnings("unused")
 @Getter
+@ToString
 public class ProgramSettings {
     private static final Logger logger = LogManager.getLogger(ProgramSettings.class);
 
-
-    @Setter
     @Getter
+    @Setter
     private static ProgramSettings currentSettings;
 
     // Camera variables
@@ -83,6 +85,9 @@ public class ProgramSettings {
     @SettingsLabel(value = "numInputElements", type = Integer.class)
     private int numInputElements;
 
+    @SettingsLabel(value = "notZeroNum", type = Integer.class)
+    private int notZeroNum;
+
     // -------------------------------------------------------------------------
 
     public void updateSettings(HashMap<String, Object> newSettings) {
@@ -136,30 +141,4 @@ public class ProgramSettings {
             }
         }
     }
-
-    @Override
-    public String toString(){
-        return "ProgramSettings{" +
-                "cameraDeviceId=" + cameraDeviceId +
-                ", cameraFps=" + cameraFps +
-                ", cameraRotation=" + cameraRotation +
-                ", mirrorCamera=" + mirrorCamera +
-                ", preserveAspectRatio=" + preserveAspectRatio +
-                ", fileDirectory='" + fileDirectory + '\'' +
-                ", saveVideo=" + saveVideo +
-                ", saveLogsTEXT=" + saveLogsTEXT +
-                ", saveLogsCSV=" + saveLogsCSV +
-                ", modelPath='" + modelPath + '\'' +
-                ", labelPath='" + labelPath + '\'' +
-                ", showBoundingBoxes=" + showBoundingBoxes +
-                ", processEveryNthFrame=" + processEveryNthFrame +
-                ", bufferThreshold=" + bufferThreshold +
-                ", confThreshold=" + confThreshold +
-                ", useGPU=" + useGPU +
-                ", gpuDeviceId=" + gpuDeviceId +
-                ", nmsThreshold=" + nmsThreshold +
-                ", optimizationLevel=" + optimizationLevel +
-                '}';
-    }
-
 }
