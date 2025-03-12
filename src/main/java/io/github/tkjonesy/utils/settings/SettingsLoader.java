@@ -44,6 +44,7 @@ public class SettingsLoader {
             settings = loadSettingsFromResource(objectMapper);
         }
 
+        System.out.println("Loaded settings." + settings);
         // Save the settings to the file, then verify that the specified model and label files exist
         if(settings != null){
 
@@ -144,7 +145,10 @@ public class SettingsLoader {
     private static ProgramSettings loadSettingsFromResource(ObjectMapper objectMapper) {
         try (InputStream inputStream = SettingsLoader.class.getResourceAsStream(RESOURCE_DEFAULT_SETTINGS_PATH)) {
             if (inputStream != null) {
-                return objectMapper.readValue(inputStream, ProgramSettings.class);
+                System.out.println("Loading default settings from resources.");
+                ProgramSettings defaultSettings = objectMapper.readValue(inputStream, ProgramSettings.class);
+                System.out.println("Default settings loaded."+defaultSettings);
+                return defaultSettings;
             } else {
                 System.err.println("Default settings file not found in resources.");
             }

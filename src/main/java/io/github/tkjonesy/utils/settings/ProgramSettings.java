@@ -5,6 +5,7 @@ import io.github.tkjonesy.frontend.App;
 import io.github.tkjonesy.utils.annotations.SettingsLabel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,10 +15,11 @@ import java.util.UUID;
 
 @SuppressWarnings("unused")
 @Getter
+@ToString
 public class ProgramSettings {
     private static final Logger logger = LogManager.getLogger(ProgramSettings.class);
 
-
+    @Getter
     @Setter
     private static ProgramSettings currentSettings;
 
@@ -138,36 +140,5 @@ public class ProgramSettings {
                 }
             }
         }
-    }
-
-    @Override
-    public String toString() {
-        return "ProgramSettings{" +
-                "cameraDeviceId=" + cameraDeviceId +
-                ", cameraFps=" + cameraFps +
-                ", cameraRotation=" + cameraRotation +
-                ", mirrorCamera=" + mirrorCamera +
-                ", preserveAspectRatio=" + preserveAspectRatio +
-                ", fileDirectory='" + fileDirectory + '\'' +
-                ", saveVideo=" + saveVideo +
-                ", saveLogsTEXT=" + saveLogsTEXT +
-                ", saveLogsCSV=" + saveLogsCSV +
-                ", modelPath='" + modelPath + '\'' +
-                ", labelPath='" + labelPath + '\'' +
-                ", boundingBoxColor=" + (boundingBoxColor != null ? boundingBoxColor.length : "null") +
-                ", showBoundingBoxes=" + showBoundingBoxes +
-                ", showLabels=" + showLabels +
-                ", showConfidences=" + showConfidences +
-                ", processEveryNthFrame=" + processEveryNthFrame +
-                ", bufferThreshold=" + bufferThreshold +
-                ", confThreshold=" + confThreshold +
-                ", useGPU=" + useGPU +
-                ", gpuDeviceId=" + gpuDeviceId +
-                ", nmsThreshold=" + nmsThreshold +
-                ", optimizationLevel=" + optimizationLevel +
-                ", inputSize=" + inputSize +
-                ", inputShape=" + (inputShape != null ? inputShape.length : "null") +
-                ", numInputElements=" + numInputElements +
-                '}';
     }
 }
