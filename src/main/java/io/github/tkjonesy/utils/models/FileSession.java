@@ -1,12 +1,18 @@
-package io.github.tkjonesy.frontend.models;
+package io.github.tkjonesy.utils.models;
 
 import io.github.tkjonesy.ONNX.models.Log;
 import io.github.tkjonesy.ONNX.models.OnnxRunner;
+import io.github.tkjonesy.frontend.App;
+import io.github.tkjonesy.utils.settings.ProgramSettings;
+import io.github.tkjonesy.frontend.models.EndSessionPopUp;
 import lombok.Getter;
 
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.Size;
 import org.bytedeco.opencv.opencv_videoio.VideoWriter;
+
+import javax.swing.*;
+
 import static org.bytedeco.opencv.global.opencv_imgproc.resize;
 
 import java.io.BufferedWriter;
@@ -16,34 +22,20 @@ import java.util.HashMap;
 import java.time.Duration;
 import java.time.Instant;
 
-import static io.github.tkjonesy.utils.Paths.AIMS_SESSIONS_DIRECTORY;
-
 /**
  * Represents a session for saving video and log files. Handles session lifecycle, including
  * initialization, writing to files, and cleanup of resources.
  */
 public class FileSession {
 
+    private final ProgramSettings settings = ProgramSettings.getCurrentSettings();
+
     private Instant startTime;
     private final OnnxRunner onnxRunner;
     private final LogHandler logHandler;
     private final String title;
+    private final String sessionDescription;
     private String sessionDirectory;
-
-    // Field to store the intended frame size for the video
-    private Size videoFrameSize;
-
-    public FileSession(OnnxRunner onnxRunner, String title, LogHandler logHandler)  {
-        this.onnxRunner = onnxRunner;
-        this.title = title;
-        this.logHandler = logHandler;
-        try{
-            startNewSession(); // Throws IOException if fails
-        }catch (IOException e) {
-            throw new RuntimeException("Failed to start new FileSession", e);
-        }
-    }
-
 
     /** VideoWriter for saving video frames to a file. */
     @Getter
@@ -53,26 +45,38 @@ public class FileSession {
     private BufferedWriter logBufferedWriter = null;
     private BufferedWriter csvBufferedWriter = null;
 
+    // Field to store the intended frame size for the video
+    private Size videoFrameSize;
 
-
+    public FileSession(OnnxRunner onnxRunner, String title, String description, LogHandler logHandler)  {
+        this.onnxRunner = onnxRunner;
+        this.title = title;
+        this.sessionDescription = description;
+        this.logHandler = logHandler;
+        try{
+            startNewSession(); // Throws IOException if fails
+        }catch (IOException e) {
+            JOptionPane.showMessageDialog(App.getInstance(),
+                    "Failed to start session. "+e.getMessage(),
+                    "Session Start Failed", JOptionPane.ERROR_MESSAGE);
+            throw new RuntimeException("Failed to start new FileSession: "+e.getMessage(), e);
+        }
+    }
 
     /**
      * Starts a new session by creating a directory and initializing resources for saving video and log files.
      */
     public void startNewSession() throws IOException {
-        System.out.println("\u001B[33m☐ Starting new FileSession...\u001B[0m");
-
         onnxRunner.startSession();
 
         if (logHandler != null) {
             logHandler.clearLogPane();
-            System.out.println("🔄 Log panel fully reset.");
         }
 
         startTime = Instant.now();
 
         String dateTime = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HHmm"));
-        this.sessionDirectory = AIMS_SESSIONS_DIRECTORY + "/" + this.title + "_" + dateTime;
+        this.sessionDirectory = settings.getFileDirectory() + "/" + this.title + "_" + dateTime;
 
         // Create the session directory
         if (!new java.io.File(sessionDirectory).mkdir()) {
@@ -80,13 +84,15 @@ public class FileSession {
         }
 
         // Initialize BufferedWriter for saving logs
-        this.logBufferedWriter = new BufferedWriter(new FileWriter(sessionDirectory + "/logfile.log", true));
+        if(settings.isSaveLogsTEXT()) {
+            this.logBufferedWriter = new BufferedWriter(new FileWriter(sessionDirectory + "/logfile.log", true));
+        }
 
         // Initialize BufferedWriter for saving CSVs
-        this.csvBufferedWriter = new BufferedWriter(new FileWriter(sessionDirectory + "/log.csv", true));
-        csvBufferedWriter.write("Timestamp,LogNumber,Object,Action\n");
-
-        System.out.println("\u001B[32m☑ FileSession started successfully. Files will be saved to: " + sessionDirectory + "\u001B[0m");
+        if(settings.isSaveLogsCSV()) {
+            this.csvBufferedWriter = new BufferedWriter(new FileWriter(sessionDirectory + "/log.csv", true));
+            csvBufferedWriter.write("Timestamp,LogNumber,Object,Action\n");
+        }
     }
 
 
@@ -96,7 +102,7 @@ public class FileSession {
      * @param frame The first frame, used to determine video properties such as size and format.
      * @throws IllegalStateException if the session is not active.
      */
-    protected void initVideoWriter(Mat frame) throws IllegalStateException {
+    public void initVideoWriter(Mat frame) throws IllegalStateException {
         // Set the intended video frame size based on the first frame
         videoFrameSize = new Size(frame.cols(), frame.rows());
         String videoPath = sessionDirectory + "/recording.mp4";
@@ -123,19 +129,18 @@ public class FileSession {
      *
      * @param frame The video frame to write.
      */
-    protected void writeVideoFrame(Mat frame) {
+    public void writeVideoFrame(Mat frame) {
         if (videoWriter != null && videoWriter.isOpened()) {
-            Mat formattedFrame = new Mat();
-            frame.convertTo(formattedFrame, org.bytedeco.opencv.global.opencv_core.CV_8UC3);
+            // TODO: Experiment on other computers. It seems to inconsistent
             // Check if the frame dimensions match the expected videoFrameSize
-            if(formattedFrame.cols() != videoFrameSize.width() || formattedFrame.rows() != videoFrameSize.height()){
+            if(frame.cols() != videoFrameSize.width() || frame.rows() != videoFrameSize.height()){
                 // Resize frame if dimensions do not match
                 Mat resizedFrame = new Mat();
-                resize(formattedFrame, resizedFrame, videoFrameSize);
+                resize(frame, resizedFrame, videoFrameSize);
                 videoWriter.write(resizedFrame);
                 resizedFrame.release();
             } else {
-                videoWriter.write(formattedFrame);
+                videoWriter.write(frame);
             }
         }
     }
@@ -149,9 +154,13 @@ public class FileSession {
         if (logBufferedWriter != null) {
             try {
                 String fullMessage = log.getTimeStamp() + " - " + log.getMessage();
-                this.logBufferedWriter.write(fullMessage + "\n");
+                if(settings.isSaveLogsTEXT())
+                    this.logBufferedWriter.write(fullMessage + "\n");
+
                 String[]parsedMessage = parseLogMessage(log.getMessage());
-                this.csvBufferedWriter.write(log.getTimeStamp() + "," + parsedMessage[0] + "," + parsedMessage[1] + "," + parsedMessage[2] + "\n");
+                if(settings.isSaveLogsCSV())
+                    this.csvBufferedWriter.write(log.getTimeStamp() + "," + parsedMessage[0] + "," + parsedMessage[1] + "," + parsedMessage[2] + "\n");
+
             } catch (IOException e) {
                 System.err.println("IO Exception writing log to file: " + e.getMessage());
             }
@@ -185,19 +194,19 @@ public class FileSession {
     public void endSession() {
         System.out.println("\u001B[33m☐ Ending current FileSession...\u001B[0m");
 
-        destroyVideoWriter();
+        if(settings.isSaveVideo())
+            destroyVideoWriter();
 
-        closeLogWriter();
-        closeCsvWriter();
+        if(settings.isSaveLogsTEXT())
+            closeLogWriter();
+
+        if(settings.isSaveLogsCSV())
+            closeCsvWriter();
 
         Duration recordDuration = Duration.between(startTime, Instant.now());
 
         generateAAR(recordDuration);
-
-        if(logBufferedWriter == null) {
-            System.out.println("\u001B[32m☑ FileSession ended successfully. Log file saved to: " + sessionDirectory + "/logfile.log\u001B[0m");
-        }
-
+        EndSessionPopUp.showSessionEndDialog(sessionDirectory);
         onnxRunner.endSession();
     }
 
@@ -215,6 +224,13 @@ public class FileSession {
         }
         formattedDuration.append(seconds).append(" seconds");
         return formattedDuration.toString().trim();
+    }
+
+    private String displayDescription(String description){
+        if (description == null || description.trim().isEmpty()) {
+            description = "No description provided";
+        }
+        return description;
     }
 
     private void generateAAR(Duration recordDuration) {
@@ -250,33 +266,19 @@ public class FileSession {
             }
         }
 
-
-        // 🔍 Debugging output
-        System.out.println("🔍 DEBUG: Start Count Per Class: " + initialToolCounts);
-        System.out.println("🔍 DEBUG: Final Tool Counts: " + finalToolCounts);
-
         String formattedSessionTime = java.time.LocalDateTime.now()
                 .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String aarPath = sessionDirectory + "/AAR.txt";
+
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(aarPath))) {
             writer.write("After Action Report (AAR)\n");
             writer.write("==========================\n");
             writer.write("Session Name: " + (title != null ? title : "Unknown") + "\n\n");
+            writer.write("Description: " + displayDescription(sessionDescription) + "\n\n");
             writer.write("Recording Duration: " + formatDuration(recordDuration) + "\n\n");
             writer.write("Session Time: " + formattedSessionTime + "\n\n");
             writer.write("Peak Objects Seen at Once: " + peakObjects + "\n\n");
-
-            writer.write("Total Instances of Each Tool Ever Added:\n");
-            writer.write("-----------------------------------------------------\n");
-            if (totalToolsAdded.isEmpty()) {
-                writer.write("None\n");
-            } else {
-                for (var entry : totalToolsAdded.entrySet()) {
-                    writer.write(entry.getKey() + ": " + entry.getValue() + "\n");
-                }
-            }
-            writer.write("-----------------------------------------------------\n\n");
 
             // Objects Present at Start
             writer.write("Objects Present at Start:\n");
@@ -285,6 +287,28 @@ public class FileSession {
                 writer.write("None\n");
             } else {
                 for (var entry : initialToolCounts.entrySet()) {
+                    writer.write(entry.getKey() + ": " + entry.getValue() + "\n");
+                }
+            }
+            writer.write("-----------------------------------------------------\n\n");
+
+            writer.write("New Objects Introduced During Session:\n");
+            writer.write("-----------------------------------------------------\n");
+            if (newToolsIntroduced.isEmpty()) {
+                writer.write("None\n");
+            } else {
+                for (var entry : newToolsIntroduced.entrySet()) {
+                    writer.write(entry.getKey() + ": " + entry.getValue() + "\n");
+                }
+            }
+            writer.write("-----------------------------------------------------\n\n");
+
+            writer.write("Total Instances of Each Object Ever Added:\n");
+            writer.write("-----------------------------------------------------\n");
+            if (totalToolsAdded.isEmpty()) {
+                writer.write("None\n");
+            } else {
+                for (var entry : totalToolsAdded.entrySet()) {
                     writer.write(entry.getKey() + ": " + entry.getValue() + "\n");
                 }
             }
@@ -301,17 +325,6 @@ public class FileSession {
                 }
             }
             writer.write("------------------------\n\n");
-
-            writer.write("New Objects Introduced During Session:\n");
-            writer.write("-----------------------------------------------------\n");
-            if (newToolsIntroduced.isEmpty()) {
-                writer.write("None\n");
-            } else {
-                for (var entry : newToolsIntroduced.entrySet()) {
-                    writer.write(entry.getKey() + ": " + entry.getValue() + "\n");
-                }
-            }
-            writer.write("-----------------------------------------------------\n\n");
 
             writer.write("Objects Removed During Session:\n");
             writer.write("-----------------------------------------------------\n");

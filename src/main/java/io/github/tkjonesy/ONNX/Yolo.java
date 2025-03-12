@@ -1,47 +1,56 @@
 package io.github.tkjonesy.ONNX;
 
-import ai.onnxruntime.NodeInfo;
-import ai.onnxruntime.OnnxJavaType;
-import ai.onnxruntime.OnnxTensor;
-import ai.onnxruntime.OrtEnvironment;
-import ai.onnxruntime.OrtException;
-import ai.onnxruntime.OrtSession;
-import ai.onnxruntime.TensorInfo;
-
+import ai.onnxruntime.*;
+import ai. onnxruntime. OrtSession. SessionOptions;
+import io.github.tkjonesy.utils.ErrorDialogManager;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
+import lombok.Getter;
 import org.bytedeco.opencv.opencv_core.Mat;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class Yolo {
 
+    @Getter
+    private static boolean isCudaAvailable = false;
+
     public OnnxJavaType inputType;
     protected final OrtEnvironment env;
-    protected final OrtSession session;
+    protected OrtSession session;
     protected final String inputName;
     public ArrayList<String> labelNames;
 
     OnnxTensor inputTensor;
 
-    // Yolo constructor, taking in the modelPath, file with labels, confidence threshold, non-maximum suppression threshold, and GPU device ID
-    // gpuDevice omitted from this example
     public Yolo(String modelPath, String labelPath) throws OrtException, IOException {
-
         // Create the Onnx Runtime Environment and Session
         this.env = OrtEnvironment.getEnvironment();
-        var sessionOptions = new OrtSession.SessionOptions();
-        sessionOptions.addCPU(false);
-        sessionOptions.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT);
 
-        // Set the session
-        this.session = this.env.createSession(modelPath, sessionOptions);
+        EnumSet<OrtProvider> availableProviders = OrtEnvironment.getAvailableProviders();
+        System.out.println("Available providers: " + availableProviders);
+        
+        boolean useGPU = availableProviders.contains(OrtProvider.CUDA) && ProgramSettings.getCurrentSettings().isUseGPU();
+        SessionOptions sessionOptions = createSessionOptions(useGPU);
+
+        try {
+            System.out.println("Attempting to create ONNX session...");
+            this.session = this.env.createSession(modelPath, sessionOptions);
+
+            isCudaAvailable = useGPU && availableProviders.contains(OrtProvider.CUDA);
+            System.out.println("Session created successfully. CUDA available: " + isCudaAvailable);
+
+        } catch (OrtException e) {
+            System.out.println("Failed to create session with GPU, falling back to CPU: " + e.getMessage());
+            ErrorDialogManager.displayErrorDialog("Failed to create session with GPU, falling back to CPU. Error: " + e.getMessage());
+
+            isCudaAvailable = false;
+            sessionOptions = createSessionOptions(false);
+            this.session = this.env.createSession(modelPath, sessionOptions);
+        }
 
         // Get the input information
         Map<String, NodeInfo> inputMetaMap = this.session.getInputInfo();
@@ -49,15 +58,43 @@ public abstract class Yolo {
         NodeInfo inputMeta = inputMetaMap.get(this.inputName);
         this.inputType = ((TensorInfo) inputMeta.getInfo()).type;
 
-
-        // Use a buffered reader to read the labels from the file
-        BufferedReader br = new BufferedReader(new FileReader(labelPath));
-        String line;
-        this.labelNames = new ArrayList<>();
-        while ((line = br.readLine()) != null) {
-            this.labelNames.add(line);
+        // Load labels
+        try (BufferedReader br = new BufferedReader(new FileReader(labelPath))) {
+            this.labelNames = new ArrayList<>();
+            String line;
+            while ((line = br.readLine()) != null) {
+                this.labelNames.add(line);
+            }
         }
     }
+
+    public SessionOptions createSessionOptions(boolean useGPU) throws OrtException {
+        SessionOptions sessionOptions = new SessionOptions();
+        sessionOptions.setOptimizationLevel(SessionOptions.OptLevel.ALL_OPT);
+
+        if (useGPU) {
+            try {
+                System.out.println("Attempting to add CUDA provider...");
+                sessionOptions.addCUDA(ProgramSettings.getCurrentSettings().getGpuDeviceId());
+                System.out.println("CUDA provider added successfully.");
+            } catch (OrtException e) {
+                System.out.println("Failed to add CUDA provider, falling back to CPU: " + e.getMessage());
+                ErrorDialogManager.displayErrorDialog("Failed to add CUDA provider, falling back to CPU. Error: " + e.getMessage());
+                useGPU = false;
+            }
+        }
+
+        if (!useGPU) {
+            sessionOptions.addCPU(true);
+            sessionOptions.setInterOpNumThreads(1);
+            sessionOptions.setIntraOpNumThreads(1);
+            System.out.println("Using CPU for inference.");
+        }
+
+        return sessionOptions;
+    }
+
+
     public abstract List<Detection> run(Mat img) throws OrtException;
 
     // Compute the Intersection over Union (IoU) of two bounding boxes

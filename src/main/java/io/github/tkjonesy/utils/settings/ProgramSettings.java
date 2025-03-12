@@ -1,25 +1,27 @@
 package io.github.tkjonesy.utils.settings;
 
-import ai.onnxruntime.OrtException;
 import ai.onnxruntime.OrtSession;
-import io.github.tkjonesy.ONNX.YoloV8;
 import io.github.tkjonesy.frontend.App;
 import io.github.tkjonesy.utils.annotations.SettingsLabel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.UUID;
 
+@SuppressWarnings("unused")
 @Getter
+@ToString
 public class ProgramSettings {
+    private static final Logger logger = LogManager.getLogger(ProgramSettings.class);
 
-    @Setter
     @Getter
+    @Setter
     private static ProgramSettings currentSettings;
-
-    private static final String FILE_DIRECTORY = System.getProperty("user.home") + "/AIMs";
 
     // Camera variables
     @SettingsLabel(value = "cameraDeviceId", type = Integer.class)
@@ -28,10 +30,21 @@ public class ProgramSettings {
     private int cameraFps;
     @SettingsLabel(value = "cameraRotation", type = Integer.class)
     private int cameraRotation;
+    @SettingsLabel(value = "mirrorCamera", type = Boolean.class)
+    private boolean mirrorCamera;
+    @SettingsLabel(value = "preserveAspectRatio", type = Boolean.class)
+    private boolean preserveAspectRatio;
 
     // Storage variables
+    @Setter
     @SettingsLabel(value = "fileDirectory", type = String.class)
     private String fileDirectory;
+    @SettingsLabel(value = "saveVideo", type = Boolean.class)
+    private boolean saveVideo;
+    @SettingsLabel(value = "saveLogsTEXT", type = Boolean.class)
+    private boolean saveLogsTEXT;
+    @SettingsLabel(value = "saveLogsCSV", type = Boolean.class)
+    private boolean saveLogsCSV;
 
     // AI settings
     @Setter
@@ -40,52 +53,65 @@ public class ProgramSettings {
     @Setter
     @SettingsLabel(value = "labelPath", type = String.class)
     private String labelPath;
-    @SettingsLabel(value = "processEveryNthFrame", type = Integer.class)
-    private int processEveryNthFrame;
+    @SettingsLabel(value = "boundingBoxColor", type = int[].class)
+    private int[] boundingBoxColor;
     @SettingsLabel(value = "showBoundingBoxes", type = Boolean.class)
     private boolean showBoundingBoxes;
+    @SettingsLabel(value = "showLabels", type = Boolean.class)
+    private boolean showLabels;
+    @SettingsLabel(value = "showConfidences", type = Boolean.class)
+    private boolean showConfidences;
+    @SettingsLabel(value = "processEveryNthFrame", type = Integer.class)
+    private int processEveryNthFrame;
+    @SettingsLabel(value = "bufferThreshold", type = Integer.class)
+    private int bufferThreshold;
     @SettingsLabel(value = "confThreshold", type = Float.class)
     private float confThreshold;
 
     // Advanced AI settings
+    @Setter
+    @SettingsLabel(value = "useGPU", type = Boolean.class)
+    private boolean useGPU;
     @SettingsLabel(value = "gpuDeviceId", type = Integer.class)
     private int gpuDeviceId;
     @SettingsLabel(value = "nmsThreshold", type = Float.class)
     private float nmsThreshold;
     @SettingsLabel(value = "optimizationLevel", type = OrtSession.SessionOptions.OptLevel.class) // all, extended, basic, no
     private OrtSession.SessionOptions.OptLevel optimizationLevel;
-    @SettingsLabel(value = "numInputElements", type = Integer.class)
-    private int numInputElements;
     @SettingsLabel(value = "inputSize", type = Integer.class)
     private int inputSize;
     @SettingsLabel(value = "inputShape", type = long[].class)
     private long[] inputShape;
+    @SettingsLabel(value = "numInputElements", type = Integer.class)
+    private int numInputElements;
+
+    @SettingsLabel(value = "notZeroNum", type = Integer.class)
+    private int notZeroNum;
 
     // -------------------------------------------------------------------------
 
     public void updateSettings(HashMap<String, Object> newSettings) {
-        boolean updateONNX = false, updateCamera = false;
+        boolean updateONNX = false, updateCamera = false, updateBuffer = false;
         for (String key : newSettings.keySet()) {
             setSettings(key, newSettings.get(key));
-            if(key.equals("modelPath") || key.equals("labelPath")){
+            if(key.equals("modelPath") || key.equals("labelPath") || key.equals("useGPU")){
                 updateONNX = true;
             }
             if(key.equals("cameraDeviceId")){
                 updateCamera = true;
             }
-        }
-        if(updateONNX){
-            try {
-                System.out.println("Updating ONNX model and label paths to: " + this.modelPath + ", " + this.labelPath);
-                App.getOnnxRunner().setInferenceSession(new YoloV8(this.modelPath, this.labelPath));
-            }catch (IOException | OrtException e) {
-                throw new RuntimeException(e);
+            if(key.equals("bufferThreshold")){
+                updateBuffer = true;
             }
         }
-
+        if(updateONNX){
+            App.getOnnxRunner().updateInferenceSession(modelPath, labelPath);
+        }
+        if(updateBuffer){
+            App.getOnnxRunner().setBufferThreshold(bufferThreshold);
+        }
         if(updateCamera){
-            App.updateCamera((int)newSettings.get("cameraDeviceId"));
-
+            App.getInstance().updateCamera((int)newSettings.get("cameraDeviceId"));
         }
 
         SettingsLoader.saveSettings(this);
@@ -114,26 +140,5 @@ public class ProgramSettings {
                 }
             }
         }
-        System.err.println("No setting found with label: " + label);
     }
-
-    @Override
-    public String toString(){
-        return "ProgramSettings{" +
-                "cameraDeviceId=" + cameraDeviceId +
-                ", cameraFps=" + cameraFps +
-                ", fileDirectory='" + fileDirectory + '\'' +
-                ", modelPath='" + modelPath + '\'' +
-                ", labelPath='" + labelPath + '\'' +
-                ", processEveryNthFrame=" + processEveryNthFrame +
-                ", showBoundingBoxes=" + showBoundingBoxes +
-                ", confThreshold=" + confThreshold +
-                ", gpuDeviceId=" + gpuDeviceId +
-                ", nmsThreshold=" + nmsThreshold +
-                ", optimizationLevel=" + optimizationLevel +
-                ", numInputElements=" + numInputElements +
-                ", inputSize=" + inputSize +
-                '}';
-    }
-
 }
