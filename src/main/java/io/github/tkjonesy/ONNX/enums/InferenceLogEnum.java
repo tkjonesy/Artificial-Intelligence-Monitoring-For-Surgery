@@ -11,16 +11,16 @@ import java.awt.Color;
  */
 @Getter
 @AllArgsConstructor
-public enum LogEnum {
+public enum InferenceLogEnum {
 
     /** Log type for error messages, displayed in red. */
-    ERROR(Color.RED),
+    REMOVE(Color.RED),
 
     /** Log type for informational messages, displayed in yellow. */
     INFO(Color.YELLOW),
 
     /** Log type for success messages, displayed in green. */
-    SUCCESS(Color.GREEN),
+    ADD(Color.GREEN),
 
     /** Default log type, displayed in dark gray. */
     DEFAULT(Color.DARK_GRAY);

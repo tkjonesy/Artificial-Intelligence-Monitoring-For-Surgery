@@ -122,7 +122,6 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
     public void initListeners() {
         this.addAISettingsListener(
                 newColor -> {
-                    System.out.println("Bounding box color changed: " + Arrays.toString(newColor));
                     settingsUpdates.put("boundingBoxColor", newColor);
                     if(Arrays.equals(settings.getBoundingBoxColor(), newColor))
                         settingsUpdates.remove("boundingBoxColor");

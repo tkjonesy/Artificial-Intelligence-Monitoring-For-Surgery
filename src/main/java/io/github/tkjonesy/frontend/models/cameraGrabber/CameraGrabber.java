@@ -33,7 +33,6 @@ public abstract class CameraGrabber {
      */
     private HashMap<String, Integer> getAvailableCameraIndices(int maxIndex) {
         HashMap<String, Integer> validIndexes = new HashMap<>();
-        System.out.println("Searching for cameras...");
 
         for (int i = 0; i < maxIndex; i++) {
 

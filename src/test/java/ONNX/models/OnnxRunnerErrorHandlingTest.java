@@ -9,7 +9,7 @@ import static _testingUtils.HelperMethods.setPrivateField;
 
 import ai.onnxruntime.OrtException;
 import io.github.tkjonesy.ONNX.Yolo;
-import io.github.tkjonesy.ONNX.models.LogQueue;
+import io.github.tkjonesy.ONNX.models.InferenceLogQueue;
 import io.github.tkjonesy.ONNX.models.OnnxOutput;
 import io.github.tkjonesy.ONNX.models.OnnxRunner;
 import io.github.tkjonesy.utils.ErrorDialogManager;
@@ -49,7 +49,7 @@ public class OnnxRunnerErrorHandlingTest {
     private Yolo mockInferenceSession;
 
     @Mock
-    private LogQueue logQueue;
+    private InferenceLogQueue inferenceLogQueue;
 
     private final Mat dummyFrame = new Mat(10, 10, 0);
 
@@ -63,12 +63,12 @@ public class OnnxRunnerErrorHandlingTest {
 
     @BeforeEach
     public void setup() throws Exception {
-        logQueue = mock(LogQueue.class);
+        inferenceLogQueue = mock(InferenceLogQueue.class);
         mockInferenceSession = mock(Yolo.class);
-        onnxRunner = spy(new OnnxRunner(logQueue));
+        onnxRunner = spy(new OnnxRunner(inferenceLogQueue));
 
         setPrivateField(onnxRunner, "inferenceSession", mockInferenceSession);
-        setPrivateField(onnxRunner, "logQueue", logQueue);
+        setPrivateField(onnxRunner, "logQueue", inferenceLogQueue);
         onnxRunner.setBufferThreshold(3);
     }
 
@@ -96,7 +96,7 @@ public class OnnxRunnerErrorHandlingTest {
             // When: runInference is called.
             OnnxOutput output = onnxRunner.runInference(dummyFrame);
             // Then: The error should be logged and the output should be empty.
-            verify(logQueue, atLeastOnce()).addRedLog(contains("Error running inference"));
+            verify(inferenceLogQueue, atLeastOnce()).addRedLog(contains("Error running inference"));
             assertThat(output.getDetectionList()).isEmpty();
         }
     }

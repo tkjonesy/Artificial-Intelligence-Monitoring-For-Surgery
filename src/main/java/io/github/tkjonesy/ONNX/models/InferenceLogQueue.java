@@ -1,6 +1,6 @@
 package io.github.tkjonesy.ONNX.models;
 
-import io.github.tkjonesy.ONNX.enums.LogEnum;
+import io.github.tkjonesy.ONNX.enums.InferenceLogEnum;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -10,23 +10,23 @@ import java.util.Queue;
  * retrieved from. It supports adding logs with different log levels (error, info,
  * success) and retrieving logs in a first-in, first-out (FIFO) order.
  */
-public class LogQueue {
+public class InferenceLogQueue {
 
     /** The queue that stores the logs in FIFO order. */
-    private final Queue<Log> logs;
+    private final Queue<InferenceLog> inferenceLogs;
 
     /**
      * Initializes a new {@code LogQueue} with an empty queue.
      */
-    public LogQueue() {
-        this.logs = new LinkedList<>();
+    public InferenceLogQueue() {
+        this.inferenceLogs = new LinkedList<>();
     }
 
     /**
      * Flushes all logs from the queue.
      */
     public void flushLogs() {
-        logs.clear();
+        inferenceLogs.clear();
     }
 
     /**
@@ -35,7 +35,7 @@ public class LogQueue {
      * @param message The message to be logged with an error level.
      */
     public void addRedLog(String message) {
-        logs.add(new Log(LogEnum.ERROR, message));
+        inferenceLogs.add(new InferenceLog(InferenceLogEnum.REMOVE, message));
     }
 
     /**
@@ -44,7 +44,7 @@ public class LogQueue {
      * @param message The message to be logged with an informational level.
      */
     public void addYellowLog(String message) {
-        logs.add(new Log(LogEnum.INFO, message));
+        inferenceLogs.add(new InferenceLog(InferenceLogEnum.INFO, message));
     }
 
     /**
@@ -53,7 +53,7 @@ public class LogQueue {
      * @param message The message to be logged with a success level.
      */
     public void addGreenLog(String message) {
-        logs.add(new Log(LogEnum.SUCCESS, message));
+        inferenceLogs.add(new InferenceLog(InferenceLogEnum.ADD, message));
     }
 
     /**
@@ -62,7 +62,7 @@ public class LogQueue {
      *
      * @return The latest {@code Log} object, or {@code null} if no logs are available.
      */
-    public Log getNextLog(){
-        return logs.poll();
+    public InferenceLog getNextLog(){
+        return inferenceLogs.poll();
     }
 }

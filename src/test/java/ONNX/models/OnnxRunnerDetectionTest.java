@@ -2,7 +2,7 @@ package ONNX.models;
 
 import io.github.tkjonesy.ONNX.Detection;
 import io.github.tkjonesy.ONNX.Yolo;
-import io.github.tkjonesy.ONNX.models.LogQueue;
+import io.github.tkjonesy.ONNX.models.InferenceLogQueue;
 import io.github.tkjonesy.ONNX.models.OnnxRunner;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import org.junit.jupiter.api.BeforeAll;
@@ -38,7 +38,7 @@ public class OnnxRunnerDetectionTest {
     private Yolo mockInferenceSession;
 
     @Mock
-    private LogQueue logQueue;
+    private InferenceLogQueue inferenceLogQueue;
 
     private final Detection dummyDetection = new Detection("test", new float[]{10, 10, 50, 50}, 0.9f);
 
@@ -52,12 +52,12 @@ public class OnnxRunnerDetectionTest {
 
     @BeforeEach
     public void setup() throws Exception {
-        logQueue = mock(LogQueue.class);
+        inferenceLogQueue = mock(InferenceLogQueue.class);
         mockInferenceSession = mock(Yolo.class);
-        onnxRunner = spy(new OnnxRunner(logQueue));
+        onnxRunner = spy(new OnnxRunner(inferenceLogQueue));
 
         setPrivateField(onnxRunner, "inferenceSession", mockInferenceSession);
-        setPrivateField(onnxRunner, "logQueue", logQueue);
+        setPrivateField(onnxRunner, "logQueue", inferenceLogQueue);
         onnxRunner.setBufferThreshold(3);
     }
 

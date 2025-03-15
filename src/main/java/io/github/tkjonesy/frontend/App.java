@@ -24,6 +24,7 @@ import io.github.tkjonesy.frontend.models.cameraGrabber.MacOSCameraGrabber;
 import io.github.tkjonesy.frontend.models.cameraGrabber.WindowsCameraGrabber;
 import io.github.tkjonesy.utils.ErrorDialogManager;
 import io.github.tkjonesy.utils.Paths;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.models.LogHandler;
 import io.github.tkjonesy.utils.models.SessionHandler;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
@@ -100,25 +101,27 @@ public class App extends JFrame {
     public App() {
         instance = this;
 
-        // Initialize the directories for AIMs
-        try{
-            initializeAIMsDirectories();
-        }catch (RuntimeException e){
-            logger.error("Failed to initialize AIMs directories. Exiting application.");
-            ErrorDialogManager.displayErrorDialogFatal("Failed to initialize AIMs directories. Exiting application.");
-        }
-
         // Load settings from file
         this.settings = SettingsLoader.loadSettings();
 
         if(settings == null) {
-            logger.error("Failed to load settings from file. Exiting application.");
+            AIMsLogger.error("Failed to load settings from file. Exiting application.");
             ErrorDialogManager.displayErrorDialogFatal("Failed to load settings from file. Exiting application.");
         }
 
         ProgramSettings.setCurrentSettings(settings);
 
-        System.out.println(settings);
+        AIMsLogger.info("Settings: " + settings);
+
+        DebugConsoleManager.initialize(ProgramSettings.getCurrentSettings());
+
+        // Initialize the directories for AIMs
+        try{
+            initializeAIMsDirectories();
+        }catch (RuntimeException e){
+            AIMsLogger.error("Failed to initialize AIMs directories. Exiting application.");
+            ErrorDialogManager.displayErrorDialogFatal("Failed to initialize AIMs directories. Exiting application.");
+        }
 
         // Initialize the GUI components and listeners
         initComponents();
@@ -127,9 +130,15 @@ public class App extends JFrame {
         // Initialize the session handler, log handler, and ONNX runner
         LogHandler logHandler = new LogHandler(loggingPanel.getLogTextPane());
         this.sessionHandler = new SessionHandler(logHandler);
-        onnxRunner = new OnnxRunner(LogHandler.getLogQueue());
+        onnxRunner = new OnnxRunner(LogHandler.getINFERENCE_LOG_QUEUE());
 
         updateCamera(settings.getCameraDeviceId());
+
+
+        // Camera fetcher thread task
+        FrameHandler frameHandler = new FrameHandler(this.cameraPanel.getCameraFeed(), camera, onnxRunner, sessionHandler);
+        cameraFetcherThread = new Thread(frameHandler);
+        cameraFetcherThread.start();
 
         // Close the splash screen and display the application
         splashScreen.closeSplash();
@@ -193,19 +202,19 @@ public class App extends JFrame {
 
                     SettingsLoader.saveSettings(settings);
 
-                    System.out.println("Beginning cleanup Process...");
-                    System.out.println("Stopping camera feed thread...");
+                    AIMsLogger.info("Beginning cleanup Process...");
+                    AIMsLogger.info("Stopping camera feed thread...");
                     if(cameraFetcherThread != null) cameraFetcherThread.interrupt();
-                    System.out.println("Closing camera access...");
+                    AIMsLogger.info("Closing camera access...");
                     if (camera != null && camera.isOpened())
                         camera.release();
 
-                    System.out.println("Done cleanup process.");
+                    AIMsLogger.info("Done cleanup process.");
 
                     App.this.dispose();
                     System.exit(0);
                 } else {
-                    System.out.println("Exit cancelled.");
+                    AIMsLogger.info("Exit cancelled.");
                 }
             }
         });
@@ -230,24 +239,22 @@ public class App extends JFrame {
                     throw new CvException("Unable to open camera with ID: " + cameraId);
                 }
             }
-
-            // Camera fetcher thread task
-            FrameHandler frameHandler = new FrameHandler(this.cameraPanel.getCameraFeed(), camera, onnxRunner, sessionHandler);
-            cameraFetcherThread = new Thread(frameHandler);
-            cameraFetcherThread.start();
+            if(frameHandler != null){
+                frameHandler.setCamera(camera);
+            }
 
         }catch (CvException e) {
-            ErrorDialogManager.displayErrorDialog("Failed to open camera with ID: " + cameraId);
-            logger.error("Failed to open camera with ID: {}", cameraId);
+            String errorMessage = "Failed to open camera with ID: " + cameraId;
+            ErrorDialogManager.displayErrorDialog(errorMessage);
+            AIMsLogger.error(errorMessage);
         }
     }
 
     public static void main(String[] args) {
         try {
-//            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             UIManager.setLookAndFeel("com.formdev.flatlaf.FlatDarkLaf");
         } catch (Exception e) {
-            System.out.println("Unable to set Look and Feel to system default.");
+            AIMsLogger.error("Unable to set Look and Feel to system default.");
         }
 
         SwingUtilities.invokeLater(App::new);

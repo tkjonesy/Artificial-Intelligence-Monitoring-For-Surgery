@@ -1,5 +1,7 @@
 package io.github.tkjonesy.frontend.miscGUI;
 
+import io.github.tkjonesy.utils.logging.AIMsLogger;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -44,7 +46,7 @@ public class EndSessionPopUp {
      */
     private static void openSessionDirectory(String sessionTitle) {
         File directory = new File(sessionTitle);
-        System.out.println("Attempting to open: " + directory.getAbsolutePath());
+        AIMsLogger.trace("Attempting to open: " + directory.getAbsolutePath());
 
         if (!directory.exists() || !directory.isDirectory()) {
             JOptionPane.showMessageDialog(null, "Error: The session folder does not exist: " + directory.getAbsolutePath(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -55,7 +57,6 @@ public class EndSessionPopUp {
             Desktop.getDesktop().open(directory);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, "Error: Failed to open the session folder: " + directory.getAbsolutePath(), "Error", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 

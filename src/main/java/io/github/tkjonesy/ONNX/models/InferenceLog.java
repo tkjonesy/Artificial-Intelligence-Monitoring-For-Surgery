@@ -1,20 +1,17 @@
 package io.github.tkjonesy.ONNX.models;
 
-import io.github.tkjonesy.ONNX.enums.LogEnum;
+import io.github.tkjonesy.ONNX.enums.InferenceLogEnum;
 import lombok.Getter;
-
-import java.awt.Component;
-import java.awt.Graphics;
 
 /**
  * The {@code Log} class represents a log entry with a log type, message, and timestamp.
  * It provides methods for generating logs with a timestamp and displaying them in a UI component.
  */
 @Getter
-public class Log {
+public class InferenceLog {
 
     /** The type of the log, defining its level and color (e.g., ERROR, INFO, SUCCESS). */
-    private final LogEnum logType;
+    private final InferenceLogEnum logType;
 
     /** The message associated with the log entry. */
     private final String message;
@@ -28,7 +25,7 @@ public class Log {
      * @param logType The type of the log, specifying the log level and color.
      * @param message The message for the log entry.
      */
-    public Log(LogEnum logType, String message) {
+    public InferenceLog(InferenceLogEnum logType, String message) {
         this.logType = logType;
         this.message = message;
         this.timeStamp = getCurrentTimestamp();
