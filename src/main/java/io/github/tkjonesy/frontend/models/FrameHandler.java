@@ -6,9 +6,11 @@ import io.github.tkjonesy.ONNX.models.OnnxOutput;
 import io.github.tkjonesy.ONNX.models.OnnxRunner;
 
 import io.github.tkjonesy.frontend.App;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.models.FileSession;
 import io.github.tkjonesy.utils.models.SessionHandler;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
+import lombok.Setter;
 import org.bytedeco.javacpp.BytePointer;
 
 import org.bytedeco.opencv.opencv_core.Mat;
@@ -37,6 +39,7 @@ import java.util.concurrent.*;
 public class FrameHandler implements Runnable {
 
     private final JLabel cameraFeed;
+    @Setter
     private VideoCapture camera;
     private final Timer timer;
     private final SessionHandler sessionHandler;
@@ -72,11 +75,11 @@ public class FrameHandler implements Runnable {
         this.onnxRunner = onnxRunner;
         this.sessionHandler = sessionHandler;
 
-        System.out.println("Starting Frame Processing Thread");
+        AIMsLogger.trace("Starting Frame Processing Thread");
         startFrameProcessingThread();
-        System.out.println("Starting Display Thread");
+        AIMsLogger.trace("Starting Display Thread");
         startDisplayThread();
-        System.out.println("Starting Recording Thread");
+        AIMsLogger.trace("Starting Recording Thread");
         startRecordingThread();
     }
 
@@ -120,13 +123,19 @@ public class FrameHandler implements Runnable {
                 }
 
                 if (camera != App.getCamera()) {
-                    System.out.println("Camera has been updated, changing to new camera");
+                    AIMsLogger.info("Camera has been updated, changing to new camera");
                     camera = App.getCamera();
 
-                    camera.set(CAP_PROP_FRAME_WIDTH, cameraFeed.getWidth());
-                    camera.set(CAP_PROP_FRAME_HEIGHT, cameraFeed.getHeight());
-                    camera.set(CAP_PROP_FPS, settings.getCameraFps());
+                    try{
+                        camera.set(CAP_PROP_FRAME_WIDTH, cameraFeed.getWidth());
+                        camera.set(CAP_PROP_FRAME_HEIGHT, cameraFeed.getHeight());
+                        camera.set(CAP_PROP_FPS, settings.getCameraFps());
+                    }catch (Exception e) {
+                        AIMsLogger.error("Error updating camera: " + e.getMessage());
+                    }
 
+
+                    AIMsLogger.info("Camera updated");
                 }
 
                 try {
@@ -139,7 +148,7 @@ public class FrameHandler implements Runnable {
                         frame.release();
                     }
                 }catch (Exception e) {
-                    System.out.println("Error capturing frame: " + e.getMessage());
+                    AIMsLogger.error("Error capturing frame: " + e.getMessage());
                 }
             }
         };
@@ -215,13 +224,13 @@ public class FrameHandler implements Runnable {
                     if(sessionHandler.isSessionActive() && settings.isSaveVideo()) {
                         Mat recordingFrame = processedFrame.clone();
                         if(!recordingFrameQueue.offer(recordingFrame, 50, TimeUnit.MILLISECONDS)){
-                            System.out.println("Failed to add frame to recording queue");
+                            AIMsLogger.fatal("Failed to add frame to recording queue");
                             recordingFrame.release();
                         }
                     }
 
                 } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+                    AIMsLogger.fatal("Frame processing thread interrupted: " + e.getMessage());
                 }
             }
         });
@@ -243,7 +252,7 @@ public class FrameHandler implements Runnable {
 
                     displayFrame.release();
                 } catch (Exception e) {
-                    System.out.println("Error displaying frame: " + e.getMessage());
+                    AIMsLogger.error("Error displaying frame: " + e.getMessage());
                 }
             }
         });
@@ -268,13 +277,13 @@ public class FrameHandler implements Runnable {
                         try{
                             fileSession.writeVideoFrame(recordingFrame);
                         }catch (Exception e) {
-                            System.out.println("Error writing video frame: " + e.getMessage());
+                            AIMsLogger.error("Error writing video frame: " + e.getMessage());
                         } finally {
                             recordingFrame.release();
                         }
                     }
                 }catch (Exception e) {
-                    System.out.println("Error in recording thread: " + e.getMessage());
+                    AIMsLogger.fatal("Error in recording thread: " + e.getMessage());
                 }
             }
         });
@@ -291,7 +300,7 @@ public class FrameHandler implements Runnable {
             displayExecutor.awaitTermination(500, TimeUnit.MILLISECONDS);
             recordingExecutor.awaitTermination(500, TimeUnit.MILLISECONDS);
         }catch (InterruptedException e) {
-            System.out.println("Error shutting down frame handler: " + e.getMessage());
+           AIMsLogger.error("Error shutting down frame handler: " + e.getMessage());
         }
 
         if(!inferenceExecutor.isTerminated()) inferenceExecutor.shutdownNow();

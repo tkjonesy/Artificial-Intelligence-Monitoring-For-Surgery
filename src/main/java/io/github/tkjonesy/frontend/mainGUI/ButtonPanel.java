@@ -2,6 +2,7 @@ package io.github.tkjonesy.frontend.mainGUI;
 
 import io.github.tkjonesy.frontend.App;
 import io.github.tkjonesy.frontend.miscGUI.SessionInputDialog;
+import io.github.tkjonesy.frontend.models.DebugConsoleManager;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
 import lombok.Getter;
 
@@ -13,6 +14,7 @@ public class ButtonPanel extends JPanel {
     private final App appInstance;
     private JToggleButton sessionButton;
     private JButton settingsButton;
+    private JButton debugButton;
     private static final Color OCEAN = new Color(55, 90, 129);
     private static final Color SUNSET = new Color(255, 40, 79);
 
@@ -27,6 +29,7 @@ public class ButtonPanel extends JPanel {
         sessionButton = new JToggleButton("Start Session");
         sessionButton.setBackground(OCEAN);
         settingsButton = new JButton("Settings");
+        debugButton = new JButton("Debug Console");
     }
 
     private void initializeListeners() {
@@ -76,6 +79,11 @@ public class ButtonPanel extends JPanel {
         );
 
         settingsButton.addActionListener(e -> SwingUtilities.invokeLater(() -> new SettingsWindow(appInstance)));
+
+        debugButton.addActionListener(e -> {
+            boolean isVisible = DebugConsoleManager.toggleConsole();
+            debugButton.setText(isVisible ? "Hide Debug" : "Debug Console");
+        });
     }
 
     private void setupLayout() {
@@ -86,6 +94,8 @@ public class ButtonPanel extends JPanel {
                         .addComponent(sessionButton)
                         .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(settingsButton)
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(debugButton)
         );
         layout.setVerticalGroup(
                 layout.createSequentialGroup()
@@ -93,6 +103,7 @@ public class ButtonPanel extends JPanel {
                                 layout.createParallelGroup(GroupLayout.Alignment.CENTER)
                                         .addComponent(sessionButton)
                                         .addComponent(settingsButton)
+                                        .addComponent(debugButton)
                         )
         );
         setLayout(layout);

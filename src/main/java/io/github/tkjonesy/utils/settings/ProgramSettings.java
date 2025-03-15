@@ -2,6 +2,7 @@ package io.github.tkjonesy.utils.settings;
 
 import ai.onnxruntime.OrtSession;
 import io.github.tkjonesy.frontend.App;
+import io.github.tkjonesy.frontend.models.DebugConsoleManager;
 import io.github.tkjonesy.utils.annotations.SettingsLabel;
 import lombok.Getter;
 import lombok.Setter;
@@ -85,6 +86,9 @@ public class ProgramSettings {
     @SettingsLabel(value = "numInputElements", type = Integer.class)
     private int numInputElements;
 
+    @SettingsLabel(value = "debugMode", type = Boolean.class)
+    private boolean debugMode;
+
     @SettingsLabel(value = "notZeroNum", type = Integer.class)
     private int notZeroNum;
 
@@ -129,12 +133,12 @@ public class ProgramSettings {
                             field.set(this, value);
 
                         } else {
-                            System.out.println("Type mismatch: Cannot assign " +
+                            DebugConsoleManager.error("Type mismatch: Cannot assign " +
                                     value.getClass().getSimpleName() + " to " +
                                     annotation.type().getSimpleName());
                         }
                     } catch (IllegalAccessException e) {
-                        System.err.println("Failed to set value for " + label + ": " + e.getMessage());
+                        DebugConsoleManager.error("Failed to set value for " + label + ": " + e.getMessage());
                     }
                     return;
                 }
