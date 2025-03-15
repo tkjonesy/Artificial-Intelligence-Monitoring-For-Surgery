@@ -18,11 +18,10 @@ import io.github.tkjonesy.frontend.mainGUI.ButtonPanel;
 import io.github.tkjonesy.frontend.mainGUI.CameraPanel;
 import io.github.tkjonesy.frontend.mainGUI.LoggingPanel;
 import io.github.tkjonesy.frontend.models.*;
-import io.github.tkjonesy.frontend.models.SplashScreen;
+import io.github.tkjonesy.frontend.miscGUI.SplashScreen;
 import io.github.tkjonesy.frontend.models.cameraGrabber.CameraGrabber;
 import io.github.tkjonesy.frontend.models.cameraGrabber.MacOSCameraGrabber;
 import io.github.tkjonesy.frontend.models.cameraGrabber.WindowsCameraGrabber;
-import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
 import io.github.tkjonesy.utils.ErrorDialogManager;
 import io.github.tkjonesy.utils.Paths;
 import io.github.tkjonesy.utils.models.LogHandler;
@@ -88,7 +87,7 @@ public class App extends JFrame {
     private final SessionHandler sessionHandler;
     private final ProgramSettings settings;
 
-    private CameraFetcher cameraFetcher;
+    private FrameHandler frameHandler;
     @Getter
     private JLabel cameraFeed;
     @Getter
@@ -128,7 +127,7 @@ public class App extends JFrame {
         // Initialize the session handler, log handler, and ONNX runner
         LogHandler logHandler = new LogHandler(loggingPanel.getLogTextPane());
         this.sessionHandler = new SessionHandler(logHandler);
-        onnxRunner = new OnnxRunner(logHandler.getLogQueue());
+        onnxRunner = new OnnxRunner(LogHandler.getLogQueue());
 
         updateCamera(settings.getCameraDeviceId());
 
@@ -200,6 +199,7 @@ public class App extends JFrame {
                     System.out.println("Closing camera access...");
                     if (camera != null && camera.isOpened())
                         camera.release();
+
                     System.out.println("Done cleanup process.");
 
                     App.this.dispose();
@@ -232,8 +232,8 @@ public class App extends JFrame {
             }
 
             // Camera fetcher thread task
-            CameraFetcher cameraFetcher = new CameraFetcher(this.cameraPanel.getCameraFeed(), camera, onnxRunner, sessionHandler);
-            cameraFetcherThread = new Thread(cameraFetcher);
+            FrameHandler frameHandler = new FrameHandler(this.cameraPanel.getCameraFeed(), camera, onnxRunner, sessionHandler);
+            cameraFetcherThread = new Thread(frameHandler);
             cameraFetcherThread.start();
 
         }catch (CvException e) {
