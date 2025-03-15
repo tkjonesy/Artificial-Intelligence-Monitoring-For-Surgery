@@ -43,7 +43,7 @@ public class OnnxRunner {
      * A queue of logs to be displayed in the UI.
      */
     @Getter
-    private final LogQueue logQueue;
+    private final InferenceLogQueue inferenceLogQueue;
 
     /**
      * A hashmap for tracking the currently active classes and their counts.
@@ -72,9 +72,9 @@ public class OnnxRunner {
 
     private boolean sessionActive = false;
 
-    public OnnxRunner(LogQueue logQueue) {
+    public OnnxRunner(InferenceLogQueue inferenceLogQueue) {
 
-        this.logQueue = logQueue;
+        this.inferenceLogQueue = inferenceLogQueue;
         this.activeDetections = new HashMap<>();
         this.detectionBuffer = new HashMap<>();
 
@@ -94,7 +94,6 @@ public class OnnxRunner {
     }
 
     public void startSession(){
-       System.out.println("🔄 Starting new tracking session.");
        bufferThreshold = settings.getBufferThreshold();
     }
 
@@ -125,7 +124,7 @@ public class OnnxRunner {
             System.out.println("Inference time: " + timeElapsed + "ms");
 
         } catch (OrtException ortException) {
-            logQueue.addRedLog("Error running inference: " + ortException.getMessage());
+            inferenceLogQueue.addRedLog("Error running inference: " + ortException.getMessage());
             LogHandler.forceProcessNextLog();
             System.err.println("Error running inference: " + ortException.getMessage());
         }
@@ -268,7 +267,7 @@ public class OnnxRunner {
             }else{
                 logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "Class count increased: " + newValue);
             }
-            logQueue.addGreenLog(logMessage);
+            inferenceLogQueue.addGreenLog(logMessage);
 
             int totalAdded = totalInstancesAdded.getOrDefault(detectionWithCount.label(), 0);
             totalInstancesAdded.put(detectionWithCount.label(), totalAdded + difference);
@@ -281,7 +280,7 @@ public class OnnxRunner {
             } else{
                 logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "Class count decreased: " + newValue);
             }
-            logQueue.addRedLog(logMessage);
+            inferenceLogQueue.addRedLog(logMessage);
         }
 
         // Update active detections

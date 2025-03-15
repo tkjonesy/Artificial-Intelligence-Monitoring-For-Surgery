@@ -145,10 +145,7 @@ public class SettingsLoader {
     private static ProgramSettings loadSettingsFromResource(ObjectMapper objectMapper) {
         try (InputStream inputStream = SettingsLoader.class.getResourceAsStream(RESOURCE_DEFAULT_SETTINGS_PATH)) {
             if (inputStream != null) {
-                System.out.println("Loading default settings from resources.");
-                ProgramSettings defaultSettings = objectMapper.readValue(inputStream, ProgramSettings.class);
-                System.out.println("Default settings loaded."+defaultSettings);
-                return defaultSettings;
+                return objectMapper.readValue(inputStream, ProgramSettings.class);
             } else {
                 System.err.println("Default settings file not found in resources.");
             }

@@ -1,5 +1,6 @@
 package io.github.tkjonesy.frontend.settingsGUI;
 
+import io.github.tkjonesy.frontend.models.DebugConsoleManager;
 import io.github.tkjonesy.frontend.settingsGUI.panels.AISettingsPanel;
 import io.github.tkjonesy.frontend.settingsGUI.panels.AdvancedSettingsPanel;
 import io.github.tkjonesy.frontend.settingsGUI.panels.CameraSettingsPanel;
@@ -219,7 +220,7 @@ public class SettingsWindow extends JDialog implements SettingsUI {
     }
 
     private void applyChanges() {
-        System.out.println("Applying changed settings");
+        DebugConsoleManager.info("Applying changed settings");
         settings.updateSettings(settingsUpdates);
         settingsUpdates.clear();
         updateApplyButtonState();

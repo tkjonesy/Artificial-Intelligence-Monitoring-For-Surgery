@@ -1,9 +1,9 @@
 package io.github.tkjonesy.utils.models;
 
-import io.github.tkjonesy.ONNX.models.Log;
+import io.github.tkjonesy.ONNX.models.InferenceLog;
 import io.github.tkjonesy.ONNX.models.OnnxRunner;
-import io.github.tkjonesy.frontend.App;
 import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import io.github.tkjonesy.frontend.miscGUI.EndSessionPopUp;
 import lombok.Getter;
@@ -11,8 +11,6 @@ import lombok.Getter;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.Size;
 import org.bytedeco.opencv.opencv_videoio.VideoWriter;
-
-import javax.swing.*;
 
 import static org.bytedeco.opencv.global.opencv_imgproc.resize;
 
@@ -122,7 +120,7 @@ public class FileSession {
                 throw new IllegalStateException("Failed to initialize VideoWriter. Check if the directory is writable.");
             }
         }
-        System.out.println("Video recording started." +
+       AIMsLogger.info("Video recording started." +
                 "Saving to: " + videoPath +
                 "Video Codec: " + (char) (codec & 0xFF) + (char) ((codec >> 8) & 0xFF) + (char) ((codec >> 16) & 0xFF) + (char) ((codec >> 24) & 0xFF) +
                 "FPS: " + targetFps);
@@ -133,7 +131,7 @@ public class FileSession {
             videoWriter.release();
             videoWriter = null;
 
-            System.out.println("Video recording ended. Video saved to: " + sessionDirectory + "/recording.mp4");
+            AIMsLogger.info("Video recording ended. Video saved to: " + sessionDirectory + "/recording.mp4");
         }
     }
 
@@ -157,7 +155,7 @@ public class FileSession {
                 }
 
             } catch (Exception e) {
-                System.err.println("Error writing video frame: " + e.getMessage());
+                AIMsLogger.fatal("Error writing video frame: " + e.getMessage());
             }
         }
     }
@@ -165,21 +163,21 @@ public class FileSession {
     /**
      * Writes a log message to the log file.
      *
-     * @param log The log entry to write.
+     * @param inferenceLog The log entry to write.
      */
-    protected void writeLogToFile(Log log) {
+    protected void writeLogToFile(InferenceLog inferenceLog) {
         if (logBufferedWriter != null) {
             try {
-                String fullMessage = log.getTimeStamp() + " - " + log.getMessage();
+                String fullMessage = inferenceLog.getTimeStamp() + " - " + inferenceLog.getMessage();
                 if(settings.isSaveLogsTEXT())
                     this.logBufferedWriter.write(fullMessage + "\n");
 
-                String[]parsedMessage = parseLogMessage(log.getMessage());
+                String[]parsedMessage = parseLogMessage(inferenceLog.getMessage());
                 if(settings.isSaveLogsCSV())
-                    this.csvBufferedWriter.write(log.getTimeStamp() + "," + parsedMessage[0] + "," + parsedMessage[1] + "," + parsedMessage[2] + "\n");
+                    this.csvBufferedWriter.write(inferenceLog.getTimeStamp() + "," + parsedMessage[0] + "," + parsedMessage[1] + "," + parsedMessage[2] + "\n");
 
             } catch (IOException e) {
-                System.err.println("IO Exception writing log to file: " + e.getMessage());
+                AIMsLogger.error("IO Exception writing log to file: " + e.getMessage());
             }
         }
     }
@@ -200,7 +198,7 @@ public class FileSession {
                 logNumber = message;
             }
         } catch(Exception e){
-            System.err.println("Error parsing log message: " + e.getMessage());
+            AIMsLogger.error("Error parsing log message: " + e.getMessage());
         }
         return new String[]{logNumber, object, action};
     }
@@ -209,7 +207,7 @@ public class FileSession {
      * Ends the current session by releasing resources such as the VideoWriter and BufferedWriter.
      */
     public void endSession() {
-        System.out.println("\u001B[33m☐ Ending current FileSession...\u001B[0m");
+        AIMsLogger.trace("Ending session: " + title);
 
         if(settings.isSaveVideo())
             destroyVideoWriter();
@@ -354,9 +352,9 @@ public class FileSession {
             }
             writer.write("-----------------------------------------------------\n\n");
 
-            System.out.println("✅ AAR saved to: " + aarPath);
+            AIMsLogger.info("AAR saved to: " + aarPath);
         } catch (IOException e) {
-            System.err.println("❌ Failed to write AAR: " + e.getMessage());
+            AIMsLogger.info("Failed to write AAR: " + e.getMessage());
         }
     }
 
@@ -370,7 +368,7 @@ public class FileSession {
                 logBufferedWriter.close();
             }
         } catch (IOException e) {
-            System.err.println("Failed to close log writer: " + e.getMessage());
+            AIMsLogger.fatal("Failed to close log writer: " + e.getMessage());
         } finally {
             logBufferedWriter = null;
         }
@@ -383,7 +381,7 @@ public class FileSession {
                 csvBufferedWriter.close();
             }
         } catch (IOException e) {
-            System.err.println("Failed to close csv writer: " + e.getMessage());
+            AIMsLogger.fatal("Failed to close csv writer: " + e.getMessage());
         } finally {
             csvBufferedWriter = null;
         }

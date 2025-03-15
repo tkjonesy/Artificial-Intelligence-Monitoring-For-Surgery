@@ -36,7 +36,7 @@ public class SessionHandler {
         }
 
         this.startTime = Instant.now();
-        onnxRunner.getLogQueue().addGreenLog("---Session started.---");
+        onnxRunner.getInferenceLogQueue().addGreenLog("---Session started.---");
         this.isActive = new AtomicBoolean(true);
         return true;
     }

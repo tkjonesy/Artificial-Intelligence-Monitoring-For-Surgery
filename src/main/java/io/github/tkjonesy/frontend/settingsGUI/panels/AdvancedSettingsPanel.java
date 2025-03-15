@@ -142,7 +142,6 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
             }
             reader.close();
         } catch (IOException e) {
-            System.err.println("Error detecting GPUs: " + e.getMessage());
             gpuList.add("No GPU detected");
         }
 
@@ -154,7 +153,6 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(useGPUCheckbox, (ActionListener)
                 e -> {
                     boolean value = useGPUCheckbox.isSelected();
-                    System.out.println("Use GPU: " + useGPUCheckbox.isSelected());
                     settingsUpdates.put("useGPU", value);
                     if(settings.isUseGPU() == value)
                         settingsUpdates.remove("useGPU");
@@ -165,7 +163,6 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(gpuDeviceSelector, (ActionListener)
                 e -> {
                     String value = (String) gpuDeviceSelector.getSelectedItem();
-                    System.out.println("GPU device: " + value);
                     assert value != null;
                     settingsUpdates.put("gpuDeviceId", Integer.parseInt(value));
                     if(settings.getGpuDeviceId() == Integer.parseInt(value))
@@ -176,7 +173,6 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(nmsThresholdSlider, (ChangeListener)
                 e -> {
                     float value = nmsThresholdSlider.getValue() / 100f;
-                    System.out.println("NMS threshold: " + value);
                     settingsUpdates.put("nmsThreshold", value);
                     if(settings.getNmsThreshold() == value)
                         settingsUpdates.remove("nmsThreshold");
@@ -186,7 +182,6 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(optimizationLevelComboBox, (ActionListener)
                 e -> {
                     String value = (String) optimizationLevelComboBox.getSelectedItem();
-                    System.out.println("Optimization level: " + value);
                     settingsUpdates.put("optimizationLevel", OrtSession.SessionOptions.OptLevel.valueOf(value));
                     if(settings.getOptimizationLevel().toString().equals(value))
                         settingsUpdates.remove("optimizationLevel");
@@ -196,7 +191,6 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(inputSizeSpinner, (ChangeListener)
                 e -> {
                     int value = (int) inputSizeSpinner.getValue();
-                    System.out.println("Input size: " + value);
                     settingsUpdates.put("inputSize", value);
                     if(settings.getInputSize() == value)
                         settingsUpdates.remove("inputSize");
@@ -207,9 +201,6 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
                 e -> {
                     String newValue = inputShapeTextField.getText().trim().replaceAll(" ", "");
                     String currentValue = Arrays.toString(settings.getInputShape()).replaceAll("[\\[\\] ]", " ").trim().replaceAll(" ", "");
-
-                    System.out.println("Current value: " + currentValue);
-                    System.out.println("New value: " + newValue);
 
                     if (!newValue.equals(currentValue)) {
 
