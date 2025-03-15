@@ -1,7 +1,7 @@
 package io.github.tkjonesy.frontend.mainGUI;
 
 import io.github.tkjonesy.frontend.App;
-import io.github.tkjonesy.frontend.models.SessionInputDialog;
+import io.github.tkjonesy.frontend.miscGUI.SessionInputDialog;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
 import lombok.Getter;
 
