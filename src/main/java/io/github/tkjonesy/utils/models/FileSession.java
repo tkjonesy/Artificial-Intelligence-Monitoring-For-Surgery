@@ -3,8 +3,9 @@ package io.github.tkjonesy.utils.models;
 import io.github.tkjonesy.ONNX.models.Log;
 import io.github.tkjonesy.ONNX.models.OnnxRunner;
 import io.github.tkjonesy.frontend.App;
+import io.github.tkjonesy.utils.ErrorDialogManager;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
-import io.github.tkjonesy.frontend.models.EndSessionPopUp;
+import io.github.tkjonesy.frontend.miscGUI.EndSessionPopUp;
 import lombok.Getter;
 
 import org.bytedeco.opencv.opencv_core.Mat;
@@ -47,18 +48,19 @@ public class FileSession {
 
     // Field to store the intended frame size for the video
     private Size videoFrameSize;
+    private final double targetFps;
 
     public FileSession(OnnxRunner onnxRunner, String title, String description, LogHandler logHandler)  {
         this.onnxRunner = onnxRunner;
         this.title = title;
         this.sessionDescription = description;
         this.logHandler = logHandler;
+        this.targetFps = settings.getCameraFps();
+
         try{
             startNewSession(); // Throws IOException if fails
         }catch (IOException e) {
-            JOptionPane.showMessageDialog(App.getInstance(),
-                    "Failed to start session. "+e.getMessage(),
-                    "Session Start Failed", JOptionPane.ERROR_MESSAGE);
+            ErrorDialogManager.displayErrorDialog("Failed to start new FileSession: "+ e.getMessage());
             throw new RuntimeException("Failed to start new FileSession: "+e.getMessage(), e);
         }
     }
@@ -106,13 +108,24 @@ public class FileSession {
         // Set the intended video frame size based on the first frame
         videoFrameSize = new Size(frame.cols(), frame.rows());
         String videoPath = sessionDirectory + "/recording.mp4";
+
+        // H.264 codec
         int codec = VideoWriter.fourcc((byte) 'a', (byte) 'v', (byte) 'c', (byte) '1');
 
-        videoWriter = new VideoWriter(videoPath, codec, 30.0, videoFrameSize, true);
+        videoWriter = new VideoWriter(videoPath, codec, targetFps, videoFrameSize, true);
 
         if (!videoWriter.isOpened()) {
-            throw new IllegalStateException("Failed to open VideoWriter with path: " + videoPath);
+            codec = VideoWriter.fourcc((byte) 'm', (byte) 'j', (byte) 'p', (byte) 'g');
+            videoWriter = new VideoWriter(videoPath, codec, targetFps, videoFrameSize, true);
+
+            if (!videoWriter.isOpened()) {
+                throw new IllegalStateException("Failed to initialize VideoWriter. Check if the directory is writable.");
+            }
         }
+        System.out.println("Video recording started." +
+                "Saving to: " + videoPath +
+                "Video Codec: " + (char) (codec & 0xFF) + (char) ((codec >> 8) & 0xFF) + (char) ((codec >> 16) & 0xFF) + (char) ((codec >> 24) & 0xFF) +
+                "FPS: " + targetFps);
     }
 
     public void destroyVideoWriter(){
@@ -120,7 +133,7 @@ public class FileSession {
             videoWriter.release();
             videoWriter = null;
 
-            System.out.println("\u001B[32m☑ Video recording ended. Video saved to: " + sessionDirectory + "/recording.mp4\u001B[0m");
+            System.out.println("Video recording ended. Video saved to: " + sessionDirectory + "/recording.mp4");
         }
     }
 
@@ -131,16 +144,20 @@ public class FileSession {
      */
     public void writeVideoFrame(Mat frame) {
         if (videoWriter != null && videoWriter.isOpened()) {
-            // TODO: Experiment on other computers. It seems to inconsistent
-            // Check if the frame dimensions match the expected videoFrameSize
-            if(frame.cols() != videoFrameSize.width() || frame.rows() != videoFrameSize.height()){
-                // Resize frame if dimensions do not match
-                Mat resizedFrame = new Mat();
-                resize(frame, resizedFrame, videoFrameSize);
-                videoWriter.write(resizedFrame);
-                resizedFrame.release();
-            } else {
-                videoWriter.write(frame);
+            try {
+                // Resize the frame if it doesn't match the intended video frame size
+                if (frame.cols() != videoFrameSize.width() || frame.rows() != videoFrameSize.height()) {
+                    Mat resizedFrame = new Mat();
+                    resize(frame, resizedFrame, videoFrameSize);
+                    videoWriter.write(resizedFrame);
+                    resizedFrame.release();
+
+                } else {
+                    videoWriter.write(frame);
+                }
+
+            } catch (Exception e) {
+                System.err.println("Error writing video frame: " + e.getMessage());
             }
         }
     }
