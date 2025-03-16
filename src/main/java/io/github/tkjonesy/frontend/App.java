@@ -105,21 +105,21 @@ public class App extends JFrame {
         this.settings = SettingsLoader.loadSettings();
 
         if(settings == null) {
-            AIMsLogger.error("Failed to load settings from file. Exiting application.");
+            AIMsLogger.ERROR("Failed to load settings from file. Exiting application.");
             ErrorDialogManager.displayErrorDialogFatal("Failed to load settings from file. Exiting application.");
         }
 
         ProgramSettings.setCurrentSettings(settings);
+        AIMsLogger.initialize(ProgramSettings.getCurrentSettings());
 
-        AIMsLogger.info("Settings: " + settings);
+        AIMsLogger.INFO("Settings: " + settings);
 
-        DebugConsoleManager.initialize(ProgramSettings.getCurrentSettings());
 
         // Initialize the directories for AIMs
         try{
             initializeAIMsDirectories();
         }catch (RuntimeException e){
-            AIMsLogger.error("Failed to initialize AIMs directories. Exiting application.");
+            AIMsLogger.ERROR("Failed to initialize AIMs directories. Exiting application.");
             ErrorDialogManager.displayErrorDialogFatal("Failed to initialize AIMs directories. Exiting application.");
         }
 
@@ -202,19 +202,19 @@ public class App extends JFrame {
 
                     SettingsLoader.saveSettings(settings);
 
-                    AIMsLogger.info("Beginning cleanup Process...");
-                    AIMsLogger.info("Stopping camera feed thread...");
+                    AIMsLogger.INFO("Beginning cleanup Process...");
+                    AIMsLogger.INFO("Stopping camera feed thread...");
                     if(cameraFetcherThread != null) cameraFetcherThread.interrupt();
-                    AIMsLogger.info("Closing camera access...");
+                    AIMsLogger.INFO("Closing camera access...");
                     if (camera != null && camera.isOpened())
                         camera.release();
 
-                    AIMsLogger.info("Done cleanup process.");
+                    AIMsLogger.INFO("Done cleanup process.");
 
                     App.this.dispose();
                     System.exit(0);
                 } else {
-                    AIMsLogger.info("Exit cancelled.");
+                    AIMsLogger.INFO("Exit cancelled.");
                 }
             }
         });
@@ -246,7 +246,7 @@ public class App extends JFrame {
         }catch (CvException e) {
             String errorMessage = "Failed to open camera with ID: " + cameraId;
             ErrorDialogManager.displayErrorDialog(errorMessage);
-            AIMsLogger.error(errorMessage);
+            AIMsLogger.ERROR(errorMessage);
         }
     }
 
@@ -254,7 +254,7 @@ public class App extends JFrame {
         try {
             UIManager.setLookAndFeel("com.formdev.flatlaf.FlatDarkLaf");
         } catch (Exception e) {
-            AIMsLogger.error("Unable to set Look and Feel to system default.");
+            AIMsLogger.ERROR("Unable to set Look and Feel to system default.");
         }
 
         SwingUtilities.invokeLater(App::new);

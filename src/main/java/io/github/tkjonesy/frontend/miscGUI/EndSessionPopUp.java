@@ -46,7 +46,7 @@ public class EndSessionPopUp {
      */
     private static void openSessionDirectory(String sessionTitle) {
         File directory = new File(sessionTitle);
-        AIMsLogger.trace("Attempting to open: " + directory.getAbsolutePath());
+        AIMsLogger.TRACE("Attempting to open: " + directory.getAbsolutePath());
 
         if (!directory.exists() || !directory.isDirectory()) {
             JOptionPane.showMessageDialog(null, "Error: The session folder does not exist: " + directory.getAbsolutePath(), "Error", JOptionPane.ERROR_MESSAGE);

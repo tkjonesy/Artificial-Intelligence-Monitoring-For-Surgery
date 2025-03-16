@@ -75,11 +75,11 @@ public class FrameHandler implements Runnable {
         this.onnxRunner = onnxRunner;
         this.sessionHandler = sessionHandler;
 
-        AIMsLogger.trace("Starting Frame Processing Thread");
+        AIMsLogger.TRACE("Starting Frame Processing Thread");
         startFrameProcessingThread();
-        AIMsLogger.trace("Starting Display Thread");
+        AIMsLogger.TRACE("Starting Display Thread");
         startDisplayThread();
-        AIMsLogger.trace("Starting Recording Thread");
+        AIMsLogger.TRACE("Starting Recording Thread");
         startRecordingThread();
     }
 
@@ -123,7 +123,7 @@ public class FrameHandler implements Runnable {
                 }
 
                 if (camera != App.getCamera()) {
-                    AIMsLogger.info("Camera has been updated, changing to new camera");
+                    AIMsLogger.INFO("Camera has been updated, changing to new camera");
                     camera = App.getCamera();
 
                     try{
@@ -131,11 +131,11 @@ public class FrameHandler implements Runnable {
                         camera.set(CAP_PROP_FRAME_HEIGHT, cameraFeed.getHeight());
                         camera.set(CAP_PROP_FPS, settings.getCameraFps());
                     }catch (Exception e) {
-                        AIMsLogger.error("Error updating camera: " + e.getMessage());
+                        AIMsLogger.ERROR("Error updating camera: " + e.getMessage());
                     }
 
 
-                    AIMsLogger.info("Camera updated");
+                    AIMsLogger.INFO("Camera updated");
                 }
 
                 try {
@@ -148,7 +148,7 @@ public class FrameHandler implements Runnable {
                         frame.release();
                     }
                 }catch (Exception e) {
-                    AIMsLogger.error("Error capturing frame: " + e.getMessage());
+                    AIMsLogger.ERROR("Error capturing frame: " + e.getMessage());
                 }
             }
         };
@@ -224,13 +224,13 @@ public class FrameHandler implements Runnable {
                     if(sessionHandler.isSessionActive() && settings.isSaveVideo()) {
                         Mat recordingFrame = processedFrame.clone();
                         if(!recordingFrameQueue.offer(recordingFrame, 50, TimeUnit.MILLISECONDS)){
-                            AIMsLogger.fatal("Failed to add frame to recording queue");
+                            AIMsLogger.FATAL("Failed to add frame to recording queue");
                             recordingFrame.release();
                         }
                     }
 
                 } catch (InterruptedException e) {
-                    AIMsLogger.fatal("Frame processing thread interrupted: " + e.getMessage());
+                    AIMsLogger.FATAL("Frame processing thread interrupted: " + e.getMessage());
                 }
             }
         });
@@ -252,7 +252,7 @@ public class FrameHandler implements Runnable {
 
                     displayFrame.release();
                 } catch (Exception e) {
-                    AIMsLogger.error("Error displaying frame: " + e.getMessage());
+                    AIMsLogger.ERROR("Error displaying frame: " + e.getMessage());
                 }
             }
         });
@@ -277,13 +277,13 @@ public class FrameHandler implements Runnable {
                         try{
                             fileSession.writeVideoFrame(recordingFrame);
                         }catch (Exception e) {
-                            AIMsLogger.error("Error writing video frame: " + e.getMessage());
+                            AIMsLogger.ERROR("Error writing video frame: " + e.getMessage());
                         } finally {
                             recordingFrame.release();
                         }
                     }
                 }catch (Exception e) {
-                    AIMsLogger.fatal("Error in recording thread: " + e.getMessage());
+                    AIMsLogger.FATAL("Error in recording thread: " + e.getMessage());
                 }
             }
         });
@@ -300,7 +300,7 @@ public class FrameHandler implements Runnable {
             displayExecutor.awaitTermination(500, TimeUnit.MILLISECONDS);
             recordingExecutor.awaitTermination(500, TimeUnit.MILLISECONDS);
         }catch (InterruptedException e) {
-           AIMsLogger.error("Error shutting down frame handler: " + e.getMessage());
+           AIMsLogger.ERROR("Error shutting down frame handler: " + e.getMessage());
         }
 
         if(!inferenceExecutor.isTerminated()) inferenceExecutor.shutdownNow();
