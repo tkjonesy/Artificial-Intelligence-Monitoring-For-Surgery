@@ -1,7 +1,6 @@
 package io.github.tkjonesy.frontend.utils.cameraGrabber;
 
 import io.github.tkjonesy.utils.logging.AIMsLogger;
-import org.bytedeco.javacv.FrameGrabber;
 import org.bytedeco.javacv.OpenCVFrameGrabber;
 import org.bytedeco.opencv.opencv_videoio.VideoCapture;
 
@@ -85,16 +84,16 @@ public abstract class CameraGrabber {
             }else{
                 index = cameraIndices.get(i);
             }
-            AIMsLogger.TRACE("Getting Camera name for index: " + index);
+
             // Use platform-specific name if available, otherwise use a generic name
             String cameraName;
             if (i < platformSpecificNames.size() && !platformSpecificNames.get(i).isEmpty()) {
                 cameraName = platformSpecificNames.get(i);
-                AIMsLogger.TRACE("Camera name: " + cameraName);
             } else {
                 cameraName = "Camera " + index;
             }
 
+            AIMsLogger.TRACE("Mapping camera index " + index + " to name: " + cameraName);
             cameraMap.put(cameraName, index);
         }
         return cameraMap;
@@ -110,11 +109,11 @@ public abstract class CameraGrabber {
         List<Integer> validIndices = new ArrayList<>();
 
         // First try the simple approach which is faster and more reliable in most cases
-        for (int i = 0; i < MAX_CAMERAS_TO_CHECK; i++) {
-            if (isCameraPresent(i)) {
-                validIndices.add(i);
-                AIMsLogger.TRACE("Camera found quickly at index: " + i);
-            }
+        int i=0;
+        while(i<MAX_CAMERAS_TO_CHECK && isCameraPresent(i)) {
+            validIndices.add(i);
+            AIMsLogger.TRACE("Camera found at index: " + i);
+            i++;
         }
 
         // If that didn't find any cameras, try the more thorough approach
@@ -137,8 +136,7 @@ public abstract class CameraGrabber {
 
         // Submit camera check tasks
         for (int i = 0; i < MAX_CAMERAS_TO_CHECK; i++) {
-            final int index = i;
-            futures.add(executor.submit(new CameraChecker(index)));
+            futures.add(executor.submit(new CameraChecker(i)));
         }
 
         // Collect results
@@ -167,12 +165,9 @@ public abstract class CameraGrabber {
      * @return true if a camera is present, false otherwise
      */
     protected boolean isCameraPresent(int index) {
-        try {
-            VideoCapture capture = new VideoCapture(index);
+        try(VideoCapture capture = new VideoCapture(index)) {
             boolean isOpened = capture.isOpened();
 
-            // On some systems, isOpened() may return true even if the device isn't usable
-            // Try to read a frame as a better check
             if (isOpened) {
                 org.bytedeco.opencv.opencv_core.Mat testFrame = new org.bytedeco.opencv.opencv_core.Mat();
                 // Set a short timeout for read operation
@@ -182,7 +177,7 @@ public abstract class CameraGrabber {
                 long startTime = System.currentTimeMillis();
                 boolean frameRead = false;
 
-                while (System.currentTimeMillis() - startTime < 300) { // 300ms timeout
+                while (System.currentTimeMillis() - startTime < 300) {
                     if (capture.read(testFrame)) {
                         frameRead = !testFrame.empty();
                         if (frameRead) break;
@@ -209,80 +204,64 @@ public abstract class CameraGrabber {
      */
     protected abstract List<String> getPlatformCameraNames();
 
-    /**
-     * Helper class to check if a camera is available at a specific index
-     */
-    private static class CameraChecker implements Callable<CameraCheckResult> {
-        private final int index;
+        /**
+         * Helper class to check if a camera is available at a specific index
+         */
+        private record CameraChecker(int index) implements Callable<CameraCheckResult> {
 
-        public CameraChecker(int index) {
-            this.index = index;
-        }
+            @Override
+            public CameraCheckResult call() {
+                // First try with OpenCVFrameGrabber
+                try (OpenCVFrameGrabber grabber = new OpenCVFrameGrabber(index)) {
+                    grabber.setFormat("mjpeg");
+                    grabber.setImageWidth(320);
+                    grabber.setImageHeight(240);
+                    grabber.start();
 
-        @Override
-        public CameraCheckResult call() {
-            // First try with OpenCVFrameGrabber
-            try(OpenCVFrameGrabber grabber = new OpenCVFrameGrabber(index)) {
-                grabber.setFormat("mjpeg");
-                grabber.setImageWidth(320);
-                grabber.setImageHeight(240);
-                grabber.start();
-
-                // Try to grab a frame
-                boolean success = false;
-                for (int attempt = 0; attempt < 3; attempt++) {
-                    try {
-                        if (grabber.grab() != null) {
-                            success = true;
-                            break;
-                        }
-                    } catch (Exception e) {
-                        // Ignore and try again
+                    // Try to grab a frame
+                    boolean success = false;
+                    for (int attempt = 0; attempt < 3; attempt++) {
+                        try {
+                            if (grabber.grab() != null) {
+                                success = true;
+                                break;
+                            }
+                        } catch (Exception ignore) {}
                     }
-                }
 
-                grabber.stop();
-                grabber.release();
+                    grabber.stop();
+                    grabber.release();
 
-                if (success) {
-                    return new CameraCheckResult(true);
-                }
-            } catch (Exception e) {
-                // Failed with OpenCVFrameGrabber, but we'll try another approach
-                AIMsLogger.TRACE("OpenCVFrameGrabber failed for index " + index + ": " + e.getMessage());
-            }
-
-            // Fallback to VideoCapture approach
-            try {
-                VideoCapture capture = new VideoCapture(index);
-                if (capture.isOpened()) {
-                    org.bytedeco.opencv.opencv_core.Mat frame = new org.bytedeco.opencv.opencv_core.Mat();
-                    boolean readSuccess = capture.read(frame);
-                    boolean notEmpty = !frame.empty();
-                    frame.release();
-                    capture.release();
-
-                    if (readSuccess && notEmpty) {
+                    if (success) {
                         return new CameraCheckResult(true);
                     }
+                } catch (Exception e) {
+                    AIMsLogger.TRACE("OpenCVFrameGrabber failed for index " + index + ": " + e.getMessage());
                 }
-            } catch (Exception e) {
-                // Both methods failed
-                AIMsLogger.TRACE("Both detection methods failed for index " + index);
+
+                // Fallback to VideoCapture approach
+                try(VideoCapture capture = new VideoCapture(index)) {
+                    if (capture.isOpened()) {
+                        org.bytedeco.opencv.opencv_core.Mat frame = new org.bytedeco.opencv.opencv_core.Mat();
+                        boolean readSuccess = capture.read(frame);
+                        boolean notEmpty = !frame.empty();
+                        frame.release();
+                        capture.release();
+
+                        if (readSuccess && notEmpty) {
+                            return new CameraCheckResult(true);
+                        }
+                    }
+                } catch (Exception e) {
+                    AIMsLogger.TRACE("Both detection methods failed for index " + index);
+                }
+
+                return new CameraCheckResult(false);
             }
-
-            return new CameraCheckResult(false);
         }
-    }
 
-    /**
-     * Simple result class for camera availability check
-     */
-    private static class CameraCheckResult {
-        public final boolean isAvailable;
-
-        public CameraCheckResult(boolean isAvailable) {
-            this.isAvailable = isAvailable;
-        }
-    }
+        /**
+         * Simple result class for camera availability check
+         */
+        private record CameraCheckResult(boolean isAvailable) {}
 }

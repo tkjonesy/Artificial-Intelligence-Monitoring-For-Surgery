@@ -14,7 +14,7 @@ public class MacOSCameraGrabber extends CameraGrabber {
      */
     @Override
     protected List<String> getPlatformCameraNames() {
-
+        AIMsLogger.TRACE("Getting camera names using MacOS-specific methods");
         List<String> cameraNames = new ArrayList<>();
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("system_profiler", "SPCameraDataType");
