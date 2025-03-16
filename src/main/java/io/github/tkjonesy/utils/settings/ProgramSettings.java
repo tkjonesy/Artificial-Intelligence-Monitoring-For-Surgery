@@ -56,6 +56,10 @@ public class ProgramSettings {
     private String labelPath;
     @SettingsLabel(value = "boundingBoxColor", type = int[].class)
     private int[] boundingBoxColor;
+    @SettingsLabel(value = "logAddedColor", type = int[].class)
+    private int[] logAddedColor = new int[]{0, 255, 0};
+    @SettingsLabel(value = "logRemovedColor", type = int[].class)
+    private int[] logRemovedColor = new int[]{255, 0, 0};
     @SettingsLabel(value = "showBoundingBoxes", type = Boolean.class)
     private boolean showBoundingBoxes;
     @SettingsLabel(value = "showLabels", type = Boolean.class)
@@ -102,29 +106,29 @@ public class ProgramSettings {
         boolean updateONNX = false, updateCamera = false, updateBuffer = false, updateDebug = false;
         for (String key : newSettings.keySet()) {
             setSettings(key, newSettings.get(key));
-            if(key.equals("modelPath") || key.equals("labelPath") || key.equals("useGPU")){
+            if (key.equals("modelPath") || key.equals("labelPath") || key.equals("useGPU")) {
                 updateONNX = true;
             }
-            if(key.equals("cameraDeviceId")){
+            if (key.equals("cameraDeviceId")) {
                 updateCamera = true;
             }
-            if(key.equals("bufferThreshold")){
+            if (key.equals("bufferThreshold")) {
                 updateBuffer = true;
             }
-            if(key.equals("debugMode") || key.equals("continuousLogging")){
+            if (key.equals("debugMode") || key.equals("continuousLogging")) {
                 updateDebug = true;
             }
         }
-        if(updateONNX){
+        if (updateONNX) {
             App.getOnnxRunner().updateInferenceSession(modelPath, labelPath);
         }
-        if(updateBuffer){
+        if (updateBuffer) {
             App.getOnnxRunner().setBufferThreshold(bufferThreshold);
         }
-        if(updateCamera){
-            App.getInstance().updateCamera((int)newSettings.get("cameraDeviceId"));
+        if (updateCamera) {
+            App.getInstance().updateCamera((int) newSettings.get("cameraDeviceId"));
         }
-        if(updateDebug){
+        if (updateDebug) {
             AIMsLogger.initialize(this);
         }
 
@@ -141,7 +145,6 @@ public class ProgramSettings {
                     try {
                         if (annotation.type().isInstance(value)) {
                             field.set(this, value);
-
                         } else {
                             DebugConsoleManager.ERROR("Type mismatch: Cannot assign " +
                                     value.getClass().getSimpleName() + " to " +
