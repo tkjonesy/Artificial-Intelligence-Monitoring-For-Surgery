@@ -120,7 +120,7 @@ public class FileSession {
                 throw new IllegalStateException("Failed to initialize VideoWriter. Check if the directory is writable.");
             }
         }
-       AIMsLogger.info("Video recording started." +
+       AIMsLogger.INFO("Video recording started." +
                 "Saving to: " + videoPath +
                 "Video Codec: " + (char) (codec & 0xFF) + (char) ((codec >> 8) & 0xFF) + (char) ((codec >> 16) & 0xFF) + (char) ((codec >> 24) & 0xFF) +
                 "FPS: " + targetFps);
@@ -131,7 +131,7 @@ public class FileSession {
             videoWriter.release();
             videoWriter = null;
 
-            AIMsLogger.info("Video recording ended. Video saved to: " + sessionDirectory + "/recording.mp4");
+            AIMsLogger.INFO("Video recording ended. Video saved to: " + sessionDirectory + "/recording.mp4");
         }
     }
 
@@ -155,7 +155,7 @@ public class FileSession {
                 }
 
             } catch (Exception e) {
-                AIMsLogger.fatal("Error writing video frame: " + e.getMessage());
+                AIMsLogger.FATAL("Error writing video frame: " + e.getMessage());
             }
         }
     }
@@ -177,7 +177,7 @@ public class FileSession {
                     this.csvBufferedWriter.write(inferenceLog.getTimeStamp() + "," + parsedMessage[0] + "," + parsedMessage[1] + "," + parsedMessage[2] + "\n");
 
             } catch (IOException e) {
-                AIMsLogger.error("IO Exception writing log to file: " + e.getMessage());
+                AIMsLogger.ERROR("IO Exception writing log to file: " + e.getMessage());
             }
         }
     }
@@ -198,7 +198,7 @@ public class FileSession {
                 logNumber = message;
             }
         } catch(Exception e){
-            AIMsLogger.error("Error parsing log message: " + e.getMessage());
+            AIMsLogger.ERROR("Error parsing log message: " + e.getMessage());
         }
         return new String[]{logNumber, object, action};
     }
@@ -207,7 +207,7 @@ public class FileSession {
      * Ends the current session by releasing resources such as the VideoWriter and BufferedWriter.
      */
     public void endSession() {
-        AIMsLogger.trace("Ending session: " + title);
+        AIMsLogger.TRACE("Ending session: " + title);
 
         if(settings.isSaveVideo())
             destroyVideoWriter();
@@ -352,9 +352,9 @@ public class FileSession {
             }
             writer.write("-----------------------------------------------------\n\n");
 
-            AIMsLogger.info("AAR saved to: " + aarPath);
+            AIMsLogger.INFO("AAR saved to: " + aarPath);
         } catch (IOException e) {
-            AIMsLogger.info("Failed to write AAR: " + e.getMessage());
+            AIMsLogger.INFO("Failed to write AAR: " + e.getMessage());
         }
     }
 
@@ -368,7 +368,7 @@ public class FileSession {
                 logBufferedWriter.close();
             }
         } catch (IOException e) {
-            AIMsLogger.fatal("Failed to close log writer: " + e.getMessage());
+            AIMsLogger.FATAL("Failed to close log writer: " + e.getMessage());
         } finally {
             logBufferedWriter = null;
         }
@@ -381,7 +381,7 @@ public class FileSession {
                 csvBufferedWriter.close();
             }
         } catch (IOException e) {
-            AIMsLogger.fatal("Failed to close csv writer: " + e.getMessage());
+            AIMsLogger.FATAL("Failed to close csv writer: " + e.getMessage());
         } finally {
             csvBufferedWriter = null;
         }

@@ -32,20 +32,20 @@ public abstract class Yolo {
         this.env = OrtEnvironment.getEnvironment();
 
         EnumSet<OrtProvider> availableProviders = OrtEnvironment.getAvailableProviders();
-        AIMsLogger.info("Available providers: " + availableProviders);
+        AIMsLogger.INFO("Available providers: " + availableProviders);
         
         boolean useGPU = availableProviders.contains(OrtProvider.CUDA) && ProgramSettings.getCurrentSettings().isUseGPU();
         SessionOptions sessionOptions = createSessionOptions(useGPU);
 
         try {
-            AIMsLogger.info("Attempting to create ONNX session...");
+            AIMsLogger.INFO("Attempting to create ONNX session...");
             this.session = this.env.createSession(modelPath, sessionOptions);
 
             isCudaAvailable = useGPU && availableProviders.contains(OrtProvider.CUDA);
-            AIMsLogger.info("Session created successfully. CUDA available: " + isCudaAvailable);
+            AIMsLogger.INFO("Session created successfully. CUDA available: " + isCudaAvailable);
 
         } catch (OrtException e) {
-            AIMsLogger.info("Failed to create session with GPU, falling back to CPU: " + e.getMessage());
+            AIMsLogger.INFO("Failed to create session with GPU, falling back to CPU: " + e.getMessage());
             ErrorDialogManager.displayErrorDialog("Failed to create session with GPU, falling back to CPU. Error: " + e.getMessage());
 
             isCudaAvailable = false;
@@ -75,11 +75,11 @@ public abstract class Yolo {
 
         if (useGPU) {
             try {
-                AIMsLogger.info("Attempting to add CUDA provider...");
+                AIMsLogger.INFO("Attempting to add CUDA provider...");
                 sessionOptions.addCUDA(ProgramSettings.getCurrentSettings().getGpuDeviceId());
-                AIMsLogger.info("CUDA provider added successfully.");
+                AIMsLogger.INFO("CUDA provider added successfully.");
             } catch (OrtException e) {
-                AIMsLogger.info("Failed to add CUDA provider, falling back to CPU: " + e.getMessage());
+                AIMsLogger.INFO("Failed to add CUDA provider, falling back to CPU: " + e.getMessage());
                 ErrorDialogManager.displayErrorDialog("Failed to add CUDA provider, falling back to CPU. Error: " + e.getMessage());
                 useGPU = false;
             }
@@ -89,7 +89,7 @@ public abstract class Yolo {
             sessionOptions.addCPU(true);
             sessionOptions.setInterOpNumThreads(1);
             sessionOptions.setIntraOpNumThreads(1);
-            AIMsLogger.info("Using CPU for inference.");
+            AIMsLogger.INFO("Using CPU for inference.");
         }
 
         return sessionOptions;
