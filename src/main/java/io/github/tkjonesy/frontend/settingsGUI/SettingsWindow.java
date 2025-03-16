@@ -1,6 +1,6 @@
 package io.github.tkjonesy.frontend.settingsGUI;
 
-import io.github.tkjonesy.frontend.models.DebugConsoleManager;
+import io.github.tkjonesy.frontend.utils.DebugConsoleManager;
 import io.github.tkjonesy.frontend.settingsGUI.panels.AISettingsPanel;
 import io.github.tkjonesy.frontend.settingsGUI.panels.AdvancedSettingsPanel.AdvancedSettingsPanel;
 import io.github.tkjonesy.frontend.settingsGUI.panels.CameraSettingsPanel;
@@ -53,7 +53,7 @@ public class SettingsWindow extends JDialog implements SettingsUI {
 
         // Icon
         try {
-            ImageIcon appIcon = new ImageIcon(Paths.LOGO16_PATH);
+            ImageIcon appIcon = new ImageIcon(Paths.LOGO32_PATH);
             this.setIconImage(appIcon.getImage());
         } catch (Exception e) {
             throw new RuntimeException(e);

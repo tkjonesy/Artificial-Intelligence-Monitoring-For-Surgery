@@ -4,6 +4,7 @@ import ai.onnxruntime.OrtSession;
 import io.github.tkjonesy.ONNX.YoloV8;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsUI;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 
 import javax.swing.*;
@@ -158,6 +159,7 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
         addSettingChangeListener(useGPUCheckbox, (ActionListener)
                 e -> {
                     boolean value = useGPUCheckbox.isSelected();
+                    AIMsLogger.TRACE("Use GPU: " + value);
                     settingsUpdates.put("useGPU", value);
                     if(settings.isUseGPU() == value)
                         settingsUpdates.remove("useGPU");
@@ -170,6 +172,7 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
                     if (value != null && value.startsWith("GPU ")) {
                         try {
                             int deviceId = Integer.parseInt(value.substring(4, value.indexOf(':')));
+                            AIMsLogger.TRACE("GPU Device ID: " + deviceId);
                             settingsUpdates.put("gpuDeviceId", deviceId);
                             if(settings.getGpuDeviceId() == deviceId)
                                 settingsUpdates.remove("gpuDeviceId");
@@ -184,6 +187,7 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
         addSettingChangeListener(nmsThresholdSlider, (ChangeListener)
                 e -> {
                     float value = nmsThresholdSlider.getValue() / 100f;
+                    AIMsLogger.TRACE("NMS Threshold: " + value);
                     settingsUpdates.put("nmsThreshold", value);
                     if(settings.getNmsThreshold() == value)
                         settingsUpdates.remove("nmsThreshold");
@@ -193,6 +197,7 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
         addSettingChangeListener(optimizationLevelComboBox, (ActionListener)
                 e -> {
                     String value = (String) optimizationLevelComboBox.getSelectedItem();
+                    AIMsLogger.TRACE("Optimization Level: " + value);
                     settingsUpdates.put("optimizationLevel", OrtSession.SessionOptions.OptLevel.valueOf(value));
                     if(settings.getOptimizationLevel().toString().equals(value))
                         settingsUpdates.remove("optimizationLevel");
@@ -202,6 +207,7 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
         addSettingChangeListener(inputSizeSpinner, (ChangeListener)
                 e -> {
                     int value = (int) inputSizeSpinner.getValue();
+                    AIMsLogger.TRACE("Input Size: " + value);
                     settingsUpdates.put("inputSize", value);
                     if(settings.getInputSize() == value)
                         settingsUpdates.remove("inputSize");
@@ -221,11 +227,10 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
 
                             long numInputElements = Arrays.stream(inputShape).reduce(1, (a, b) -> a * b);
 
+                            AIMsLogger.TRACE("Input Shape: " + Arrays.toString(inputShape));
+
                             settingsUpdates.put("inputShape", inputShape);
                             settingsUpdates.put("numInputElements", (int) numInputElements);
-
-                            System.out.println("Input shape changed: " + newValue);
-                            System.out.println("Number of input elements: " + numInputElements);
 
                             updateApplyButtonState();
                         } catch (NumberFormatException ex) {

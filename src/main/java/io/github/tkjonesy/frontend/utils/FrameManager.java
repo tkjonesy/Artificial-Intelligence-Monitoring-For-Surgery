@@ -1,4 +1,4 @@
-package io.github.tkjonesy.frontend.models;
+package io.github.tkjonesy.frontend.utils;
 
 import io.github.tkjonesy.ONNX.Detection;
 import io.github.tkjonesy.ONNX.ImageUtil;
@@ -25,7 +25,6 @@ import static org.bytedeco.opencv.global.opencv_videoio.*;
 
 import org.bytedeco.opencv.global.opencv_core;
 
-
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
@@ -35,8 +34,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.*;
 
-
-public class FrameHandler implements Runnable {
+public class FrameManager implements Runnable {
 
     private final JLabel cameraFeed;
     @Setter
@@ -56,30 +54,25 @@ public class FrameHandler implements Runnable {
     private final LinkedBlockingQueue<Mat> processedFrameQueue = new LinkedBlockingQueue<>();
     private final LinkedBlockingQueue<Mat> recordingFrameQueue = new LinkedBlockingQueue<>();
 
-    private volatile boolean isRunning = true;
-    private long lastFrameTimestamp = 0;
-    private final Scalar redColor = new Scalar(0, 0, 255, 0);
-
-
     // Current state
     private volatile List<Detection> currentDetections = new ArrayList<>();
     private volatile int frameCounter = 0;
+    private volatile boolean isRunning = true;
 
 
     private final ProgramSettings settings = ProgramSettings.getCurrentSettings();
+    private final Scalar redColor = new Scalar(0, 0, 255, 0);
 
-    public FrameHandler(JLabel cameraFeed, VideoCapture camera, OnnxRunner onnxRunner, SessionHandler sessionHandler) {
+
+    public FrameManager(JLabel cameraFeed, VideoCapture camera, OnnxRunner onnxRunner, SessionHandler sessionHandler) {
         this.cameraFeed = cameraFeed;
         this.camera = camera;
         this.timer = new Timer();
         this.onnxRunner = onnxRunner;
         this.sessionHandler = sessionHandler;
 
-        AIMsLogger.TRACE("Starting Frame Processing Thread");
         startFrameProcessingThread();
-        AIMsLogger.TRACE("Starting Display Thread");
         startDisplayThread();
-        AIMsLogger.TRACE("Starting Recording Thread");
         startRecordingThread();
     }
 
@@ -157,6 +150,7 @@ public class FrameHandler implements Runnable {
     }
 
     private void startFrameProcessingThread(){
+        AIMsLogger.TRACE("Starting Frame Processing Thread");
         processExecutor.submit(() -> {
             while(isRunning && !Thread.currentThread().isInterrupted()){
 
@@ -237,6 +231,7 @@ public class FrameHandler implements Runnable {
     }
 
     private void startDisplayThread(){
+        AIMsLogger.TRACE("Starting Display Thread");
         displayExecutor.submit(() -> {
             while(isRunning && !Thread.currentThread().isInterrupted()){
                 try {
@@ -259,6 +254,7 @@ public class FrameHandler implements Runnable {
     }
 
     private void startRecordingThread(){
+        AIMsLogger.TRACE("Starting Recording Thread");
         recordingExecutor.submit(() -> {
             while (isRunning || !Thread.currentThread().isInterrupted()) {
                 try {

@@ -1,4 +1,4 @@
-package io.github.tkjonesy.frontend.models;
+package io.github.tkjonesy.frontend.utils;
 
 import io.github.tkjonesy.frontend.mainGUI.DebugConsole;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
@@ -13,22 +13,6 @@ import javax.swing.SwingUtilities;
 public class DebugConsoleManager {
 
     /**
-     * Initializes the debug console based on the current program settings.
-     *
-     * @param settings The program settings
-     */
-    public static void initialize(ProgramSettings settings) {
-        boolean debugModeEnabled = settings.isDebugMode();
-
-        if (debugModeEnabled) {
-            startConsole();
-            AIMsLogger.INFO("Debug mode is enabled, starting debug console");
-        } else {
-            AIMsLogger.INFO("Debug mode is disabled");
-        }
-    }
-
-    /**
      * Toggles the debug console visibility.
      *
      * @return true if console is now visible, false otherwise
@@ -37,20 +21,6 @@ public class DebugConsoleManager {
         boolean newVisibility = !DebugConsole.getInstance().isVisible();
         DebugConsole.getInstance().setVisible(newVisibility);
         return newVisibility;
-    }
-
-    /**
-     * Starts the console by redirecting system output streams
-     */
-    private static void startConsole() {
-        AIMsLogger.startRedirection();
-    }
-
-    /**
-     * Stops the console and restores original system output streams
-     */
-    private static void stopConsole() {
-        AIMsLogger.stopRedirection();
     }
 
     /**

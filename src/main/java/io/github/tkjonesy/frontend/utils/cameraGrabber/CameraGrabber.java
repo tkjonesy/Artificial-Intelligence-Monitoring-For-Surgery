@@ -1,5 +1,6 @@
-package io.github.tkjonesy.frontend.models.cameraGrabber;
+package io.github.tkjonesy.frontend.utils.cameraGrabber;
 
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import org.bytedeco.javacv.FrameGrabber;
 import org.bytedeco.javacv.OpenCVFrameGrabber;
 import org.bytedeco.opencv.opencv_videoio.VideoCapture;
@@ -46,7 +47,7 @@ public abstract class CameraGrabber {
                 grabber.stop();
                 validIndexes.put("Camera " + i, i);
             } catch (FrameGrabber.Exception e) {
-                System.out.println("Camera index " + i + " failed to initialize.");
+                AIMsLogger.FATAL("Camera index " + i + " failed to initialize.");
             }
         }
         return validIndexes;
