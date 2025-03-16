@@ -2,8 +2,9 @@ package io.github.tkjonesy.frontend.mainGUI;
 
 import io.github.tkjonesy.frontend.App;
 import io.github.tkjonesy.frontend.miscGUI.SessionInputDialog;
-import io.github.tkjonesy.frontend.models.DebugConsoleManager;
+import io.github.tkjonesy.frontend.utils.DebugConsoleManager;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
+import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.Getter;
 
 import javax.swing.*;
@@ -84,6 +85,12 @@ public class ButtonPanel extends JPanel {
             boolean isVisible = DebugConsoleManager.toggleConsole();
             debugButton.setText(isVisible ? "Hide Debug" : "Debug Console");
         });
+    }
+
+    public void updateDebugButtonVisibility(){
+        if(debugButton!= null) {
+            debugButton.setVisible(ProgramSettings.getCurrentSettings().isDebugMode());
+        }
     }
 
     private void setupLayout() {

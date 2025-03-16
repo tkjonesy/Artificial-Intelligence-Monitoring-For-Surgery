@@ -17,11 +17,11 @@ import io.github.tkjonesy.ONNX.models.OnnxRunner;
 import io.github.tkjonesy.frontend.mainGUI.ButtonPanel;
 import io.github.tkjonesy.frontend.mainGUI.CameraPanel;
 import io.github.tkjonesy.frontend.mainGUI.LoggingPanel;
-import io.github.tkjonesy.frontend.models.*;
+import io.github.tkjonesy.frontend.utils.*;
 import io.github.tkjonesy.frontend.miscGUI.SplashScreen;
-import io.github.tkjonesy.frontend.models.cameraGrabber.CameraGrabber;
-import io.github.tkjonesy.frontend.models.cameraGrabber.MacOSCameraGrabber;
-import io.github.tkjonesy.frontend.models.cameraGrabber.WindowsCameraGrabber;
+import io.github.tkjonesy.frontend.utils.cameraGrabber.CameraGrabber;
+import io.github.tkjonesy.frontend.utils.cameraGrabber.MacOSCameraGrabber;
+import io.github.tkjonesy.frontend.utils.cameraGrabber.WindowsCameraGrabber;
 import io.github.tkjonesy.utils.ErrorDialogManager;
 import io.github.tkjonesy.utils.Paths;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
@@ -32,14 +32,10 @@ import io.github.tkjonesy.utils.settings.SettingsLoader;
 import lombok.Getter;
 import lombok.Setter;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bytedeco.opencv.opencv_videoio.VideoCapture;
 import org.bytedeco.opencv.global.opencv_core;
 import org.bytedeco.javacpp.Loader;
 import org.opencv.core.CvException;
-
-import static io.github.tkjonesy.utils.settings.SettingsLoader.initializeAIMsDirectories;
 
 public class App extends JFrame {
 
@@ -51,8 +47,10 @@ public class App extends JFrame {
     @Setter
     private static VideoCapture camera;
 
-    private static final Logger logger = LogManager.getLogger(App.class);
-    public static final HashMap<String, Integer> AVAILABLE_CAMERAS;
+    @Getter
+    private ButtonPanel buttonPanel;
+
+    public static HashMap<String, Integer> AVAILABLE_CAMERAS = null;
     private static final SplashScreen splashScreen;
     static {
 
@@ -66,58 +64,31 @@ public class App extends JFrame {
         System.getProperty("org.bytedeco.javacpp.maxphysicalbytes", "0");
         System.getProperty("org.bytedeco.javacpp.maxbytes", "0");
         opencv_core.setNumThreads(1);
-
-        // Load the camera devices from the user's system
-        CameraGrabber grabber;
-        if(System.getProperty("os.name").toLowerCase().contains("mac")) {
-            grabber = new MacOSCameraGrabber();
-        } else if(System.getProperty("os.name").toLowerCase().contains("windows")) {
-            grabber = new WindowsCameraGrabber();
-        }else{
-            throw new UnsupportedOperationException("Unsupported OS");
-        }
-
-        AVAILABLE_CAMERAS = grabber.getCameraNames();
     }
 
-    private Thread cameraFetcherThread;
+    private final Thread cameraFetcherThread;
     private CameraPanel cameraPanel;
     private LoggingPanel loggingPanel;
 
     @Getter
     private final SessionHandler sessionHandler;
-    private final ProgramSettings settings;
+    private ProgramSettings settings;
 
-    private FrameHandler frameHandler;
-    @Getter
-    private JLabel cameraFeed;
+    private final FrameManager frameManager;
     @Getter
     @Setter
     private JTextPane logTextPane;
-    private JPanel trackerPanel;
-
-    private static final Color CHARCOAL = new Color(30, 31, 34);
 
     public App() {
         instance = this;
 
-        // Load settings from file
-        this.settings = SettingsLoader.loadSettings();
+        initializeSettings();
 
-        if(settings == null) {
-            AIMsLogger.ERROR("Failed to load settings from file. Exiting application.");
-            ErrorDialogManager.displayErrorDialogFatal("Failed to load settings from file. Exiting application.");
-        }
-
-        ProgramSettings.setCurrentSettings(settings);
-        AIMsLogger.initialize(ProgramSettings.getCurrentSettings());
-
-        AIMsLogger.INFO("Settings: " + settings);
-
+        collectAvailableCameras();
 
         // Initialize the directories for AIMs
         try{
-            initializeAIMsDirectories();
+            SettingsLoader.initializeAIMsDirectories();
         }catch (RuntimeException e){
             AIMsLogger.ERROR("Failed to initialize AIMs directories. Exiting application.");
             ErrorDialogManager.displayErrorDialogFatal("Failed to initialize AIMs directories. Exiting application.");
@@ -134,15 +105,43 @@ public class App extends JFrame {
 
         updateCamera(settings.getCameraDeviceId());
 
-
         // Camera fetcher thread task
-        FrameHandler frameHandler = new FrameHandler(this.cameraPanel.getCameraFeed(), camera, onnxRunner, sessionHandler);
-        cameraFetcherThread = new Thread(frameHandler);
+        frameManager = new FrameManager(this.cameraPanel.getCameraFeed(), camera, onnxRunner, sessionHandler);
+        cameraFetcherThread = new Thread(frameManager);
         cameraFetcherThread.start();
 
         // Close the splash screen and display the application
         splashScreen.closeSplash();
         this.setVisible(true);
+    }
+
+    private void initializeSettings(){
+        // Load settings from file
+        this.settings = SettingsLoader.loadSettings();
+
+        if(settings == null) {
+            AIMsLogger.ERROR("Failed to load settings from file. Exiting application.");
+            ErrorDialogManager.displayErrorDialogFatal("Failed to load settings from file. Exiting application.");
+        }
+
+        ProgramSettings.setCurrentSettings(settings);
+        AIMsLogger.initialize(ProgramSettings.getCurrentSettings());
+
+        AIMsLogger.INFO("Settings: " + settings);
+    }
+
+    private void collectAvailableCameras(){
+        // Load the camera devices from the user's system
+        CameraGrabber grabber;
+        if(System.getProperty("os.name").toLowerCase().contains("mac")) {
+            grabber = new MacOSCameraGrabber();
+        } else if(System.getProperty("os.name").toLowerCase().contains("windows")) {
+            grabber = new WindowsCameraGrabber();
+        }else{
+            throw new UnsupportedOperationException("Unsupported OS");
+        }
+
+        AVAILABLE_CAMERAS = grabber.getCameraNames();
     }
 
     private void initComponents() {
@@ -165,7 +164,7 @@ public class App extends JFrame {
         // GUI Panels
         cameraPanel = new CameraPanel(new BorderLayout(), instance);
         loggingPanel = new LoggingPanel();
-        ButtonPanel buttonPanel = new ButtonPanel(instance);
+        buttonPanel = new ButtonPanel(instance);
 
         // Window Layout
         this.setLayout(new GridBagLayout());
@@ -239,8 +238,8 @@ public class App extends JFrame {
                     throw new CvException("Unable to open camera with ID: " + cameraId);
                 }
             }
-            if(frameHandler != null){
-                frameHandler.setCamera(camera);
+            if(frameManager != null){
+                frameManager.setCamera(camera);
             }
 
         }catch (CvException e) {

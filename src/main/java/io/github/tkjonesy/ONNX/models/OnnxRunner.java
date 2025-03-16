@@ -174,7 +174,7 @@ public class OnnxRunner {
             sessionActive = true;
             startCountPerClass = new HashMap<>();
             startCountPerClass.putAll(activeDetections);
-            System.out.println("✅ Initial tools captured: " + startCountPerClass);
+            AIMsLogger.INFO("Initial tools captured: " + startCountPerClass);
         }
 
         /*

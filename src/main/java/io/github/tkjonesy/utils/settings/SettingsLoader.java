@@ -1,6 +1,7 @@
 package io.github.tkjonesy.utils.settings;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +29,7 @@ public class SettingsLoader {
         if(defaultSettings != null){
             saveSettings(defaultSettings);
             ProgramSettings.setCurrentSettings(defaultSettings);
-            System.out.println("Reset settings to default.");
+            AIMsLogger.WARN("Reset settings to default.");
         }
     }
 
@@ -40,11 +41,11 @@ public class SettingsLoader {
 
         // If settings are null, load default settings from resources
         if(settings == null){
-            System.out.println("No settings file found, loading default settings.");
+            AIMsLogger.WARN("No settings file found, loading default settings.");
             settings = loadSettingsFromResource(objectMapper);
         }
 
-        System.out.println("Loaded settings." + settings);
+        AIMsLogger.TRACE("Loaded settings." + settings);
         // Save the settings to the file, then verify that the specified model and label files exist
         if(settings != null){
 
@@ -79,7 +80,6 @@ public class SettingsLoader {
 
                 // If the user's value is null but the default has a value, copy it over
                 if (userValue == null && defaultValue != null) {
-                    System.out.println("Setting default value for field: " + field.getName());
                     field.set(userSettings, defaultValue);
                 }
             }
@@ -96,10 +96,8 @@ public class SettingsLoader {
                 field.set(userSettings, cleanValue);
             }
 
-            System.out.println("Removed any extra settings not defined in ProgramSettings class");
-
         } catch (IllegalAccessException | IOException e) {
-            System.err.println("Failed to sync settings fields: " + e.getMessage());
+            AIMsLogger.ERROR("Failed to sync settings fields: " + e.getMessage());
         }
     }
 
@@ -136,7 +134,7 @@ public class SettingsLoader {
                     return settings;
                 }
             } catch (IOException e) {
-                System.err.println("Failed to load settings from file: " + e.getMessage());
+                AIMsLogger.ERROR("Failed to load settings from file: " + e.getMessage());
             }
         }
         return null;
@@ -147,10 +145,10 @@ public class SettingsLoader {
             if (inputStream != null) {
                 return objectMapper.readValue(inputStream, ProgramSettings.class);
             } else {
-                System.err.println("Default settings file not found in resources.");
+                AIMsLogger.FATAL("Default settings file not found in resources.");
             }
         } catch (IOException e) {
-            System.err.println("Failed to load default settings: " + e.getMessage());
+            AIMsLogger.FATAL("Failed to load default settings: " + e.getMessage());
         }
         return null;
     }
@@ -160,7 +158,7 @@ public class SettingsLoader {
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.writeValue(new File(AIMS_SETTINGS_FILE_PATH), settings);
         } catch (IOException e) {
-            System.err.println("Failed to save settings: " + e.getMessage());
+            AIMsLogger.FATAL("Failed to save settings: " + e.getMessage());
         }
     }
 
@@ -171,14 +169,14 @@ public class SettingsLoader {
 
         File modelFile = new File(modelPath);
         if (!modelFile.exists()) {
-            System.out.println("Model file not found, extracting default model.");
+            AIMsLogger.WARN("Model file not found, extracting default model.");
             modelPath = extractResourceIfMissing(RESOURCE_DEFAULT_MODEL_PATH, AIMS_MODELS_DIRECTORY + "/" + DEFAULT_MODEL + ".onnx");
             settings.setModelPath(modelPath);
         }
 
         File labelFile = new File(labelPath);
         if (!labelFile.exists()) {
-            System.out.println("Label file not found, extracting default labels.");
+            AIMsLogger.WARN("Label file not found, extracting default labels.");
             labelPath = extractResourceIfMissing(RESOURCE_DEFAULT_LABELS_PATH, AIMS_MODELS_DIRECTORY + "/" + DEFAULT_MODEL + ".names");
             settings.setLabelPath(labelPath);
         }
@@ -193,7 +191,7 @@ public class SettingsLoader {
                     throw new IOException("Resource not found inside JAR: " + resourcePath);
                 }
                 Files.copy(in, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("Extracted resource: " + resourcePath + " -> " + targetPath);
+                AIMsLogger.TRACE("Extracted resource: " + resourcePath + " -> " + targetPath);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to extract required resource: " + resourcePath, e);
             }
