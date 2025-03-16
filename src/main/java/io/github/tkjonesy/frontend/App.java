@@ -20,8 +20,6 @@ import io.github.tkjonesy.frontend.mainGUI.LoggingPanel;
 import io.github.tkjonesy.frontend.utils.*;
 import io.github.tkjonesy.frontend.miscGUI.SplashScreen;
 import io.github.tkjonesy.frontend.utils.cameraGrabber.CameraGrabber;
-import io.github.tkjonesy.frontend.utils.cameraGrabber.MacOSCameraGrabber;
-import io.github.tkjonesy.frontend.utils.cameraGrabber.WindowsCameraGrabber;
 import io.github.tkjonesy.utils.ErrorDialogManager;
 import io.github.tkjonesy.utils.Paths;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
@@ -29,7 +27,6 @@ import io.github.tkjonesy.utils.models.LogHandler;
 import io.github.tkjonesy.utils.models.SessionHandler;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import io.github.tkjonesy.utils.settings.SettingsLoader;
-import io.github.tkjonesy.ONNX.enums.InferenceLogEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -83,7 +80,7 @@ public class App extends JFrame {
     public App() {
         instance = this;
 
-        initializeSettings();
+        initializeSettingsAndLogger();
 
         collectAvailableCameras();
 
@@ -116,7 +113,7 @@ public class App extends JFrame {
         this.setVisible(true);
     }
 
-    private void initializeSettings(){
+    private void initializeSettingsAndLogger(){
         // Load settings from file
         this.settings = SettingsLoader.loadSettings();
 
@@ -128,8 +125,9 @@ public class App extends JFrame {
         ProgramSettings.setCurrentSettings(settings);
         AIMsLogger.initialize(ProgramSettings.getCurrentSettings());
 
-        InferenceLogEnum.LOG_ADDED.updateColor(settings.getLogAddedColor());
-        InferenceLogEnum.LOG_REMOVED.updateColor(settings.getLogRemovedColor());
+        if(settings.isDebugMode()) {
+            DebugConsoleManager.toggleConsole();
+        }
 
         AIMsLogger.INFO("Settings: " + settings);
     }
