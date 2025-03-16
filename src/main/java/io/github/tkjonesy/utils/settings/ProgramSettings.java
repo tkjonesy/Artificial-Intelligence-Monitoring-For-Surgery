@@ -2,7 +2,7 @@ package io.github.tkjonesy.utils.settings;
 
 import ai.onnxruntime.OrtSession;
 import io.github.tkjonesy.frontend.App;
-import io.github.tkjonesy.frontend.models.DebugConsoleManager;
+import io.github.tkjonesy.frontend.utils.DebugConsoleManager;
 import io.github.tkjonesy.utils.annotations.SettingsLabel;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import lombok.Getter;

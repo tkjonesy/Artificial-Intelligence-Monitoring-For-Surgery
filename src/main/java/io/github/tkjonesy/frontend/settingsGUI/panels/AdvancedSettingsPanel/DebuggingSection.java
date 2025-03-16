@@ -1,6 +1,5 @@
 package io.github.tkjonesy.frontend.settingsGUI.panels.AdvancedSettingsPanel;
 
-import io.github.tkjonesy.frontend.models.DebugConsoleManager;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsUI;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
@@ -65,6 +64,7 @@ public class DebuggingSection extends JPanel implements SettingsUI {
         addSettingChangeListener(debugModeCheckbox, (ActionListener)
                 e -> {
                     boolean value = debugModeCheckbox.isSelected();
+                    AIMsLogger.TRACE("Debug mode set to " + value);
                     settingsUpdates.put("debugMode", value);
                     if(settings.isDebugMode() == value)
                         settingsUpdates.remove("debugMode");
@@ -74,6 +74,7 @@ public class DebuggingSection extends JPanel implements SettingsUI {
         addSettingChangeListener(continuousLoggingCheckbox, (ActionListener)
                 e -> {
                     boolean value = continuousLoggingCheckbox.isSelected();
+                    AIMsLogger.TRACE("Continuous logging set to " + value);
                     settingsUpdates.put("continuousLogging", value);
                     if(settings.isContinuousLogging() == value)
                         settingsUpdates.remove("continuousLogging");
@@ -83,6 +84,7 @@ public class DebuggingSection extends JPanel implements SettingsUI {
         addSettingChangeListener(showInferenceTimeCheckbox, (ActionListener)
                 e -> {
                     boolean value = showInferenceTimeCheckbox.isSelected();
+                    AIMsLogger.TRACE("Show inference time set to " + value);
                     settingsUpdates.put("showInferenceTime", value);
                     if(settings.isShowInferenceTime() == value)
                         settingsUpdates.remove("showInferenceTime");

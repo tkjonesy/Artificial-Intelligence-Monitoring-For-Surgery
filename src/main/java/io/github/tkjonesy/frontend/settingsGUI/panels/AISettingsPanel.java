@@ -4,6 +4,7 @@ import io.github.tkjonesy.frontend.settingsGUI.SettingsUI;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
 import io.github.tkjonesy.frontend.settingsGUI.listenersANDevents.AISettingsListener;
 import io.github.tkjonesy.frontend.settingsGUI.listenersANDevents.BoundingBoxColorChangeEvent;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 
 import javax.swing.*;
@@ -123,6 +124,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         this.addAISettingsListener(
                 newColor -> {
                     settingsUpdates.put("boundingBoxColor", newColor);
+                    AIMsLogger.TRACE("Bounding box color changed to: " + Arrays.toString(newColor));
                     if(Arrays.equals(settings.getBoundingBoxColor(), newColor))
                         settingsUpdates.remove("boundingBoxColor");
                     updateApplyButtonState();
@@ -151,7 +153,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                 e -> {
                     String value = (String) modelSelector.getSelectedItem();
                     String path = AIMS_MODELS_DIRECTORY + "/" + value;
-                    System.out.println("Model: " + modelSelector.getSelectedItem());
+                    AIMsLogger.TRACE("Selected model: " + value);
                     settingsUpdates.put("modelPath", path);
                     if(settings.getModelPath().equals(path))
                         settingsUpdates.remove("modelPath");
@@ -162,7 +164,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                 e -> {
                     String value = (String) labelSelector.getSelectedItem();
                     String path = AIMS_MODELS_DIRECTORY + "/" + value;
-                    System.out.println("Labels: " + labelSelector.getSelectedItem());
+                    AIMsLogger.TRACE("Selected label file: " + value);
                     settingsUpdates.put("labelPath", path);
                     if(settings.getLabelPath().equals(path))
                         settingsUpdates.remove("labelPath");
@@ -172,7 +174,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(boundingBoxCheckbox, (ActionListener)
                 e -> {
                     boolean value = boundingBoxCheckbox.isSelected();
-                    System.out.println("Bounding boxes: " + boundingBoxCheckbox.isSelected());
+                    AIMsLogger.TRACE("Bounding box visibility changed to: " + value);
                     settingsUpdates.put("showBoundingBoxes", value);
                     if(settings.isShowBoundingBoxes() == value)
                         settingsUpdates.remove("showBoundingBoxes");
@@ -182,7 +184,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(showLabelsCheckbox, (ActionListener)
                 e -> {
                     boolean value = showLabelsCheckbox.isSelected();
-                    System.out.println("Show labels: " + showLabelsCheckbox.isSelected());
+                    AIMsLogger.TRACE("Label visibility changed to: " + value);
                     settingsUpdates.put("showLabels", value);
                     if(settings.isShowLabels() == value)
                         settingsUpdates.remove("showLabels");
@@ -192,7 +194,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(showConfidencesCheckbox, (ActionListener)
                 e -> {
                     boolean value = showConfidencesCheckbox.isSelected();
-                    System.out.println("Show confidences: " + showConfidencesCheckbox.isSelected());
+                    AIMsLogger.TRACE("Confidence visibility changed to: " + value);
                     settingsUpdates.put("showConfidences", value);
                     if(settings.isShowConfidences() == value)
                         settingsUpdates.remove("showConfidences");
@@ -202,7 +204,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(processEveryNthFrameSpinner, (ChangeListener)
                 e -> {
                     int value = (int) processEveryNthFrameSpinner.getValue();
-                    System.out.println("Process every nth frame: " + processEveryNthFrameSpinner.getValue());
+                    AIMsLogger.TRACE("Processing every Nth frame changed to: " + value);
                     settingsUpdates.put("processEveryNthFrame", value);
                     if(settings.getProcessEveryNthFrame() == value)
                         settingsUpdates.remove("processEveryNthFrame");
@@ -212,7 +214,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(bufferThresholdSpinner, (ChangeListener)
                 e -> {
                     int value = (int) bufferThresholdSpinner.getValue();
-                    System.out.println("Buffer threshold: " + bufferThresholdSpinner.getValue());
+                    AIMsLogger.TRACE("Buffer threshold changed to: " + value);
                     settingsUpdates.put("bufferThreshold", value);
                     if(settings.getBufferThreshold() == value)
                         settingsUpdates.remove("bufferThreshold");
@@ -222,7 +224,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(confThresholdSlider, (ChangeListener)
                 e -> {
                     float value = confThresholdSlider.getValue() / 100f;
-                    System.out.println("Confidence threshold: " + value);
+                    AIMsLogger.TRACE("Confidence threshold changed to: " + value);
                     settingsUpdates.put("confThreshold", value);
                     if(settings.getConfThreshold() == value)
                         settingsUpdates.remove("confThreshold");

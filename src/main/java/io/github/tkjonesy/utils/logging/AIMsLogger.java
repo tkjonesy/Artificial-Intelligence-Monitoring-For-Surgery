@@ -1,9 +1,9 @@
 package io.github.tkjonesy.utils.logging;
 
-import io.github.tkjonesy.frontend.models.DebugConsoleManager;
+import io.github.tkjonesy.frontend.App;
+import io.github.tkjonesy.frontend.utils.DebugConsoleManager;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -37,7 +37,11 @@ public class AIMsLogger {
     public static void initialize(ProgramSettings settings) {
         debugModeEnabled = settings.isDebugMode() || settings.isContinuousLogging();
 
-        DebugConsoleManager.initialize(settings);
+        if(App.getInstance().getButtonPanel()!=null) {
+            App.getInstance().getButtonPanel().updateDebugButtonVisibility();
+        }
+
+        startRedirection();
     }
 
     /**
@@ -49,17 +53,6 @@ public class AIMsLogger {
         System.setErr(stderrPrintStream);
 
         TRACE("System output redirection started");
-    }
-
-    /**
-     * Stops redirecting system output streams and restores the originals
-     */
-    public static void stopRedirection() {
-        TRACE("System output redirection stopped");
-
-        // Restore original streams
-        System.setOut(originalSystemOut);
-        System.setErr(originalSystemErr);
     }
 
     public static void TRACE(String message) {
@@ -121,7 +114,8 @@ public class AIMsLogger {
             if (c == '\n') {
                 String message = buffer.toString();
                 if (debugModeEnabled) {
-                    DebugConsoleManager.displayLog(message, isErrorStream);
+                    String timestampedMessage = addTimestamp("[CONSOLE] "+message);
+                    DebugConsoleManager.displayLog(timestampedMessage, isErrorStream);
                 }
                 buffer.setLength(0);
             } else {

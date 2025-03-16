@@ -3,6 +3,7 @@ package io.github.tkjonesy.frontend.settingsGUI.panels;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsUI;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
 import io.github.tkjonesy.utils.Paths;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 
 import javax.swing.*;
@@ -83,8 +84,11 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(customSaveOption, (ActionListener)
                 e -> {
                     folderSelectorButton.setEnabled(true);
-                    settingsUpdates.put("fileDirectory", selectedFolderLabel.getText());
-                    if(settings.getFileDirectory().equals(selectedFolderLabel.getText()))
+                    String selectedFolderPath = selectedFolderLabel.getText();
+                    AIMsLogger.TRACE("Custom save option selected: "+ selectedFolderPath);
+
+                    settingsUpdates.put("fileDirectory", selectedFolderPath);
+                    if(settings.getFileDirectory().equals(selectedFolderPath))
                         settingsUpdates.remove("fileDirectory");
                 }
         );
@@ -92,6 +96,7 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(defaultSaveOption, (ActionListener)
                 e -> {
                     folderSelectorButton.setEnabled(false);
+                    AIMsLogger.TRACE("Default save option selected");
                     selectedFolderLabel.setText(Paths.DEFAULT_AIMS_SESSIONS_DIRECTORY);
                     if(settings.getFileDirectory().equals(Paths.DEFAULT_AIMS_SESSIONS_DIRECTORY))
                         settingsUpdates.remove("fileDirectory");
@@ -116,6 +121,7 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(saveVideoCheckbox, (ActionListener)
                 e -> {
                     boolean value = saveVideoCheckbox.isSelected();
+                    AIMsLogger.TRACE("Save video checkbox selected: "+ value);
                     settingsUpdates.put("saveVideo", value);
                     if(settings.isSaveVideo() == value)
                         settingsUpdates.remove("saveVideo");
@@ -124,6 +130,7 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(saveLogsTextCheckbox, (ActionListener)
                 e -> {
                     boolean value = saveLogsTextCheckbox.isSelected();
+                    AIMsLogger.TRACE("Save logs as text checkbox selected: "+ value);
                     settingsUpdates.put("saveLogsTEXT", value);
                     if(settings.isSaveLogsTEXT() == value)
                         settingsUpdates.remove("saveLogsTEXT");
@@ -132,6 +139,7 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(saveLogsCSVCheckbox, (ActionListener)
                 e -> {
                     boolean value = saveLogsCSVCheckbox.isSelected();
+                    AIMsLogger.TRACE("Save logs as CSV checkbox selected: "+ value);
                     settingsUpdates.put("saveLogsCSV", value);
                     if(settings.isSaveLogsCSV() == value)
                         settingsUpdates.remove("saveLogsCSV");

@@ -1,4 +1,4 @@
-package io.github.tkjonesy.frontend.models.cameraGrabber;
+package io.github.tkjonesy.frontend.utils.cameraGrabber;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

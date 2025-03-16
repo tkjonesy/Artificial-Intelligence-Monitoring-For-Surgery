@@ -57,7 +57,7 @@ public class OnnxRunnerDetectionTest {
         onnxRunner = spy(new OnnxRunner(inferenceLogQueue));
 
         setPrivateField(onnxRunner, "inferenceSession", mockInferenceSession);
-        setPrivateField(onnxRunner, "logQueue", inferenceLogQueue);
+        setPrivateField(onnxRunner, "inferenceLogQueue", inferenceLogQueue);
         onnxRunner.setBufferThreshold(3);
     }
 
