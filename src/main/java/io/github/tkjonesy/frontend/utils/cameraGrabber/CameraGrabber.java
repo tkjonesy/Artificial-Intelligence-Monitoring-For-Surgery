@@ -23,6 +23,7 @@ public abstract class CameraGrabber {
 
     private static final int MAX_CAMERAS_TO_CHECK = 10;
     private static final int CONNECTION_TIMEOUT_MS = 2000; // Increased timeout
+    private static final String osName = System.getProperty("os.name").toLowerCase();
 
     /**
      * Creates the appropriate CameraGrabber for the current operating system.
@@ -30,7 +31,6 @@ public abstract class CameraGrabber {
      * @return A platform-appropriate CameraGrabber instance
      */
     public static CameraGrabber createForPlatform() {
-        String osName = System.getProperty("os.name").toLowerCase();
 
         if (osName.contains("win")) {
             return new WindowsCameraGrabber();
@@ -78,13 +78,19 @@ public abstract class CameraGrabber {
         HashMap<String, Integer> cameraMap = new HashMap<>();
 
         // Map indices to names
-        for (int i = 0; i < cameraIndices.size(); i++) {
-            int index = cameraIndices.get(i);
-
+        for (int i = 0; i <cameraIndices.size(); i++) {
+            int index;
+            if(osName.contains("mac")) {
+                index = cameraIndices.get(cameraIndices.size() - 1 - i);
+            }else{
+                index = cameraIndices.get(i);
+            }
+            AIMsLogger.TRACE("Getting Camera name for index: " + index);
             // Use platform-specific name if available, otherwise use a generic name
             String cameraName;
             if (i < platformSpecificNames.size() && !platformSpecificNames.get(i).isEmpty()) {
                 cameraName = platformSpecificNames.get(i);
+                AIMsLogger.TRACE("Camera name: " + cameraName);
             } else {
                 cameraName = "Camera " + index;
             }
