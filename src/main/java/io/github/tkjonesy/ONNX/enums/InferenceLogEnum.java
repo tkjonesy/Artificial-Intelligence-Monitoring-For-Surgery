@@ -2,7 +2,7 @@ package io.github.tkjonesy.ONNX.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
+import io.github.tkjonesy.utils.settings.ProgramSettings;
 import java.awt.Color;
 
 /**
@@ -10,21 +10,32 @@ import java.awt.Color;
  * It is used to classify log entries by type, such as errors, informational messages, and successes.
  */
 @Getter
-@AllArgsConstructor
 public enum InferenceLogEnum {
+    WARNING(Color.YELLOW),
+    LOG_ADDED(getLogAddedColor()),  // New dynamic color
+    LOG_REMOVED(getLogRemovedColor()); // New dynamic color
 
-    /** Log type for error messages, displayed in red. */
-    REMOVE(Color.RED),
+    private Color color;
 
-    /** Log type for informational messages, displayed in yellow. */
-    INFO(Color.YELLOW),
+    InferenceLogEnum(Color color) {
+        this.color = color;
+    }
 
-    /** Log type for success messages, displayed in green. */
-    ADD(Color.GREEN),
+    public Color getColor() {
+        return color;
+    }
 
-    /** Default log type, displayed in dark gray. */
-    DEFAULT(Color.DARK_GRAY);
+    public void updateColor(Color newColor) {
+        this.color = newColor;
+    }
 
-    /** The color associated with the log type. */
-    private final Color color;
+    private static Color getLogAddedColor() {
+        int[] colorArray = ProgramSettings.getCurrentSettings().getLogAddedColor();
+        return new Color(colorArray[0], colorArray[1], colorArray[2]);
+    }
+
+    private static Color getLogRemovedColor() {
+        int[] colorArray = ProgramSettings.getCurrentSettings().getLogRemovedColor();
+        return new Color(colorArray[0], colorArray[1], colorArray[2]);
+    }
 }

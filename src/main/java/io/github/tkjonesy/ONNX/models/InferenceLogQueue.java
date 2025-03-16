@@ -1,6 +1,7 @@
 package io.github.tkjonesy.ONNX.models;
 
 import io.github.tkjonesy.ONNX.enums.InferenceLogEnum;
+import io.github.tkjonesy.utils.settings.ProgramSettings;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -30,30 +31,51 @@ public class InferenceLogQueue {
     }
 
     /**
-     * Adds an error log (red) to the queue.
+     * Adds an error log to the queue.
      *
      * @param message The message to be logged with an error level.
      */
     public void addRedLog(String message) {
-        inferenceLogs.add(new InferenceLog(InferenceLogEnum.REMOVE, message));
+        InferenceLogEnum logType = InferenceLogEnum.LOG_REMOVED;
+        logType.updateColor(getLogRemovedColor());
+        inferenceLogs.add(new InferenceLog(logType, message));
     }
 
     /**
      * Adds an informational log (yellow) to the queue.
      *
      * @param message The message to be logged with an informational level.
-     */
+
     public void addYellowLog(String message) {
         inferenceLogs.add(new InferenceLog(InferenceLogEnum.INFO, message));
-    }
+    } */
 
     /**
-     * Adds a success log (green) to the queue.
+     * Adds a success log to the queue.
      *
      * @param message The message to be logged with a success level.
      */
     public void addGreenLog(String message) {
-        inferenceLogs.add(new InferenceLog(InferenceLogEnum.ADD, message));
+        InferenceLogEnum logType = InferenceLogEnum.LOG_ADDED;
+        logType.updateColor(getLogAddedColor());
+        inferenceLogs.add(new InferenceLog(logType, message));
+
+    }
+
+    /**
+     * Gets the dynamically updated "Added" color from settings.
+     */
+    private static java.awt.Color getLogAddedColor() {
+        int[] colorArray = ProgramSettings.getCurrentSettings().getLogAddedColor();
+        return new java.awt.Color(colorArray[0], colorArray[1], colorArray[2]);
+    }
+
+    /**
+     * Gets the dynamically updated "Removed" color from settings.
+     */
+    private static java.awt.Color getLogRemovedColor() {
+        int[] colorArray = ProgramSettings.getCurrentSettings().getLogRemovedColor();
+        return new java.awt.Color(colorArray[0], colorArray[1], colorArray[2]);
     }
 
     /**
