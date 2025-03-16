@@ -5,6 +5,7 @@ import io.github.tkjonesy.ONNX.Detection;
 import io.github.tkjonesy.ONNX.Yolo;
 import io.github.tkjonesy.ONNX.YoloV8;
 import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.models.LogHandler;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.*;
@@ -120,13 +121,16 @@ public class OnnxRunner {
             Instant start = Instant.now();
             detectionList = inferenceSession.run(frame);
             Instant end = Instant.now();
-            long timeElapsed = end.toEpochMilli() - start.toEpochMilli();
-            System.out.println("Inference time: " + timeElapsed + "ms");
+
+            if(settings.isShowInferenceTime()){
+                long timeElapsed = end.toEpochMilli() - start.toEpochMilli();
+                AIMsLogger.INFO("Inference time: " + timeElapsed + "ms");
+            }
 
         } catch (OrtException ortException) {
             inferenceLogQueue.addRedLog("Error running inference: " + ortException.getMessage());
             LogHandler.forceProcessNextLog();
-            System.err.println("Error running inference: " + ortException.getMessage());
+            AIMsLogger.ERROR("Error running inference: " + ortException.getMessage());
         }
         return new OnnxOutput(detectionList);
     }

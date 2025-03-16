@@ -7,18 +7,12 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 
 /**
- * A debug console window that captures and displays System.out and System.err output.
- * This component is useful for debugging and monitoring application logs.
+ * A debug console window that displays log messages.
+ * This component is focused on UI display only.
  */
 public class DebugConsole extends JFrame {
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
     private static final Color BACKGROUND_COLOR = new Color(30, 31, 34);
     private static final Color DEFAULT_TEXT_COLOR = Color.WHITE;
     private static final Color ERROR_TEXT_COLOR = new Color(255, 80, 80);
@@ -28,11 +22,14 @@ public class DebugConsole extends JFrame {
     @Getter
     private final JTextPane consoleTextPane;
     private final StyledDocument document;
-    private final PrintStream originalSystemOut;
-    private final PrintStream originalSystemErr;
+
+    @Getter
     private final Style defaultStyle;
+    @Getter
     private final Style errorStyle;
+    @Getter
     private final Style infoStyle;
+    @Getter
     private final Style debugStyle;
 
     private static DebugConsole instance;
@@ -50,10 +47,6 @@ public class DebugConsole extends JFrame {
 
     private DebugConsole() {
         super("AIMs DEBUG");
-
-        // Save original streams
-        originalSystemOut = System.out;
-        originalSystemErr = System.err;
 
         setSize(800, 600);
         setMinimumSize(new Dimension(400, 300));
@@ -102,24 +95,21 @@ public class DebugConsole extends JFrame {
     }
 
     /**
-     * Starts the debug console by redirecting System.out and System.err
+     * Displays a log message to the console with the specified style
+     *
+     * @param message The message to log
+     * @param style The style to apply to the message
      */
-    public void startConsole() {
-        // Redirect system output streams
-        System.setOut(new PrintStream(new ConsoleOutputStream(defaultStyle), true));
-        System.setErr(new PrintStream(new ConsoleOutputStream(errorStyle), true));
+    public void displayLog(String message, Style style) {
+        try {
+            document.insertString(document.getLength(), message + "\n", style);
 
-        // Log that the console has started
-        appendLog("Debug console started - System.out and System.err are now redirected", infoStyle);
-    }
-
-    /**
-     * Stops the debug console and restores original System.out and System.err
-     */
-    public void stopConsole() {
-        System.setOut(originalSystemOut);
-        System.setErr(originalSystemErr);
-        appendLog("Debug console stopped", infoStyle);
+            // Auto-scroll to bottom
+            consoleTextPane.setCaretPosition(document.getLength());
+        } catch (BadLocationException e) {
+            // If we can't log to the console, print to the original out
+            System.err.println("Error logging to debug console: " + e.getMessage());
+        }
     }
 
     /**
@@ -128,71 +118,9 @@ public class DebugConsole extends JFrame {
     public void clearConsole() {
         try {
             document.remove(0, document.getLength());
-            appendLog("Console cleared", infoStyle);
+            displayLog("Console cleared", infoStyle);
         } catch (BadLocationException e) {
-            appendLog("Error clearing console: " + e.getMessage(), errorStyle);
-        }
-    }
-
-    /**
-     * Appends a log message to the console with the current timestamp
-     *
-     * @param message The message to log
-     * @param style The style to apply to the message
-     */
-    public void appendLog(String message, Style style) {
-        try {
-            String timestamp = "[" + LocalTime.now().format(TIME_FORMATTER) + "] ";
-            document.insertString(document.getLength(), timestamp, infoStyle);
-            document.insertString(document.getLength(), message + "\n", style);
-
-            // Auto-scroll to bottom
-            consoleTextPane.setCaretPosition(document.getLength());
-        } catch (BadLocationException e) {
-            // If we can't log to the console, print to the original out
-            originalSystemErr.println("Error logging to debug console: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Logs an info message
-     *
-     * @param message The info message
-     */
-    public void info(String message) {
-        appendLog(message, infoStyle);
-    }
-
-    /**
-     * Logs an error message
-     *
-     * @param message The error message
-     */
-    public void error(String message) {
-        appendLog(message, errorStyle);
-    }
-
-    /**
-     * Custom OutputStream that writes to the debug console
-     */
-    private class ConsoleOutputStream extends OutputStream {
-        private final StringBuilder buffer = new StringBuilder();
-        private final Style style;
-
-        public ConsoleOutputStream(Style style) {
-            this.style = style;
-        }
-
-        @Override
-        public void write(int b) {
-            char c = (char) b;
-            if (c == '\n') {
-                final String message = buffer.toString();
-                SwingUtilities.invokeLater(() -> appendLog(message, style));
-                buffer.setLength(0);
-            } else {
-                buffer.append(c);
-            }
+            displayLog("Error clearing console: " + e.getMessage(), errorStyle);
         }
     }
 }

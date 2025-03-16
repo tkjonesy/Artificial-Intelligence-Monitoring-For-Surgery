@@ -28,7 +28,9 @@
   "inputSize": 640,
   "inputShape": [1, 3, 640, 640],
 
+  "continuousLogging": true,
   "debugMode": false,
+  "showInferenceTime": false,
 
   "notZeroNum": 1
 }

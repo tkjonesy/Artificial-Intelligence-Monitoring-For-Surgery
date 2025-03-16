@@ -4,6 +4,7 @@ import ai.onnxruntime.OrtSession;
 import io.github.tkjonesy.frontend.App;
 import io.github.tkjonesy.frontend.models.DebugConsoleManager;
 import io.github.tkjonesy.utils.annotations.SettingsLabel;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -12,7 +13,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
-import java.util.UUID;
 
 @SuppressWarnings("unused")
 @Getter
@@ -88,6 +88,10 @@ public class ProgramSettings {
 
     @SettingsLabel(value = "debugMode", type = Boolean.class)
     private boolean debugMode;
+    @SettingsLabel(value = "continuousLogging", type = Boolean.class)
+    private boolean continuousLogging;
+    @SettingsLabel(value = "showInferenceTime", type = Boolean.class)
+    private boolean showInferenceTime;
 
     @SettingsLabel(value = "notZeroNum", type = Integer.class)
     private int notZeroNum;
@@ -95,7 +99,7 @@ public class ProgramSettings {
     // -------------------------------------------------------------------------
 
     public void updateSettings(HashMap<String, Object> newSettings) {
-        boolean updateONNX = false, updateCamera = false, updateBuffer = false;
+        boolean updateONNX = false, updateCamera = false, updateBuffer = false, updateDebug = false;
         for (String key : newSettings.keySet()) {
             setSettings(key, newSettings.get(key));
             if(key.equals("modelPath") || key.equals("labelPath") || key.equals("useGPU")){
@@ -107,6 +111,9 @@ public class ProgramSettings {
             if(key.equals("bufferThreshold")){
                 updateBuffer = true;
             }
+            if(key.equals("debugMode") || key.equals("continuousLogging")){
+                updateDebug = true;
+            }
         }
         if(updateONNX){
             App.getOnnxRunner().updateInferenceSession(modelPath, labelPath);
@@ -116,6 +123,9 @@ public class ProgramSettings {
         }
         if(updateCamera){
             App.getInstance().updateCamera((int)newSettings.get("cameraDeviceId"));
+        }
+        if(updateDebug){
+            AIMsLogger.initialize(this);
         }
 
         SettingsLoader.saveSettings(this);
@@ -133,12 +143,12 @@ public class ProgramSettings {
                             field.set(this, value);
 
                         } else {
-                            DebugConsoleManager.error("Type mismatch: Cannot assign " +
+                            DebugConsoleManager.ERROR("Type mismatch: Cannot assign " +
                                     value.getClass().getSimpleName() + " to " +
                                     annotation.type().getSimpleName());
                         }
                     } catch (IllegalAccessException e) {
-                        DebugConsoleManager.error("Failed to set value for " + label + ": " + e.getMessage());
+                        DebugConsoleManager.ERROR("Failed to set value for " + label + ": " + e.getMessage());
                     }
                     return;
                 }

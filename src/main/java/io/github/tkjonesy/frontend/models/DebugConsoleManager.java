@@ -4,12 +4,13 @@ import io.github.tkjonesy.frontend.mainGUI.DebugConsole;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 
+import javax.swing.SwingUtilities;
+
 /**
  * Manages the debug console window.
  * This class provides static methods for showing, hiding, and logging to the debug console.
  */
 public class DebugConsoleManager {
-    private static boolean debugModeEnabled = false;
 
     /**
      * Initializes the debug console based on the current program settings.
@@ -17,33 +18,14 @@ public class DebugConsoleManager {
      * @param settings The program settings
      */
     public static void initialize(ProgramSettings settings) {
-        debugModeEnabled = true;
+        boolean debugModeEnabled = settings.isDebugMode();
 
         if (debugModeEnabled) {
-            AIMsLogger.info("Debug mode is enabled, starting debug console");
-            DebugConsole.getInstance().startConsole();
+            startConsole();
+            AIMsLogger.INFO("Debug mode is enabled, starting debug console");
         } else {
-            AIMsLogger.info("Debug mode is disabled");
+            AIMsLogger.INFO("Debug mode is disabled");
         }
-    }
-
-    /**
-     * Shows the debug console window.
-     */
-    public static void showConsole() {
-        DebugConsole.getInstance().setVisible(true);
-
-        if (!debugModeEnabled) {
-            DebugConsole.getInstance().startConsole();
-            debugModeEnabled = true;
-        }
-    }
-
-    /**
-     * Hides the debug console window.
-     */
-    public static void hideConsole() {
-        DebugConsole.getInstance().setVisible(false);
     }
 
     /**
@@ -54,33 +36,37 @@ public class DebugConsoleManager {
     public static boolean toggleConsole() {
         boolean newVisibility = !DebugConsole.getInstance().isVisible();
         DebugConsole.getInstance().setVisible(newVisibility);
-
-        if (newVisibility && !debugModeEnabled) {
-            DebugConsole.getInstance().startConsole();
-            debugModeEnabled = true;
-        }
-
         return newVisibility;
     }
 
     /**
-     * Enables debug mode and starts the console.
+     * Starts the console by redirecting system output streams
      */
-    public static void enableDebugMode() {
-        if (!debugModeEnabled) {
-            DebugConsole.getInstance().startConsole();
-            debugModeEnabled = true;
-        }
+    private static void startConsole() {
+        AIMsLogger.startRedirection();
     }
 
     /**
-     * Disables debug mode and stops the console.
+     * Stops the console and restores original system output streams
      */
-    public static void disableDebugMode() {
-        if (debugModeEnabled) {
-            DebugConsole.getInstance().stopConsole();
-            debugModeEnabled = false;
-        }
+    private static void stopConsole() {
+        AIMsLogger.stopRedirection();
+    }
+
+    /**
+     * Display a log message in the console
+     *
+     * @param message The message to display
+     * @param isError Whether this is an error message
+     */
+    public static void displayLog(String message, boolean isError) {
+        SwingUtilities.invokeLater(() -> {
+            if (isError) {
+                DebugConsole.getInstance().displayLog(message, DebugConsole.getInstance().getErrorStyle());
+            } else {
+                DebugConsole.getInstance().displayLog(message, DebugConsole.getInstance().getDefaultStyle());
+            }
+        });
     }
 
     /**
@@ -88,10 +74,10 @@ public class DebugConsoleManager {
      *
      * @param message The info message
      */
-    public static void info(String message) {
-        if (debugModeEnabled) {
-            DebugConsole.getInstance().info(message);
-        }
+    public static void INFO(String message) {
+        SwingUtilities.invokeLater(() ->
+                DebugConsole.getInstance().displayLog(message, DebugConsole.getInstance().getInfoStyle())
+        );
     }
 
     /**
@@ -99,9 +85,9 @@ public class DebugConsoleManager {
      *
      * @param message The error message
      */
-    public static void error(String message) {
-        if (debugModeEnabled) {
-            DebugConsole.getInstance().error(message);
-        }
+    public static void ERROR(String message) {
+        SwingUtilities.invokeLater(() ->
+                DebugConsole.getInstance().displayLog(message, DebugConsole.getInstance().getErrorStyle())
+        );
     }
 }
