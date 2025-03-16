@@ -8,58 +8,275 @@ import org.bytedeco.opencv.opencv_videoio.VideoCapture;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * Abstract base class for camera detection across different platforms.
+ * Provides a unified approach to camera detection with platform-specific
+ * optimizations handled by subclasses.
+ */
 public abstract class CameraGrabber {
 
+    private static final int MAX_CAMERAS_TO_CHECK = 10;
+    private static final int CONNECTION_TIMEOUT_MS = 2000; // Increased timeout
+
+    /**
+     * Creates the appropriate CameraGrabber for the current operating system.
+     *
+     * @return A platform-appropriate CameraGrabber instance
+     */
+    public static CameraGrabber createForPlatform() {
+        String osName = System.getProperty("os.name").toLowerCase();
+
+        if (osName.contains("win")) {
+            return new WindowsCameraGrabber();
+        } else if (osName.contains("mac")) {
+            return new MacOSCameraGrabber();
+        } else if (osName.contains("linux") || osName.contains("unix")) {
+            return new LinuxCameraGrabber();
+        } else {
+            // Default to generic implementation if OS is unknown
+            AIMsLogger.WARN("Unknown operating system: " + osName + ". Using default camera detection.");
+            return new GenericCameraGrabber();
+        }
+    }
+
+    /**
+     * Returns a mapping of camera names to their corresponding device indices.
+     * This method is the main entry point for camera detection.
+     *
+     * @return A HashMap mapping camera names to their device indices
+     */
     public HashMap<String, Integer> getCameraNames() {
-        List<Integer> cameraIndices = new ArrayList<>(getAvailableCameraIndices(10).values());
+        // First, quickly find available camera indices
+        List<Integer> cameraIndices = findAvailableCameraIndices();
+
+        // If no cameras found, return empty map
+        if (cameraIndices.isEmpty()) {
+            AIMsLogger.WARN("No cameras detected");
+            return new HashMap<>();
+        }
+
+        // Then map these indices to names
         return getCameraNamesFromIndices(cameraIndices);
     }
 
-    private HashMap<String, Integer> getCameraNamesFromIndices(List<Integer> cameraIndices) {
-        List<String> cameraNames = getSystemProfilerCameraNames();
+    /**
+     * Maps discovered camera indices to human-readable names.
+     * Uses platform-specific naming when available.
+     *
+     * @param cameraIndices List of available camera indices
+     * @return HashMap mapping camera names to their indices
+     */
+    private HashMap<String, Integer> getCameraNamesFromIndices(List<Integer> cameraIndices){
+        // Try to get platform-specific names
+        List<String> platformSpecificNames = getPlatformCameraNames();
         HashMap<String, Integer> cameraMap = new HashMap<>();
 
-        // Map OpenCV indices to camera names
+        // Map indices to names
         for (int i = 0; i < cameraIndices.size(); i++) {
             int index = cameraIndices.get(i);
-            String cameraName = (i < cameraNames.size()) ? cameraNames.get(i) : "Unknown Camera " + index;
+
+            // Use platform-specific name if available, otherwise use a generic name
+            String cameraName;
+            if (i < platformSpecificNames.size() && !platformSpecificNames.get(i).isEmpty()) {
+                cameraName = platformSpecificNames.get(i);
+            } else {
+                cameraName = "Camera " + index;
+            }
+
             cameraMap.put(cameraName, index);
         }
         return cameraMap;
     }
 
     /**
-     * Returns a HashMap mapping camera names to their corresponding OpenCV indices.
+     * Efficiently discovers available camera indices by checking
+     * multiple cameras in parallel with timeouts.
+     *
+     * @return List of available camera indices
      */
-    private HashMap<String, Integer> getAvailableCameraIndices(int maxIndex) {
-        HashMap<String, Integer> validIndexes = new HashMap<>();
+    private List<Integer> findAvailableCameraIndices() {
+        List<Integer> validIndices = new ArrayList<>();
 
-        for (int i = 0; i < maxIndex; i++) {
-
-            if (!isCameraPresentQuickly(i)) {
-                continue;
-            }
-
-            try (FrameGrabber grabber = new OpenCVFrameGrabber(i)) {
-                grabber.setTimeout(1000);
-                grabber.start();
-                grabber.stop();
-                validIndexes.put("Camera " + i, i);
-            } catch (FrameGrabber.Exception e) {
-                AIMsLogger.FATAL("Camera index " + i + " failed to initialize.");
+        // First try the simple approach which is faster and more reliable in most cases
+        for (int i = 0; i < MAX_CAMERAS_TO_CHECK; i++) {
+            if (isCameraPresent(i)) {
+                validIndices.add(i);
+                AIMsLogger.TRACE("Camera found quickly at index: " + i);
             }
         }
-        return validIndexes;
+
+        // If that didn't find any cameras, try the more thorough approach
+        if (validIndices.isEmpty()) {
+            AIMsLogger.INFO("No cameras found with quick check, trying thorough check...");
+            validIndices = findCamerasThoroughly();
+        }
+
+        return validIndices;
     }
 
-    private boolean isCameraPresentQuickly(int index) {
-        VideoCapture capture = new VideoCapture(index);
-        boolean isOpened = capture.isOpened();
-        capture.release();
-        return isOpened;
+    /**
+     * More thorough method to find cameras by actually trying to start
+     * the grabber and capture a frame.
+     */
+    private List<Integer> findCamerasThoroughly() {
+        List<Integer> validIndices = new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(MAX_CAMERAS_TO_CHECK);
+        List<Future<CameraCheckResult>> futures = new ArrayList<>();
+
+        // Submit camera check tasks
+        for (int i = 0; i < MAX_CAMERAS_TO_CHECK; i++) {
+            final int index = i;
+            futures.add(executor.submit(new CameraChecker(index)));
+        }
+
+        // Collect results
+        for (int i = 0; i < futures.size(); i++) {
+            try {
+                CameraCheckResult result = futures.get(i).get(CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                if (result.isAvailable) {
+                    validIndices.add(i);
+                    AIMsLogger.TRACE("Camera found at index: " + i);
+                }
+            } catch (Exception e) {
+                // Camera check timed out or failed - skip this index
+                AIMsLogger.TRACE("Camera check failed for index " + i + ": " + e.getMessage());
+            }
+        }
+
+        executor.shutdown();
+        return validIndices;
     }
 
+    /**
+     * Quick check if a camera is present at a specific index.
+     * This method is optimized for speed.
+     *
+     * @param index The index to check
+     * @return true if a camera is present, false otherwise
+     */
+    protected boolean isCameraPresent(int index) {
+        try {
+            VideoCapture capture = new VideoCapture(index);
+            boolean isOpened = capture.isOpened();
 
-    abstract List<String> getSystemProfilerCameraNames();
+            // On some systems, isOpened() may return true even if the device isn't usable
+            // Try to read a frame as a better check
+            if (isOpened) {
+                org.bytedeco.opencv.opencv_core.Mat testFrame = new org.bytedeco.opencv.opencv_core.Mat();
+                // Set a short timeout for read operation
+                capture.set(org.bytedeco.opencv.global.opencv_videoio.CAP_PROP_BUFFERSIZE, 1);
+
+                // Try to read a frame with timeout
+                long startTime = System.currentTimeMillis();
+                boolean frameRead = false;
+
+                while (System.currentTimeMillis() - startTime < 300) { // 300ms timeout
+                    if (capture.read(testFrame)) {
+                        frameRead = !testFrame.empty();
+                        if (frameRead) break;
+                    }
+                }
+
+                testFrame.release();
+                capture.release();
+                return frameRead;
+            }
+
+            capture.release();
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Abstract method to be implemented by platform-specific subclasses.
+     * Should return a list of descriptive names for detected cameras.
+     *
+     * @return List of camera names, which may be empty if platform-specific detection fails
+     */
+    protected abstract List<String> getPlatformCameraNames();
+
+    /**
+     * Helper class to check if a camera is available at a specific index
+     */
+    private static class CameraChecker implements Callable<CameraCheckResult> {
+        private final int index;
+
+        public CameraChecker(int index) {
+            this.index = index;
+        }
+
+        @Override
+        public CameraCheckResult call() {
+            // First try with OpenCVFrameGrabber
+            try(OpenCVFrameGrabber grabber = new OpenCVFrameGrabber(index)) {
+                grabber.setFormat("mjpeg");
+                grabber.setImageWidth(320);
+                grabber.setImageHeight(240);
+                grabber.start();
+
+                // Try to grab a frame
+                boolean success = false;
+                for (int attempt = 0; attempt < 3; attempt++) {
+                    try {
+                        if (grabber.grab() != null) {
+                            success = true;
+                            break;
+                        }
+                    } catch (Exception e) {
+                        // Ignore and try again
+                    }
+                }
+
+                grabber.stop();
+                grabber.release();
+
+                if (success) {
+                    return new CameraCheckResult(true);
+                }
+            } catch (Exception e) {
+                // Failed with OpenCVFrameGrabber, but we'll try another approach
+                AIMsLogger.TRACE("OpenCVFrameGrabber failed for index " + index + ": " + e.getMessage());
+            }
+
+            // Fallback to VideoCapture approach
+            try {
+                VideoCapture capture = new VideoCapture(index);
+                if (capture.isOpened()) {
+                    org.bytedeco.opencv.opencv_core.Mat frame = new org.bytedeco.opencv.opencv_core.Mat();
+                    boolean readSuccess = capture.read(frame);
+                    boolean notEmpty = !frame.empty();
+                    frame.release();
+                    capture.release();
+
+                    if (readSuccess && notEmpty) {
+                        return new CameraCheckResult(true);
+                    }
+                }
+            } catch (Exception e) {
+                // Both methods failed
+                AIMsLogger.TRACE("Both detection methods failed for index " + index);
+            }
+
+            return new CameraCheckResult(false);
+        }
+    }
+
+    /**
+     * Simple result class for camera availability check
+     */
+    private static class CameraCheckResult {
+        public final boolean isAvailable;
+
+        public CameraCheckResult(boolean isAvailable) {
+            this.isAvailable = isAvailable;
+        }
+    }
 }

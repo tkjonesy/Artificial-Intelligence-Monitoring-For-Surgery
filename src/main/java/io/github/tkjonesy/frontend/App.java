@@ -136,14 +136,7 @@ public class App extends JFrame {
 
     private void collectAvailableCameras(){
         // Load the camera devices from the user's system
-        CameraGrabber grabber;
-        if(System.getProperty("os.name").toLowerCase().contains("mac")) {
-            grabber = new MacOSCameraGrabber();
-        } else if(System.getProperty("os.name").toLowerCase().contains("windows")) {
-            grabber = new WindowsCameraGrabber();
-        }else{
-            throw new UnsupportedOperationException("Unsupported OS");
-        }
+        CameraGrabber grabber = CameraGrabber.createForPlatform();
 
         AVAILABLE_CAMERAS = grabber.getCameraNames();
     }
