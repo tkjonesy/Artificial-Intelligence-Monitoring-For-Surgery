@@ -36,9 +36,7 @@ public class InferenceLogQueue {
      * @param message The message to be logged with an error level.
      */
     public void addRedLog(String message) {
-        InferenceLogEnum logType = InferenceLogEnum.LOG_REMOVED;
-        logType.updateColor(getLogRemovedColor());
-        inferenceLogs.add(new InferenceLog(logType, message));
+        inferenceLogs.add(new InferenceLog(InferenceLogEnum.LOG_REMOVED, message));
     }
 
     /**
@@ -48,7 +46,8 @@ public class InferenceLogQueue {
 
     public void addYellowLog(String message) {
         inferenceLogs.add(new InferenceLog(InferenceLogEnum.INFO, message));
-    } */
+    }
+     */
 
     /**
      * Adds a success log to the queue.
@@ -56,10 +55,7 @@ public class InferenceLogQueue {
      * @param message The message to be logged with a success level.
      */
     public void addGreenLog(String message) {
-        InferenceLogEnum logType = InferenceLogEnum.LOG_ADDED;
-        logType.updateColor(getLogAddedColor());
-        inferenceLogs.add(new InferenceLog(logType, message));
-
+        inferenceLogs.add(new InferenceLog(InferenceLogEnum.LOG_ADDED, message));
     }
 
     /**
