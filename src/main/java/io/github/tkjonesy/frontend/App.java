@@ -29,6 +29,7 @@ import io.github.tkjonesy.utils.models.LogHandler;
 import io.github.tkjonesy.utils.models.SessionHandler;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import io.github.tkjonesy.utils.settings.SettingsLoader;
+import io.github.tkjonesy.ONNX.enums.InferenceLogEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -126,6 +127,9 @@ public class App extends JFrame {
 
         ProgramSettings.setCurrentSettings(settings);
         AIMsLogger.initialize(ProgramSettings.getCurrentSettings());
+
+        InferenceLogEnum.LOG_ADDED.updateColor(settings.getLogAddedColor());
+        InferenceLogEnum.LOG_REMOVED.updateColor(settings.getLogRemovedColor());
 
         AIMsLogger.INFO("Settings: " + settings);
     }

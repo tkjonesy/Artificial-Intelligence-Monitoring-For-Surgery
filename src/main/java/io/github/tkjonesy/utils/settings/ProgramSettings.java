@@ -5,6 +5,8 @@ import io.github.tkjonesy.frontend.App;
 import io.github.tkjonesy.frontend.utils.DebugConsoleManager;
 import io.github.tkjonesy.utils.annotations.SettingsLabel;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
+import io.github.tkjonesy.ONNX.enums.InferenceLogEnum;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -57,9 +59,9 @@ public class ProgramSettings {
     @SettingsLabel(value = "boundingBoxColor", type = int[].class)
     private int[] boundingBoxColor;
     @SettingsLabel(value = "logAddedColor", type = int[].class)
-    private int[] logAddedColor = new int[]{0, 255, 0};
+    private int[] logAddedColor;
     @SettingsLabel(value = "logRemovedColor", type = int[].class)
-    private int[] logRemovedColor = new int[]{255, 0, 0};
+    private int[] logRemovedColor;
     @SettingsLabel(value = "showBoundingBoxes", type = Boolean.class)
     private boolean showBoundingBoxes;
     @SettingsLabel(value = "showLabels", type = Boolean.class)
@@ -103,9 +105,11 @@ public class ProgramSettings {
     // -------------------------------------------------------------------------
 
     public void updateSettings(HashMap<String, Object> newSettings) {
-        boolean updateONNX = false, updateCamera = false, updateBuffer = false, updateDebug = false;
+        boolean updateONNX = false, updateCamera = false, updateBuffer = false, updateDebug = false, updateLogColors = false;
+
         for (String key : newSettings.keySet()) {
             setSettings(key, newSettings.get(key));
+
             if (key.equals("modelPath") || key.equals("labelPath") || key.equals("useGPU")) {
                 updateONNX = true;
             }
@@ -117,6 +121,9 @@ public class ProgramSettings {
             }
             if (key.equals("debugMode") || key.equals("continuousLogging")) {
                 updateDebug = true;
+            }
+            if (key.equals("logAddedColor") || key.equals("logRemovedColor")) {
+                updateLogColors = true;
             }
         }
         if (updateONNX) {
@@ -130,6 +137,10 @@ public class ProgramSettings {
         }
         if (updateDebug) {
             AIMsLogger.initialize(this);
+        }
+        if (updateLogColors) {
+            InferenceLogEnum.LOG_ADDED.updateColor(logAddedColor);
+            InferenceLogEnum.LOG_REMOVED.updateColor(logRemovedColor);
         }
 
         SettingsLoader.saveSettings(this);
