@@ -28,6 +28,7 @@ public class ErrorUtils {
 
             try (PrintWriter printWriter = new PrintWriter(new FileWriter(errorFilePath.toFile(), true))) {
                 printWriter.println("========== UNKNOWN ERROR OCCURRED ==========");
+                printWriter.println("Version: " + AppVersion.getCOMMIT_ID_FULL());
                 printWriter.println("Exception: " + e.getClass().getName());
                 printWriter.println("Message: " + e.getMessage());
                 printWriter.println("Stack Trace:");
