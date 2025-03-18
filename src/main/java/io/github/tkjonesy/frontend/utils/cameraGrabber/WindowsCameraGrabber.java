@@ -1,34 +1,34 @@
 package io.github.tkjonesy.frontend.utils.cameraGrabber;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
+import org.bytedeco.javacv.FrameGrabber;
+import org.bytedeco.javacv.VideoInputFrameGrabber;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Windows-specific implementation of the CameraGrabber.
+ * Uses DirectShow names when available.
+ */
 public class WindowsCameraGrabber extends CameraGrabber {
 
     /**
-     * Gets camera names from WMIC (Windows only).
+     * Gets camera names using Windows-specific methods.
      */
     @Override
-    public List<String> getSystemProfilerCameraNames() {
-        List<String> cameraNames = new ArrayList<>();
+    protected List<String> getPlatformCameraNames() {
+        AIMsLogger.TRACE("Getting camera names using Windows-specific methods");
+        List<String> cameras = new ArrayList<>();
         try {
-            Process process = new ProcessBuilder("wmic", "path", "Win32_PnPEntity", "get", "Name").start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                // Filters only camera-related devices
-                if (line.toLowerCase().contains("camera") || line.toLowerCase().contains("webcam") || line.toLowerCase().contains("usb video device")) {
-                    cameraNames.add(line);
-                }
-            }
-            process.waitFor();
-        } catch (Exception e) {
-            System.err.println("Error retrieving camera names: " + e.getMessage());
+            String[] deviceDescriptions = VideoInputFrameGrabber.getDeviceDescriptions();
+            cameras.addAll(Arrays.asList(deviceDescriptions));
+        }catch (FrameGrabber.Exception e) {
+            AIMsLogger.FATAL("Error getting camera names: " + e.getMessage());
         }
-        return cameraNames;
+
+
+        return cameras;
     }
 }

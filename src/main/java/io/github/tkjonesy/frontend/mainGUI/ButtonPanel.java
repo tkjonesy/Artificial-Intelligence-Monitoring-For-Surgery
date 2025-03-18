@@ -30,7 +30,8 @@ public class ButtonPanel extends JPanel {
         sessionButton = new JToggleButton("Start Session");
         sessionButton.setBackground(OCEAN);
         settingsButton = new JButton("Settings");
-        debugButton = new JButton("Debug Console");
+        String debugButtonText = DebugConsole.getInstance().isVisible() ? "Hide Debug" : "Debug Console";
+        debugButton = new JButton(debugButtonText);
     }
 
     private void initializeListeners() {

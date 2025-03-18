@@ -20,9 +20,8 @@ import io.github.tkjonesy.frontend.mainGUI.LoggingPanel;
 import io.github.tkjonesy.frontend.utils.*;
 import io.github.tkjonesy.frontend.miscGUI.SplashScreen;
 import io.github.tkjonesy.frontend.utils.cameraGrabber.CameraGrabber;
-import io.github.tkjonesy.frontend.utils.cameraGrabber.MacOSCameraGrabber;
-import io.github.tkjonesy.frontend.utils.cameraGrabber.WindowsCameraGrabber;
 import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.ErrorUtils;
 import io.github.tkjonesy.utils.Paths;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.models.LogHandler;
@@ -82,7 +81,7 @@ public class App extends JFrame {
     public App() {
         instance = this;
 
-        initializeSettings();
+        initializeSettingsAndLogger();
 
         collectAvailableCameras();
 
@@ -115,7 +114,7 @@ public class App extends JFrame {
         this.setVisible(true);
     }
 
-    private void initializeSettings(){
+    private void initializeSettingsAndLogger(){
         // Load settings from file
         this.settings = SettingsLoader.loadSettings();
 
@@ -127,19 +126,16 @@ public class App extends JFrame {
         ProgramSettings.setCurrentSettings(settings);
         AIMsLogger.initialize(ProgramSettings.getCurrentSettings());
 
+        if(settings.isDebugMode()) {
+            DebugConsoleManager.toggleConsole();
+        }
+
         AIMsLogger.INFO("Settings: " + settings);
     }
 
     private void collectAvailableCameras(){
         // Load the camera devices from the user's system
-        CameraGrabber grabber;
-        if(System.getProperty("os.name").toLowerCase().contains("mac")) {
-            grabber = new MacOSCameraGrabber();
-        } else if(System.getProperty("os.name").toLowerCase().contains("windows")) {
-            grabber = new WindowsCameraGrabber();
-        }else{
-            throw new UnsupportedOperationException("Unsupported OS");
-        }
+        CameraGrabber grabber = CameraGrabber.createForPlatform();
 
         AVAILABLE_CAMERAS = grabber.getCameraNames();
     }
@@ -256,6 +252,18 @@ public class App extends JFrame {
             AIMsLogger.ERROR("Unable to set Look and Feel to system default.");
         }
 
-        SwingUtilities.invokeLater(App::new);
+        try {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    new App();
+                } catch (Exception e) {
+                    ErrorUtils.saveExceptionToFile(e);
+                    ErrorDialogManager.displayErrorDialogFatal("An unknown error has occurred. The stacktrace has been saved to the error directory.");
+                }
+            });
+        }catch (Exception e) {
+            ErrorUtils.saveExceptionToFile(e);
+            ErrorDialogManager.displayErrorDialogFatal("An unknown error has occurred. The stacktrace has been saved to the error directory.");
+        }
     }
 }
