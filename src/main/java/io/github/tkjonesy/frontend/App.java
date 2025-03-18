@@ -20,6 +20,7 @@ import io.github.tkjonesy.frontend.mainGUI.LoggingPanel;
 import io.github.tkjonesy.frontend.utils.*;
 import io.github.tkjonesy.frontend.miscGUI.SplashScreen;
 import io.github.tkjonesy.frontend.utils.cameraGrabber.CameraGrabber;
+import io.github.tkjonesy.utils.AppVersion;
 import io.github.tkjonesy.utils.ErrorDialogManager;
 import io.github.tkjonesy.utils.ErrorUtils;
 import io.github.tkjonesy.utils.Paths;
@@ -83,6 +84,8 @@ public class App extends JFrame {
 
         initializeSettingsAndLogger();
 
+        AIMsLogger.INFO("Application Version: " + AppVersion.getCOMMIT_ID_FULL());
+
         collectAvailableCameras();
 
         // Initialize the directories for AIMs
@@ -111,7 +114,12 @@ public class App extends JFrame {
 
         // Close the splash screen and display the application
         splashScreen.closeSplash();
+
         this.setVisible(true);
+
+        if(settings.isDebugMode()) {
+            DebugConsoleManager.toggleConsole();
+        }
     }
 
     private void initializeSettingsAndLogger(){
@@ -126,10 +134,6 @@ public class App extends JFrame {
         ProgramSettings.setCurrentSettings(settings);
         AIMsLogger.initialize(ProgramSettings.getCurrentSettings());
 
-        if(settings.isDebugMode()) {
-            DebugConsoleManager.toggleConsole();
-        }
-
         AIMsLogger.INFO("Settings: " + settings);
     }
 
@@ -143,7 +147,7 @@ public class App extends JFrame {
     private void initComponents() {
 
         // Titling, sizing, and exit actions
-        this.setTitle("AIM: Surgical");
+        updateTitle();
         this.setMinimumSize(new Dimension(746, 401));
         this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
@@ -172,6 +176,16 @@ public class App extends JFrame {
         this.add(buttonPanel, buttonPanelConstraints);
         this.pack();
         this.setLocationRelativeTo(null); // Center application
+    }
+
+    public void updateTitle(){
+        String title;
+        if(settings.isDebugMode()) {
+            title = "AIMs - " + AppVersion.getCOMMIT_ID_ABBREV();
+        } else {
+            title = "AIMs";
+        }
+        this.setTitle(title);
     }
 
     private GridBagConstraints createConstraints(int gridX, int gridY, double weightX, double weightY) {
