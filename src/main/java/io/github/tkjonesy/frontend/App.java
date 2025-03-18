@@ -21,6 +21,7 @@ import io.github.tkjonesy.frontend.utils.*;
 import io.github.tkjonesy.frontend.miscGUI.SplashScreen;
 import io.github.tkjonesy.frontend.utils.cameraGrabber.CameraGrabber;
 import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.ErrorUtils;
 import io.github.tkjonesy.utils.Paths;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.models.LogHandler;
@@ -251,6 +252,18 @@ public class App extends JFrame {
             AIMsLogger.ERROR("Unable to set Look and Feel to system default.");
         }
 
-        SwingUtilities.invokeLater(App::new);
+        try {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    new App();
+                } catch (Exception e) {
+                    ErrorUtils.saveExceptionToFile(e);
+                    ErrorDialogManager.displayErrorDialogFatal("An unknown error has occurred. The stacktrace has been saved to the error directory.");
+                }
+            });
+        }catch (Exception e) {
+            ErrorUtils.saveExceptionToFile(e);
+            ErrorDialogManager.displayErrorDialogFatal("An unknown error has occurred. The stacktrace has been saved to the error directory.");
+        }
     }
 }
