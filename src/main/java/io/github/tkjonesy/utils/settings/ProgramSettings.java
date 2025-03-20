@@ -8,8 +8,6 @@ import io.github.tkjonesy.utils.logging.AIMsLogger;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -18,7 +16,6 @@ import java.util.HashMap;
 @Getter
 @ToString
 public class ProgramSettings {
-    private static final Logger logger = LogManager.getLogger(ProgramSettings.class);
 
     @Getter
     @Setter

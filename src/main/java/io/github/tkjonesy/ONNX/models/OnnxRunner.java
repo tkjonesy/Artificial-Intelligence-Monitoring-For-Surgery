@@ -10,8 +10,6 @@ import io.github.tkjonesy.utils.models.LogHandler;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.*;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bytedeco.opencv.opencv_core.Mat;
 
 import java.io.IOException;
@@ -25,9 +23,6 @@ import java.util.*;
  */
 @NoArgsConstructor(force = true)
 public class OnnxRunner {
-
-    private static final Logger logger = LogManager.getLogger(OnnxRunner.class);
-
     private final ProgramSettings settings = ProgramSettings.getCurrentSettings();
 
 
@@ -90,7 +85,7 @@ public class OnnxRunner {
             this.inferenceSession = new YoloV8(modelPath, labelPath);
         }catch (IOException | OrtException e) {
             ErrorDialogManager.displayErrorDialog("An error occurred while loading the ONNX model: " + e.getMessage());
-            logger.error("Error loading ONNX model: {}", e.getMessage(), e);
+            AIMsLogger.ERROR("Error loading ONNX model: " + e.getMessage());
         }
     }
 
