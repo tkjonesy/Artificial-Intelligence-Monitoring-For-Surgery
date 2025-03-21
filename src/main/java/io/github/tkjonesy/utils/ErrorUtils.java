@@ -15,7 +15,7 @@ public class ErrorUtils {
 
     /**
      * Saves the exception to a file in the error directory.
-     * @param e
+     * @param e The exception to save
      */
     public static void saveExceptionToFile(Exception e) {
         try{
