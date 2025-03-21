@@ -58,21 +58,6 @@ public class InferenceLogQueue {
         inferenceLogs.add(new InferenceLog(InferenceLogEnum.LOG_ADDED, message));
     }
 
-    /**
-     * Gets the dynamically updated "Added" color from settings.
-     */
-    private static java.awt.Color getLogAddedColor() {
-        int[] colorArray = ProgramSettings.getCurrentSettings().getLogAddedColor();
-        return new java.awt.Color(colorArray[0], colorArray[1], colorArray[2]);
-    }
-
-    /**
-     * Gets the dynamically updated "Removed" color from settings.
-     */
-    private static java.awt.Color getLogRemovedColor() {
-        int[] colorArray = ProgramSettings.getCurrentSettings().getLogRemovedColor();
-        return new java.awt.Color(colorArray[0], colorArray[1], colorArray[2]);
-    }
 
     /**
      * Retrieves and removes the latest log from the queue.
