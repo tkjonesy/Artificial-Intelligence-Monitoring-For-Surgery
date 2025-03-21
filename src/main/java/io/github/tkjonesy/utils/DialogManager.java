@@ -2,7 +2,7 @@ package io.github.tkjonesy.utils;
 
 import javax.swing.*;
 
-public class ErrorDialogManager {
+public class DialogManager {
 
     public static void displayErrorDialog(String message){
         JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.ERROR_MESSAGE);
@@ -11,6 +11,10 @@ public class ErrorDialogManager {
     public static void displayErrorDialogFatal(String message){
         JOptionPane.showMessageDialog(null, message, "Fatal Error", JOptionPane.ERROR_MESSAGE);
         System.exit(1);
+    }
+
+    public static void displayInfoDialog(String message){
+        JOptionPane.showMessageDialog(null, message, "Information", JOptionPane.INFORMATION_MESSAGE);
     }
 
     public static void displayWarningDialog(String message){

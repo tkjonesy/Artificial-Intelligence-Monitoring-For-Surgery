@@ -4,7 +4,7 @@ import ai.onnxruntime.OrtException;
 import io.github.tkjonesy.ONNX.Detection;
 import io.github.tkjonesy.ONNX.Yolo;
 import io.github.tkjonesy.ONNX.YoloV8;
-import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.DialogManager;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.models.LogHandler;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
@@ -84,7 +84,7 @@ public class OnnxRunner {
         try {
             this.inferenceSession = new YoloV8(modelPath, labelPath);
         }catch (IOException | OrtException e) {
-            ErrorDialogManager.displayErrorDialog("An error occurred while loading the ONNX model: " + e.getMessage());
+            DialogManager.displayErrorDialog("An error occurred while loading the ONNX model: " + e.getMessage());
             AIMsLogger.ERROR("Error loading ONNX model: " + e.getMessage());
         }
     }

@@ -1,8 +1,7 @@
 package io.github.tkjonesy.frontend.utils;
 
 import io.github.tkjonesy.frontend.mainGUI.DebugConsole;
-import io.github.tkjonesy.utils.logging.AIMsLogger;
-import io.github.tkjonesy.utils.settings.ProgramSettings;
+import io.github.tkjonesy.utils.logging.LogType;
 
 import javax.swing.SwingUtilities;
 
@@ -29,35 +28,14 @@ public class DebugConsoleManager {
      * @param message The message to display
      * @param isError Whether this is an error message
      */
-    public static void displayLog(String message, boolean isError) {
+    public static void displayLog(String message, LogType logType) {
         SwingUtilities.invokeLater(() -> {
-            if (isError) {
-                DebugConsole.getInstance().displayLog(message, DebugConsole.getInstance().getErrorStyle());
-            } else {
-                DebugConsole.getInstance().displayLog(message, DebugConsole.getInstance().getDefaultStyle());
+            switch(logType){
+                case ERROR -> DebugConsole.getInstance().displayLog(message, DebugConsole.getInstance().getErrorStyle());
+                case INFO -> DebugConsole.getInstance().displayLog(message, DebugConsole.getInstance().getInfoStyle());
+                case TRACE -> DebugConsole.getInstance().displayLog(message, DebugConsole.getInstance().getTraceStyle());
+                default -> DebugConsole.getInstance().displayLog(message, DebugConsole.getInstance().getDefaultStyle());
             }
         });
-    }
-
-    /**
-     * Logs an info message to the console.
-     *
-     * @param message The info message
-     */
-    public static void INFO(String message) {
-        SwingUtilities.invokeLater(() ->
-                DebugConsole.getInstance().displayLog(message, DebugConsole.getInstance().getInfoStyle())
-        );
-    }
-
-    /**
-     * Logs an error message to the console.
-     *
-     * @param message The error message
-     */
-    public static void ERROR(String message) {
-        SwingUtilities.invokeLater(() ->
-                DebugConsole.getInstance().displayLog(message, DebugConsole.getInstance().getErrorStyle())
-        );
     }
 }
