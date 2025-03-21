@@ -16,6 +16,7 @@ import java.util.HashMap;
 import io.github.tkjonesy.ONNX.models.OnnxRunner;
 import io.github.tkjonesy.frontend.mainGUI.ButtonPanel;
 import io.github.tkjonesy.frontend.mainGUI.CameraPanel;
+import io.github.tkjonesy.frontend.mainGUI.DebugConsole;
 import io.github.tkjonesy.frontend.mainGUI.LoggingPanel;
 import io.github.tkjonesy.frontend.utils.*;
 import io.github.tkjonesy.frontend.miscGUI.SplashScreen;
@@ -53,28 +54,32 @@ public class App extends JFrame {
     public static HashMap<String, Integer> AVAILABLE_CAMERAS = null;
     private static final SplashScreen splashScreen;
     static {
-
-        // Display the splash screen
         splashScreen = new SplashScreen();
-        splashScreen.showSplash();
+
+        SwingUtilities.invokeLater(() -> {
+            splashScreen.showSplash();
+            if (ProgramSettings.getCurrentSettings() != null && ProgramSettings.getCurrentSettings().isDebugMode()) {
+                DebugConsole.getInstance().setVisible(true);
+            }
+        });
 
         // Load OpenCV
         Loader.load(opencv_core.class);
 
-        System.getProperty("org.bytedeco.javacpp.maxphysicalbytes", "0");
-        System.getProperty("org.bytedeco.javacpp.maxbytes", "0");
+        System.setProperty("org.bytedeco.javacpp.maxphysicalbytes", "0");
+        System.setProperty("org.bytedeco.javacpp.maxbytes", "0");
         opencv_core.setNumThreads(1);
     }
 
-    private final Thread cameraFetcherThread;
+    private Thread cameraFetcherThread;
     private CameraPanel cameraPanel;
     private LoggingPanel loggingPanel;
 
     @Getter
-    private final SessionHandler sessionHandler;
+    private SessionHandler sessionHandler;
     private ProgramSettings settings;
 
-    private final FrameManager frameManager;
+    private FrameManager frameManager;
     @Getter
     @Setter
     private JTextPane logTextPane;
@@ -82,51 +87,48 @@ public class App extends JFrame {
     public App() {
         instance = this;
 
-        initializeSettingsAndLogger();
+        new Thread(() -> {
+            initializeSettingsAndLogger();
 
-        AIMsLogger.INFO("Application Version: " + AppVersion.getCOMMIT_ID_FULL());
+            if (settings.isDebugMode()) {
+                SwingUtilities.invokeLater(() -> DebugConsole.getInstance().setVisible(true));
+            }
 
-        collectAvailableCameras();
+            AIMsLogger.INFO("Application Version: " + AppVersion.getCOMMIT_ID_FULL());
 
-        // Initialize the directories for AIMs
-        try{
-            SettingsLoader.initializeAIMsDirectories();
-        }catch (RuntimeException e){
-            AIMsLogger.ERROR("Failed to initialize AIMs directories. Exiting application.");
-            ErrorDialogManager.displayErrorDialogFatal("Failed to initialize AIMs directories. Exiting application.");
-        }
+            collectAvailableCameras();
 
-        // Initialize the GUI components and listeners
-        initComponents();
-        initListeners();
+            try {
+                SettingsLoader.initializeAIMsDirectories();
+            } catch (RuntimeException e) {
+                AIMsLogger.ERROR("Failed to initialize AIMs directories. Exiting application.");
+                ErrorDialogManager.displayErrorDialogFatal("Failed to initialize AIMs directories. Exiting application.");
+            }
 
-        // Initialize the session handler, log handler, and ONNX runner
-        LogHandler logHandler = new LogHandler(loggingPanel.getLogTextPane());
-        this.sessionHandler = new SessionHandler(logHandler);
-        onnxRunner = new OnnxRunner(LogHandler.getINFERENCE_LOG_QUEUE());
+            SwingUtilities.invokeLater(() -> {
+                initComponents();
+                initListeners();
 
-        updateCamera(settings.getCameraDeviceId());
+                LogHandler logHandler = new LogHandler(loggingPanel.getLogTextPane());
+                sessionHandler = new SessionHandler(logHandler);
+                onnxRunner = new OnnxRunner(LogHandler.getINFERENCE_LOG_QUEUE());
 
-        // Camera fetcher thread task
-        frameManager = new FrameManager(this.cameraPanel.getCameraFeed(), camera, onnxRunner, sessionHandler);
-        cameraFetcherThread = new Thread(frameManager);
-        cameraFetcherThread.start();
+                updateCamera(settings.getCameraDeviceId());
 
-        // Close the splash screen and display the application
-        splashScreen.closeSplash();
+                frameManager = new FrameManager(cameraPanel.getCameraFeed(), camera, onnxRunner, sessionHandler);
+                cameraFetcherThread = new Thread(frameManager);
+                cameraFetcherThread.start();
 
-        this.setVisible(true);
-
-        if(settings.isDebugMode()) {
-            DebugConsoleManager.toggleConsole();
-        }
+                splashScreen.closeSplash();
+                App.this.setVisible(true);
+            });
+        }).start();
     }
 
-    private void initializeSettingsAndLogger(){
-        // Load settings from file
+    private void initializeSettingsAndLogger() {
         this.settings = SettingsLoader.loadSettings();
 
-        if(settings == null) {
+        if (settings == null) {
             AIMsLogger.ERROR("Failed to load settings from file. Exiting application.");
             ErrorDialogManager.displayErrorDialogFatal("Failed to load settings from file. Exiting application.");
         }
@@ -137,36 +139,26 @@ public class App extends JFrame {
         AIMsLogger.INFO("Settings: " + settings);
     }
 
-    private void collectAvailableCameras(){
-        // Load the camera devices from the user's system
+    private void collectAvailableCameras() {
         CameraGrabber grabber = CameraGrabber.createForPlatform();
-
         AVAILABLE_CAMERAS = grabber.getCameraNames();
     }
 
     private void initComponents() {
-
-        // Titling, sizing, and exit actions
         updateTitle();
         this.setMinimumSize(new Dimension(746, 401));
         this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-        // Icon
-        try(InputStream stream = getClass().getResourceAsStream(Paths.LOGO32_PATH)) {
-            if(stream == null) {
-                throw new IOException("Resource not found: " + Paths.LOGO32_PATH);
-            }
-
+        try (InputStream stream = getClass().getResourceAsStream(Paths.LOGO32_PATH)) {
+            if (stream == null) throw new IOException("Resource not found: " + Paths.LOGO32_PATH);
             ImageIcon appIcon = new ImageIcon(ImageIO.read(stream));
             this.setIconImage(appIcon.getImage());
         } catch (Exception ignored) {}
 
-        // GUI Panels
         cameraPanel = new CameraPanel(new BorderLayout(), instance);
         loggingPanel = new LoggingPanel();
         buttonPanel = new ButtonPanel(instance);
 
-        // Window Layout
         this.setLayout(new GridBagLayout());
         this.add(cameraPanel, createConstraints(0, 0, 0.5, 1));
         this.add(loggingPanel, createConstraints(1, 0, 0.5, 0.5));
@@ -175,16 +167,11 @@ public class App extends JFrame {
         buttonPanelConstraints.fill = GridBagConstraints.VERTICAL;
         this.add(buttonPanel, buttonPanelConstraints);
         this.pack();
-        this.setLocationRelativeTo(null); // Center application
+        this.setLocationRelativeTo(null);
     }
 
-    public void updateTitle(){
-        String title;
-        if(settings.isDebugMode()) {
-            title = "AIMs - " + AppVersion.getCOMMIT_ID_ABBREV();
-        } else {
-            title = "AIMs";
-        }
+    public void updateTitle() {
+        String title = settings.isDebugMode() ? "AIMs - " + AppVersion.getCOMMIT_ID_ABBREV() : "AIMs";
         this.setTitle(title);
     }
 
@@ -199,7 +186,6 @@ public class App extends JFrame {
     }
 
     private void initListeners() {
-        // Window Event Listener
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -208,18 +194,13 @@ public class App extends JFrame {
                         "Confirm Exit", JOptionPane.YES_NO_OPTION);
 
                 if (confirmation == JOptionPane.YES_OPTION) {
-
                     SettingsLoader.saveSettings(settings);
-
                     AIMsLogger.INFO("Beginning cleanup Process...");
                     AIMsLogger.INFO("Stopping camera feed thread...");
-                    if(cameraFetcherThread != null) cameraFetcherThread.interrupt();
+                    if (cameraFetcherThread != null) cameraFetcherThread.interrupt();
                     AIMsLogger.INFO("Closing camera access...");
-                    if (camera != null && camera.isOpened())
-                        camera.release();
-
+                    if (camera != null && camera.isOpened()) camera.release();
                     AIMsLogger.INFO("Done cleanup process.");
-
                     App.this.dispose();
                     System.exit(0);
                 } else {
@@ -228,18 +209,16 @@ public class App extends JFrame {
             }
         });
 
-        this.addComponentListener(
-                new ComponentAdapter() {
-                    @Override
-                    public void componentResized(ComponentEvent e) {
-                        loggingPanel.setPreferredSize(new Dimension(App.this.getWidth() / 3, loggingPanel.getHeight()));
-                    }
-                }
-        );
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                loggingPanel.setPreferredSize(new Dimension(App.this.getWidth() / 3, loggingPanel.getHeight()));
+            }
+        });
     }
 
     public void updateCamera(int cameraId) {
-        try{
+        try {
             camera = new VideoCapture(cameraId);
             if (!camera.isOpened()) {
                 cameraId = 0;
@@ -248,11 +227,10 @@ public class App extends JFrame {
                     throw new CvException("Unable to open camera with ID: " + cameraId);
                 }
             }
-            if(frameManager != null){
+            if (frameManager != null) {
                 frameManager.setCamera(camera);
             }
-
-        }catch (CvException e) {
+        } catch (CvException e) {
             String errorMessage = "Failed to open camera with ID: " + cameraId;
             ErrorDialogManager.displayErrorDialog(errorMessage);
             AIMsLogger.ERROR(errorMessage);
@@ -275,7 +253,7 @@ public class App extends JFrame {
                     ErrorDialogManager.displayErrorDialogFatal("An unknown error has occurred. The stacktrace has been saved to the error directory.");
                 }
             });
-        }catch (Exception e) {
+        } catch (Exception e) {
             ErrorUtils.saveExceptionToFile(e);
             ErrorDialogManager.displayErrorDialogFatal("An unknown error has occurred. The stacktrace has been saved to the error directory.");
         }
