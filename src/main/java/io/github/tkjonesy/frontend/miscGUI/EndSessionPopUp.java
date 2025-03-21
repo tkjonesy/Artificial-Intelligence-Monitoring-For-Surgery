@@ -6,26 +6,65 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
+import java.util.HashMap;
 
 /**
  * Utility class to display a popup at the end of a session,
  * prompting the user to open the sessions directory.
  */
 public class EndSessionPopUp {
+
     /**
-     * Displays a confirmation popup asking the user if they want to open the specific session directory.
-     * @param sessionTitle The title of the session, used to locate the session folder.
+     * Displays a confirmation popup asking the user if they want to open the specific session directory.@param sessionTitle The title of the session, used to locate the session folder.
      */
-    public static void showSessionEndDialog(String sessionTitle) {
+    public static void showSessionEndDialog(String title, String duration, int peakSeen,
+                                            HashMap<String, Integer> finalToolCounts,
+                                            HashMap<String, Integer> totalToolsAdded,
+                                            HashMap<String, Integer> toolsRemoved,
+                                            String sessionDirectory) {
         SwingUtilities.invokeLater(() -> {
-            Object[] options = {"Open session folder",
-                    "Cancel"};
-            String miniAAR = generateMiniAAR(sessionTitle);
+            Object[] options = {"Open session folder", "Cancel"};
+
+            StringBuilder miniAAR = new StringBuilder();
+            miniAAR.append("Session Name: ").append(title).append("\n");
+            miniAAR.append("Recording Duration: ").append(duration).append("\n");
+            miniAAR.append("Peak Objects Seen at Once: ").append(peakSeen).append("\n\n");
+
+            miniAAR.append("Total Instances of Each Object Ever Added:\n");
+            miniAAR.append("-----------------------------------------------------\n");
+            if (totalToolsAdded.isEmpty()) {
+                miniAAR.append("None\n");
+            } else {
+                for (var entry : totalToolsAdded.entrySet()) {
+                    miniAAR.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+                }
+            }
+            miniAAR.append("-----------------------------------------------------\n\n");
+
+            miniAAR.append("Objects Present at End:\n");
+            miniAAR.append("------------------------\n");
+            if (finalToolCounts.isEmpty()) {
+                miniAAR.append("None\n");
+            } else {
+                for (var entry : finalToolCounts.entrySet()) {
+                    miniAAR.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+                }
+            }
+            miniAAR.append("------------------------\n\n");
+
+            miniAAR.append("Objects Removed During Session:\n");
+            miniAAR.append("-----------------------------------------------------\n");
+            if (toolsRemoved.isEmpty()) {
+                miniAAR.append("None\n");
+            } else {
+                for (var entry : toolsRemoved.entrySet()) {
+                    miniAAR.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+                }
+            }
+            miniAAR.append("-----------------------------------------------------\n\n");
+
             int choice = JOptionPane.showOptionDialog(null,
-                    miniAAR,
+                    miniAAR.toString(),
                     "Session Ended",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE,
@@ -35,7 +74,7 @@ public class EndSessionPopUp {
             );
 
             if (choice == JOptionPane.YES_OPTION) {
-                openSessionDirectory(sessionTitle);
+                openSessionDirectory(sessionDirectory);
             }
         });
     }
@@ -60,52 +99,4 @@ public class EndSessionPopUp {
         }
     }
 
-    /**
-     * Generates a mini AAR summary from the AAR.txt file inside the session directory.
-     * @param sessionTitle The full path of the session directory.
-     * @return A short summary of the AAR file.
-     */
-    private static String generateMiniAAR(String sessionTitle) {
-        String aarPath = sessionTitle + "/AAR.txt";
-        File aarFile = new File(aarPath);
-        if (!aarFile.exists()) {
-            return "(No AAR available)";
-        }
-
-        try {
-            List<String> lines = Files.readAllLines(Paths.get(aarPath));
-            StringBuilder miniAAR = new StringBuilder();
-            boolean captureSection = false;
-
-            for (String line : lines) {
-                if (line.contains("Session Name") || line.contains("Recording Duration") || line.contains("Peak Objects Seen at Once")) {
-                    miniAAR.append(line).append("\n");
-                }
-
-                // Capture sections dynamically and include their content
-                if (line.contains("Objects Present at End") ||
-                        line.contains("Total Instances of Each Object Ever Added") ||
-                        line.contains("Objects Removed During Session")) {
-                    captureSection = true;
-                    miniAAR.append("\n").append(line).append("\n");
-                    continue;
-                }
-
-                if (captureSection) {
-                    if (line.trim().isEmpty()) {
-                        captureSection = false;
-                    } else {
-                        miniAAR.append(line).append("\n");
-                    }
-                }
-            }
-
-            if (miniAAR.toString().trim().isEmpty()) {
-                return "(No relevant data found in AAR)";
-            }
-            return miniAAR.toString().trim();
-        } catch (IOException e) {
-            return "(Failed to read AAR)";
-        }
-    }
 }
