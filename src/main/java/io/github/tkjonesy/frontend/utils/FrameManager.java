@@ -35,6 +35,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.*;
 
+/**
+ * FrameManager is responsible for capturing, processing, displaying the different frames.
+ */
 public class FrameManager implements Runnable {
 
     private final JLabel cameraFeed;
@@ -64,7 +67,6 @@ public class FrameManager implements Runnable {
     private final ProgramSettings settings = ProgramSettings.getCurrentSettings();
     private final Scalar redColor = new Scalar(0, 0, 255, 0);
 
-
     public FrameManager(JLabel cameraFeed, VideoCapture camera, OnnxRunner onnxRunner, SessionHandler sessionHandler) {
         this.cameraFeed = cameraFeed;
         this.camera = camera;
@@ -78,7 +80,11 @@ public class FrameManager implements Runnable {
     }
 
     /**
-     * Convert Bytedeco Mat to BufferedImage
+     * Converts an OpenCV Mat frame into a BufferedImage.
+     * This is used to render video frames in the Swing GUI.
+     *
+     * @param frame The OpenCV Mat to convert
+     * @return A BufferedImage representation of the frame
      */
     private static BufferedImage cvt2bi(Mat frame) {
         // Dimensions
@@ -101,6 +107,11 @@ public class FrameManager implements Runnable {
         return image;
     }
 
+    /**
+     * Starts the frame capture loop using a Timer.
+     * Captures frames from the camera at the configured resolution and FPS,
+     * and places them into the raw frame queue.
+     */
     @Override
     public void run() {
         // Configure camera resolution and FPS
@@ -150,6 +161,11 @@ public class FrameManager implements Runnable {
         timer.scheduleAtFixedRate(task, 0, 1000 / settings.getCameraFps());
     }
 
+    /**
+     * Launches a thread that processes raw frames:
+     * flips them (if needed), performs inference every Nth frame,
+     * overlays predictions, resizes the result, and queues it for display or recording.
+     */
     private void startFrameProcessingThread(){
         AIMsLogger.TRACE("Starting Frame Processing Thread");
         processExecutor.submit(() -> {
@@ -232,6 +248,10 @@ public class FrameManager implements Runnable {
         });
     }
 
+    /**
+     * Starts a thread that pulls processed frames and displays them
+     * in the {@code cameraFeed} panel.
+     */
     private void startDisplayThread(){
         AIMsLogger.TRACE("Starting Display Thread");
         displayExecutor.submit(() -> {
@@ -256,6 +276,10 @@ public class FrameManager implements Runnable {
         });
     }
 
+    /**
+     * Launches a thread to save processed frames to video to {@link FileSession}
+     * if recording is enabled and a session is active.
+     */
     private void startRecordingThread(){
         AIMsLogger.TRACE("Starting Recording Thread");
         recordingExecutor.submit(() -> {
@@ -289,6 +313,10 @@ public class FrameManager implements Runnable {
         });
     }
 
+    /**
+     * Stops all threads, clears frame queues, cancels the timer,
+     * and shuts down executor services to clean up resources.
+     */
     public void shutdown(){
         isRunning = false;
         timer.cancel();

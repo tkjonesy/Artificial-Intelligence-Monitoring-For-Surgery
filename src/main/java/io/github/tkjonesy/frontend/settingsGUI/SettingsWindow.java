@@ -10,6 +10,7 @@ import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.Getter;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.event.ChangeListener;
@@ -19,6 +20,8 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 import static io.github.tkjonesy.frontend.App.AVAILABLE_CAMERAS;
@@ -54,12 +57,11 @@ public class SettingsWindow extends JDialog implements SettingsUI {
         this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
         // Icon
-        try {
-            ImageIcon appIcon = new ImageIcon(Paths.LOGO32_PATH);
+        try (InputStream stream = getClass().getResourceAsStream(Paths.LOGO32_PATH)) {
+            if (stream == null) throw new IOException("Resource not found: " + Paths.LOGO32_PATH);
+            ImageIcon appIcon = new ImageIcon(ImageIO.read(stream));
             this.setIconImage(appIcon.getImage());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        } catch (Exception ignored) {}
 
         CameraSettingsPanel cameraPanel = new CameraSettingsPanel(settings, AVAILABLE_CAMERAS);
         StorageSettingsPanel storagePanel = new StorageSettingsPanel();

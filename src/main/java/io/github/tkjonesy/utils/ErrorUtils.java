@@ -13,6 +13,10 @@ import static io.github.tkjonesy.utils.Paths.AIMS_ERRORS_DIRECTORY;
 
 public class ErrorUtils {
 
+    /**
+     * Saves the exception to a file in the error directory.
+     * @param e
+     */
     public static void saveExceptionToFile(Exception e) {
         try{
             // Get the error directory
@@ -40,6 +44,10 @@ public class ErrorUtils {
         }
     }
 
+    /**
+     * Saves the console output to a file in the error directory.
+     * @param consoleOutput The console output to save
+     */
     public static void saveConsoleToFile(String consoleOutput) {
         try {
             // Get the error directory

@@ -26,7 +26,7 @@ public class DebugConsoleManager {
      * Display a log message in the console
      *
      * @param message The message to display
-     * @param isError Whether this is an error message
+     * @param logType The type of log message (e.g., ERROR, INFO, TRACE)
      */
     public static void displayLog(String message, LogType logType) {
         SwingUtilities.invokeLater(() -> {
