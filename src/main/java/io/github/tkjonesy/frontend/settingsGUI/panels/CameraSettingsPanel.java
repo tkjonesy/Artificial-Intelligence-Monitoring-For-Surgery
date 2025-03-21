@@ -2,7 +2,7 @@ package io.github.tkjonesy.frontend.settingsGUI.panels;
 
 import io.github.tkjonesy.frontend.settingsGUI.SettingsUI;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
-import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.DialogManager;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import javax.swing.*;
@@ -85,7 +85,7 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
         cameraFpsSpinner.addChangeListener(
                 e -> {
                     if((int) cameraFpsSpinner.getValue() > 30)
-                        ErrorDialogManager.displayWarningDialog("Values over 30 may not be supported by all cameras. Setting this value higher than 30 will not make the recording smoother if the camera does not have a refresh rate this high. Additionally, values over 60 may cause extreme performance issues.");
+                        DialogManager.displayWarningDialog("Values over 30 may not be supported by all cameras. Setting this value higher than 30 will not make the recording smoother if the camera does not have a refresh rate this high. Additionally, values over 60 may cause extreme performance issues.");
                     }
         );
 

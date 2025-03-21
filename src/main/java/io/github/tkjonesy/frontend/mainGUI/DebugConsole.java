@@ -1,5 +1,7 @@
 package io.github.tkjonesy.frontend.mainGUI;
 
+import io.github.tkjonesy.utils.DialogManager;
+import io.github.tkjonesy.utils.ErrorUtils;
 import lombok.Getter;
 
 import javax.swing.*;
@@ -16,8 +18,9 @@ public class DebugConsole extends JFrame {
     private static final Color BACKGROUND_COLOR = new Color(30, 31, 34);
     private static final Color DEFAULT_TEXT_COLOR = Color.WHITE;
     private static final Color ERROR_TEXT_COLOR = new Color(255, 80, 80);
-    private static final Color INFO_TEXT_COLOR = new Color(135, 206, 250);
-    private static final Color DEBUG_TEXT_COLOR = new Color(170, 255, 170);
+    private static final Color INFO_TEXT_COLOR = new Color(250, 244, 135);
+    private static final Color TRACE_TEXT_COLOR = new Color(135, 206, 250);
+    private static final Color DEBUG_TEXT_COLOR = new Color(255, 215, 170);
 
     @Getter
     private final JTextPane consoleTextPane;
@@ -29,6 +32,8 @@ public class DebugConsole extends JFrame {
     private final Style errorStyle;
     @Getter
     private final Style infoStyle;
+    @Getter
+    private final Style traceStyle;
     @Getter
     private final Style debugStyle;
 
@@ -70,6 +75,10 @@ public class DebugConsole extends JFrame {
         StyleConstants.setForeground(infoStyle, INFO_TEXT_COLOR);
         StyleConstants.setFontFamily(infoStyle, "Monospaced");
 
+        traceStyle = consoleTextPane.addStyle("trace", null);
+        StyleConstants.setForeground(traceStyle, TRACE_TEXT_COLOR);
+        StyleConstants.setFontFamily(traceStyle, "Monospaced");
+
         debugStyle = consoleTextPane.addStyle("debug", null);
         StyleConstants.setForeground(debugStyle, DEBUG_TEXT_COLOR);
         StyleConstants.setFontFamily(debugStyle, "Monospaced");
@@ -77,12 +86,35 @@ public class DebugConsole extends JFrame {
         JScrollPane scrollPane = new JScrollPane(consoleTextPane);
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
+        // Set shorter tab stops
+        int tabSizePixels = 25;
+        TabStop[] tabs = new TabStop[10];
+        for (int i = 0; i < tabs.length; i++) {
+            tabs[i] = new TabStop((i + 1) * tabSizePixels);
+        }
+        TabSet tabSet = new TabSet(tabs);
+
+        StyleContext styleContext = StyleContext.getDefaultStyleContext();
+        AttributeSet tabAttributes = styleContext.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabSet);
+        consoleTextPane.setParagraphAttributes(tabAttributes, false);
+
+
         add(scrollPane, BorderLayout.CENTER);
 
         // Add clear button at the bottom
         JButton clearButton = new JButton("Clear Console");
         clearButton.addActionListener(e -> clearConsole());
-        add(clearButton, BorderLayout.SOUTH);
+
+        JButton saveButton = new JButton("Save Console");
+        saveButton.addActionListener(e -> saveConsole());
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(saveButton);
+        buttonPanel.add(clearButton);
+        add(buttonPanel, BorderLayout.SOUTH);
+        setBackground(BACKGROUND_COLOR);
+
 
         // Handle window closing - should just hide, not dispose
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -118,9 +150,13 @@ public class DebugConsole extends JFrame {
     public void clearConsole() {
         try {
             document.remove(0, document.getLength());
-            displayLog("Console cleared", infoStyle);
+            DialogManager.displayInfoDialog("Console cleared");
         } catch (BadLocationException e) {
             displayLog("Error clearing console: " + e.getMessage(), errorStyle);
         }
+    }
+
+    public void saveConsole(){
+        ErrorUtils.saveConsoleToFile(consoleTextPane.getText());
     }
 }

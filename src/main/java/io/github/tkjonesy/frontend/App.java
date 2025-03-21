@@ -22,7 +22,7 @@ import io.github.tkjonesy.frontend.utils.*;
 import io.github.tkjonesy.frontend.miscGUI.SplashScreen;
 import io.github.tkjonesy.frontend.utils.cameraGrabber.CameraGrabber;
 import io.github.tkjonesy.utils.AppVersion;
-import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.DialogManager;
 import io.github.tkjonesy.utils.ErrorUtils;
 import io.github.tkjonesy.utils.Paths;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
@@ -102,7 +102,7 @@ public class App extends JFrame {
                 SettingsLoader.initializeAIMsDirectories();
             } catch (RuntimeException e) {
                 AIMsLogger.ERROR("Failed to initialize AIMs directories. Exiting application.");
-                ErrorDialogManager.displayErrorDialogFatal("Failed to initialize AIMs directories. Exiting application.");
+                DialogManager.displayErrorDialogFatal("Failed to initialize AIMs directories. Exiting application.");
             }
 
             SwingUtilities.invokeLater(() -> {
@@ -130,7 +130,7 @@ public class App extends JFrame {
 
         if (settings == null) {
             AIMsLogger.ERROR("Failed to load settings from file. Exiting application.");
-            ErrorDialogManager.displayErrorDialogFatal("Failed to load settings from file. Exiting application.");
+            DialogManager.displayErrorDialogFatal("Failed to load settings from file. Exiting application.");
         }
 
         ProgramSettings.setCurrentSettings(settings);
@@ -232,7 +232,7 @@ public class App extends JFrame {
             }
         } catch (CvException e) {
             String errorMessage = "Failed to open camera with ID: " + cameraId;
-            ErrorDialogManager.displayErrorDialog(errorMessage);
+            DialogManager.displayErrorDialog(errorMessage);
             AIMsLogger.ERROR(errorMessage);
         }
     }
@@ -250,12 +250,12 @@ public class App extends JFrame {
                     new App();
                 } catch (Exception e) {
                     ErrorUtils.saveExceptionToFile(e);
-                    ErrorDialogManager.displayErrorDialogFatal("An unknown error has occurred. The stacktrace has been saved to the error directory.");
+                    DialogManager.displayErrorDialogFatal("An unknown error has occurred. The stacktrace has been saved to the error directory.");
                 }
             });
         } catch (Exception e) {
             ErrorUtils.saveExceptionToFile(e);
-            ErrorDialogManager.displayErrorDialogFatal("An unknown error has occurred. The stacktrace has been saved to the error directory.");
+            DialogManager.displayErrorDialogFatal("An unknown error has occurred. The stacktrace has been saved to the error directory.");
         }
     }
 }

@@ -14,7 +14,6 @@ import static io.github.tkjonesy.utils.Paths.AIMS_ERRORS_DIRECTORY;
 public class ErrorUtils {
 
     public static void saveExceptionToFile(Exception e) {
-
         try{
             // Get the error directory
             Path errorsDirectory = Paths.get(AIMS_ERRORS_DIRECTORY);
@@ -39,8 +38,30 @@ public class ErrorUtils {
         }catch (IOException ex){
             AIMsLogger.ERROR("Failed to save error to file: " + ex.getMessage());
         }
+    }
 
+    public static void saveConsoleToFile(String consoleOutput) {
+        try {
+            // Get the error directory
+            Path errorsDirectory = Paths.get(AIMS_ERRORS_DIRECTORY);
+            if (!Files.exists(errorsDirectory)) {
+                Files.createDirectories(errorsDirectory);
+            }
 
+            String timeStamp = LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+            Path errorFilePath = errorsDirectory.resolve(timeStamp + ".log");
+
+            try (PrintWriter printWriter = new PrintWriter(new FileWriter(errorFilePath.toFile(), true))) {
+                printWriter.println("========== CONSOLE OUTPUT ==========");
+                printWriter.println("Version: " + AppVersion.getCOMMIT_ID_FULL());
+                printWriter.println(consoleOutput);
+                printWriter.println("=====================================");
+            }
+            DialogManager.displayInfoDialog("Console output saved to: " + errorFilePath.toAbsolutePath());
+        } catch (IOException ex) {
+            AIMsLogger.ERROR("Failed to save console output to file: " + ex.getMessage());
+        }
     }
 
 }

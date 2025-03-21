@@ -2,7 +2,7 @@ package io.github.tkjonesy.utils.models;
 
 import io.github.tkjonesy.ONNX.models.InferenceLog;
 import io.github.tkjonesy.ONNX.models.OnnxRunner;
-import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.DialogManager;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import io.github.tkjonesy.frontend.miscGUI.EndSessionPopUp;
@@ -58,7 +58,7 @@ public class FileSession {
         try{
             startNewSession(); // Throws IOException if fails
         }catch (IOException e) {
-            ErrorDialogManager.displayErrorDialog("Failed to start new FileSession: "+ e.getMessage());
+            DialogManager.displayErrorDialog("Failed to start new FileSession: "+ e.getMessage());
             throw new RuntimeException("Failed to start new FileSession: "+e.getMessage(), e);
         }
     }

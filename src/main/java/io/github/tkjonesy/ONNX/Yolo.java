@@ -2,7 +2,7 @@ package io.github.tkjonesy.ONNX;
 
 import ai.onnxruntime.*;
 import ai. onnxruntime. OrtSession. SessionOptions;
-import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.DialogManager;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.Getter;
@@ -46,7 +46,7 @@ public abstract class Yolo {
 
         } catch (OrtException e) {
             AIMsLogger.INFO("Failed to create session with GPU, falling back to CPU: " + e.getMessage());
-            ErrorDialogManager.displayErrorDialog("Failed to create session with GPU, falling back to CPU. Error: " + e.getMessage());
+            DialogManager.displayErrorDialog("Failed to create session with GPU, falling back to CPU. Error: " + e.getMessage());
 
             isCudaAvailable = false;
             sessionOptions = createSessionOptions(false);
@@ -80,7 +80,7 @@ public abstract class Yolo {
                 AIMsLogger.INFO("CUDA provider added successfully.");
             } catch (OrtException e) {
                 AIMsLogger.INFO("Failed to add CUDA provider, falling back to CPU: " + e.getMessage());
-                ErrorDialogManager.displayErrorDialog("Failed to add CUDA provider, falling back to CPU. Error: " + e.getMessage());
+                DialogManager.displayErrorDialog("Failed to add CUDA provider, falling back to CPU. Error: " + e.getMessage());
                 useGPU = false;
             }
         }

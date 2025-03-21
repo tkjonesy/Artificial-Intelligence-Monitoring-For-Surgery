@@ -2,7 +2,6 @@ package io.github.tkjonesy.utils.settings;
 
 import ai.onnxruntime.OrtSession;
 import io.github.tkjonesy.frontend.App;
-import io.github.tkjonesy.frontend.utils.DebugConsoleManager;
 import io.github.tkjonesy.utils.annotations.SettingsLabel;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.ONNX.enums.InferenceLogEnum;
@@ -154,12 +153,12 @@ public class ProgramSettings {
                         if (annotation.type().isInstance(value)) {
                             field.set(this, value);
                         } else {
-                            DebugConsoleManager.ERROR("Type mismatch: Cannot assign " +
+                            AIMsLogger.ERROR("Type mismatch: Cannot assign " +
                                     value.getClass().getSimpleName() + " to " +
                                     annotation.type().getSimpleName());
                         }
                     } catch (IllegalAccessException e) {
-                        DebugConsoleManager.ERROR("Failed to set value for " + label + ": " + e.getMessage());
+                        AIMsLogger.ERROR("Failed to set value for " + label + ": " + e.getMessage());
                     }
                     return;
                 }

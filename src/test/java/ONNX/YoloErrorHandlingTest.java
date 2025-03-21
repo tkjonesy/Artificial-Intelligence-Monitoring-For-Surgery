@@ -12,7 +12,7 @@ import ai.onnxruntime.OrtProvider;
 import ai.onnxruntime.OrtSession;
 import io.github.tkjonesy.ONNX.Detection;
 import io.github.tkjonesy.ONNX.Yolo;
-import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.DialogManager;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,7 +35,7 @@ import java.util.*;
  *   <li>When a GPU failure occurs during construction (simulated by a thrown OrtException),
  *       the CUDA availability flag is set to false.</li>
  *   <li>When updating the inference session with invalid model paths causes a failure,
- *       an error dialog is displayed via the {@link ErrorDialogManager}.</li>
+ *       an error dialog is displayed via the {@link DialogManager}.</li>
  * </ul>
  * Naming convention for tests follows the "Given-When-Then" pattern.
  * A passing test indicates that the corresponding error handling behavior is working correctly.
@@ -77,7 +77,7 @@ public class YoloErrorHandlingTest {
     public void givenSessionOptions_whenAddCudaFails_thenErrorDialogIsDisplayed() throws Exception {
         System.out.println("Running test: givenSessionOptions_whenAddCudaFails_thenErrorDialogIsDisplayed");
 
-        try (MockedStatic<ErrorDialogManager> errorDialogStatic = mockStatic(ErrorDialogManager.class);
+        try (MockedStatic<DialogManager> errorDialogStatic = mockStatic(DialogManager.class);
              MockedConstruction<OrtSession.SessionOptions> mockSessionOptionsConstruction =
                      mockConstruction(OrtSession.SessionOptions.class, (mock, context) -> {
                          doThrow(new OrtException("Simulated addCUDA failure")).when(mock).addCUDA(anyInt());
@@ -90,7 +90,7 @@ public class YoloErrorHandlingTest {
             OrtSession.SessionOptions resultOptions = mockYolo.createSessionOptions(true);
 
             // Verify that the error dialog was triggered
-            errorDialogStatic.verify(() -> ErrorDialogManager.displayErrorDialog(
+            errorDialogStatic.verify(() -> DialogManager.displayErrorDialog(
                     argThat(message -> message.contains("Simulated addCUDA failure"))
             ), times(1));
 
@@ -124,7 +124,7 @@ public class YoloErrorHandlingTest {
         OrtSession mockSession = mock(OrtSession.class);
 
         try (MockedStatic<OrtEnvironment> envStatic = mockStatic(OrtEnvironment.class);
-             MockedStatic<ErrorDialogManager> errorDialogStatic = mockStatic(ErrorDialogManager.class);
+             MockedStatic<DialogManager> errorDialogStatic = mockStatic(DialogManager.class);
              MockedConstruction<OrtSession.SessionOptions> mockSessionOptionsConstruction =
                      mockConstruction(OrtSession.SessionOptions.class, (mock, context) -> {
                          doNothing().when(mock).addCUDA(anyInt()); // `addCUDA()` succeeds
@@ -153,7 +153,7 @@ public class YoloErrorHandlingTest {
             assertThat(Yolo.isCudaAvailable()).isFalse();
 
             // Verify that the error dialog was triggered for GPU session failure
-            errorDialogStatic.verify(() -> ErrorDialogManager.displayErrorDialog(
+            errorDialogStatic.verify(() -> DialogManager.displayErrorDialog(
                     argThat(message -> message.contains("Failed to create session with GPU"))
             ), times(1));
         }
@@ -174,7 +174,7 @@ public class YoloErrorHandlingTest {
      */
     @Test
     public void givenInvalidModelPaths_whenUpdatingInferenceSession_thenErrorDialogIsDisplayed() {
-        try (MockedStatic<ErrorDialogManager> errorDialogStatic = mockStatic(ErrorDialogManager.class)) {
+        try (MockedStatic<DialogManager> errorDialogStatic = mockStatic(DialogManager.class)) {
             dummySettings.setUseGPU(false);
 
             // Given: Invalid model and label paths.
@@ -192,7 +192,7 @@ public class YoloErrorHandlingTest {
             } catch (Exception ignore) { }
 
             // Then: The error dialog should be displayed with a message indicating ORT_NO_SUCHFILE.
-            errorDialogStatic.verify(() -> ErrorDialogManager.displayErrorDialog(
+            errorDialogStatic.verify(() -> DialogManager.displayErrorDialog(
                     argThat(message -> message != null && message.contains("ORT_NO_SUCHFILE"))
             ), times(1));
         }

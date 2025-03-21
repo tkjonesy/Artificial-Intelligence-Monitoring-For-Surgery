@@ -32,6 +32,7 @@ public class ButtonPanel extends JPanel {
         settingsButton = new JButton("Settings");
         String debugButtonText = DebugConsole.getInstance().isVisible() ? "Hide Debug" : "Debug Console";
         debugButton = new JButton(debugButtonText);
+        updateDebugButtonVisibility();
     }
 
     private void initializeListeners() {

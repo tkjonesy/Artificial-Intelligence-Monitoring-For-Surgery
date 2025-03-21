@@ -6,7 +6,7 @@ import io.github.tkjonesy.ONNX.models.OnnxOutput;
 import io.github.tkjonesy.ONNX.models.OnnxRunner;
 
 import io.github.tkjonesy.frontend.App;
-import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.DialogManager;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.models.FileSession;
 import io.github.tkjonesy.utils.models.SessionHandler;
@@ -226,7 +226,7 @@ public class FrameManager implements Runnable {
 
                 } catch (InterruptedException e) {
                     AIMsLogger.FATAL("Frame processing thread interrupted: " + e.getMessage());
-                    ErrorDialogManager.displayErrorDialog("Frame processing thread interrupted: " + e.getMessage());
+                    DialogManager.displayErrorDialog("Frame processing thread interrupted: " + e.getMessage());
                 }
             }
         });
@@ -250,7 +250,7 @@ public class FrameManager implements Runnable {
                     displayFrame.release();
                 } catch (Exception e) {
                     AIMsLogger.ERROR("Error displaying frame: " + e.getMessage());
-                    ErrorDialogManager.displayErrorDialog("Error displaying frame: " + e.getMessage());
+                    DialogManager.displayErrorDialog("Error displaying frame: " + e.getMessage());
                 }
             }
         });
@@ -283,7 +283,7 @@ public class FrameManager implements Runnable {
                     }
                 }catch (Exception e) {
                     AIMsLogger.FATAL("Error in recording thread: " + e.getMessage());
-                    ErrorDialogManager.displayErrorDialog("Error in recording thread: " + e.getMessage());
+                    DialogManager.displayErrorDialog("Error in recording thread: " + e.getMessage());
                 }
             }
         });

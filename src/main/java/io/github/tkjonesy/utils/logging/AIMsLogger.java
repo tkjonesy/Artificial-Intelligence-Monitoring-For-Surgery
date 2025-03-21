@@ -5,8 +5,7 @@ import io.github.tkjonesy.frontend.utils.DebugConsoleManager;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.Getter;
 
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
@@ -56,38 +55,45 @@ public class AIMsLogger {
         TRACE("System output redirection started");
     }
 
+    public static void DEBUG(String message) {
+        if (debugModeEnabled) {
+            String timestampedMessage = addTimestamp("[DEBUG]\t" + message);
+            DebugConsoleManager.displayLog(timestampedMessage, LogType.DEBUG);
+        }
+    }
+
     public static void TRACE(String message) {
         if (debugModeEnabled) {
-            String timestampedMessage = addTimestamp("[TRACE] " + message);
-            DebugConsoleManager.displayLog(timestampedMessage, false);
+            String timestampedMessage = addTimestamp("[TRACE]\t" + message);
+            DebugConsoleManager.displayLog(timestampedMessage, LogType.TRACE);
         }
     }
 
     public static void INFO(String message) {
         if (debugModeEnabled) {
-            String timestampedMessage = addTimestamp("[INFO] " + message);
-            DebugConsoleManager.displayLog(timestampedMessage, false);
+            String timestampedMessage = addTimestamp("[INFO]\t" + message);
+            DebugConsoleManager.displayLog(timestampedMessage, LogType.INFO);
         }
     }
 
     public static void WARN(String message) {
         if (debugModeEnabled) {
-            String timestampedMessage = addTimestamp("[WARN] " + message);
-            DebugConsoleManager.displayLog(timestampedMessage, false);
+            String timestampedMessage = addTimestamp("[WARN]\t" + message);
+            DebugConsoleManager.displayLog(timestampedMessage, LogType.ERROR);
         }
     }
 
     public static void ERROR(String message) {
         if (debugModeEnabled) {
-            String timestampedMessage = addTimestamp("[ERROR] " + message);
-            DebugConsoleManager.displayLog(timestampedMessage, true);
+            String timestampedMessage = addTimestamp("[ERROR]\t" + message);
+            DebugConsoleManager.displayLog(timestampedMessage, LogType.ERROR);
         }
     }
 
     public static void FATAL(String message) {
         if (debugModeEnabled) {
-            String timestampedMessage = addTimestamp("[FATAL] " + message);
-            DebugConsoleManager.displayLog(timestampedMessage, true);
+            String timestampedMessage = addTimestamp("[FATAL]\t" + message);
+            DebugConsoleManager.displayLog(timestampedMessage, LogType.ERROR);
         }
     }
 
@@ -95,7 +101,7 @@ public class AIMsLogger {
      * Adds a timestamp to a log message
      */
     private static String addTimestamp(String message) {
-        return "[" + LocalTime.now().format(TIME_FORMATTER) + "] " + message;
+        return "[" + LocalTime.now().format(TIME_FORMATTER) + "]\t" + message;
     }
 
     /**
@@ -115,8 +121,9 @@ public class AIMsLogger {
             if (c == '\n') {
                 String message = buffer.toString();
                 if (debugModeEnabled) {
-                    String timestampedMessage = addTimestamp("[CONSOLE] "+message);
-                    DebugConsoleManager.displayLog(timestampedMessage, isErrorStream);
+                    String timestampedMessage = addTimestamp("[CONSOLE]\t"+message);
+                    LogType logType = isErrorStream ? LogType.ERROR : LogType.INFO;
+                    DebugConsoleManager.displayLog(timestampedMessage, logType);
                 }
                 buffer.setLength(0);
             } else {
