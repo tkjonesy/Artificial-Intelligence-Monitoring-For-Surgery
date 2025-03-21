@@ -221,7 +221,6 @@ public class FileSession {
         Duration recordDuration = Duration.between(startTime, Instant.now());
 
         generateAAR(recordDuration);
-        EndSessionPopUp.showSessionEndDialog(sessionDirectory);
         onnxRunner.endSession();
     }
 
@@ -356,6 +355,18 @@ public class FileSession {
         } catch (IOException e) {
             AIMsLogger.INFO("Failed to write AAR: " + e.getMessage());
         }
+
+        // Save values for popup
+        String formattedDuration = formatDuration(recordDuration);
+        EndSessionPopUp.showSessionEndDialog(
+                title,
+                formattedDuration,
+                peakObjects,
+                finalToolCounts,
+                totalToolsAdded,
+                toolsRemoved,
+                sessionDirectory
+        );
     }
 
     /**
