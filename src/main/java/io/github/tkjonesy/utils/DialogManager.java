@@ -9,7 +9,7 @@ public class DialogManager {
 
     /**
      * Displays an error dialog with the specified message.
-     * @param message
+     * @param message Message to be displayed in the dialog
      */
     public static void displayErrorDialog(String message){
         JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.ERROR_MESSAGE);
@@ -17,7 +17,7 @@ public class DialogManager {
 
     /**
      * Displays a fatal error dialog with the specified message and exits the program.
-     * @param message
+     * @param message Message to be displayed in the dialog
      */
     public static void displayErrorDialogFatal(String message){
         JOptionPane.showMessageDialog(null, message, "Fatal Error", JOptionPane.ERROR_MESSAGE);
@@ -26,7 +26,7 @@ public class DialogManager {
 
     /**
      * Displays a confirmation dialog with the specified message.
-     * @param message
+     * @param message Message to be displayed in the dialog
      */
     public static void displayInfoDialog(String message){
         JOptionPane.showMessageDialog(null, message, "Information", JOptionPane.INFORMATION_MESSAGE);
@@ -34,7 +34,7 @@ public class DialogManager {
 
     /**
      * Displays a warning dialog with the specified message.
-     * @param message
+     * @param message Message to be displayed in the dialog
      */
     public static void displayWarningDialog(String message){
         JOptionPane.showMessageDialog(null, message, "Warning", JOptionPane.WARNING_MESSAGE);

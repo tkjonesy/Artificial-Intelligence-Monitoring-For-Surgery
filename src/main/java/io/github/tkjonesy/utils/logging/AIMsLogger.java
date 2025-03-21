@@ -70,7 +70,7 @@ public class AIMsLogger {
 
     /**
      * Logs a {@code DEBUG} message. Should not be used in production.
-     * @param message
+     * @param message The message to log
      */
     public static void DEBUG(String message) {
         if (debugModeEnabled) {
@@ -81,7 +81,7 @@ public class AIMsLogger {
 
     /**
      * Logs a {@code TRACE} message. Useful for tracing program flow.
-     * @param message
+     * @param message The message to log
      */
     public static void TRACE(String message) {
         if (debugModeEnabled) {
@@ -92,7 +92,7 @@ public class AIMsLogger {
 
     /**
      * Logs an {@code INFO} message. General informational messages.
-     * @param message
+     * @param message The message to log
      */
     public static void INFO(String message) {
         if (debugModeEnabled) {
@@ -103,7 +103,7 @@ public class AIMsLogger {
 
     /**
      * Logs a {@code WARN} message. Indicates potential issues.
-     * @param message
+     * @param message The message to log
      */
     public static void WARN(String message) {
         if (debugModeEnabled) {
@@ -114,7 +114,7 @@ public class AIMsLogger {
 
     /**
      * Logs an {@code ERROR} message. Indicates errors that allow continuation.
-     * @param message
+     * @param message The message to log
      */
     public static void ERROR(String message) {
         if (debugModeEnabled) {
@@ -125,7 +125,7 @@ public class AIMsLogger {
 
     /**
      * Logs a {@code FATAL} message. Indicates unrecoverable or critical errors.
-     * @param message
+     * @param message The message to log
      */
     public static void FATAL(String message) {
         if (debugModeEnabled) {
