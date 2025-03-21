@@ -156,6 +156,9 @@ public class DebugConsole extends JFrame {
         }
     }
 
+    /**
+     * Saves the console output to a file
+     */
     public void saveConsole(){
         ErrorUtils.saveConsoleToFile(consoleTextPane.getText());
     }

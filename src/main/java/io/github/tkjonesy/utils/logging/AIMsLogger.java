@@ -9,6 +9,19 @@ import java.io.*;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Provides logging methods for different message severities.
+ * <p>
+ * Available log levels:
+ * <ul>
+ *   <li><b>DEBUG</b> – For development-time debugging messages (avoid using in production).</li>
+ *   <li><b>TRACE</b> – For tracing the flow of the program in detail.</li>
+ *   <li><b>INFO</b> – For general informational messages.</li>
+ *   <li><b>WARN</b> – For warnings that may indicate potential issues.</li>
+ *   <li><b>ERROR</b> – For error messages indicating failures that allow continuation.</li>
+ *   <li><b>FATAL</b> – For unrecoverable or critical errors that may lead to shutdown.</li>
+ * </ul>
+ */
 public class AIMsLogger {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
@@ -55,6 +68,10 @@ public class AIMsLogger {
         TRACE("System output redirection started");
     }
 
+    /**
+     * Logs a {@code DEBUG} message. Should not be used in production.
+     * @param message
+     */
     public static void DEBUG(String message) {
         if (debugModeEnabled) {
             String timestampedMessage = addTimestamp("[DEBUG]\t" + message);
@@ -62,6 +79,10 @@ public class AIMsLogger {
         }
     }
 
+    /**
+     * Logs a {@code TRACE} message. Useful for tracing program flow.
+     * @param message
+     */
     public static void TRACE(String message) {
         if (debugModeEnabled) {
             String timestampedMessage = addTimestamp("[TRACE]\t" + message);
@@ -69,6 +90,10 @@ public class AIMsLogger {
         }
     }
 
+    /**
+     * Logs an {@code INFO} message. General informational messages.
+     * @param message
+     */
     public static void INFO(String message) {
         if (debugModeEnabled) {
             String timestampedMessage = addTimestamp("[INFO]\t" + message);
@@ -76,6 +101,10 @@ public class AIMsLogger {
         }
     }
 
+    /**
+     * Logs a {@code WARN} message. Indicates potential issues.
+     * @param message
+     */
     public static void WARN(String message) {
         if (debugModeEnabled) {
             String timestampedMessage = addTimestamp("[WARN]\t" + message);
@@ -83,6 +112,10 @@ public class AIMsLogger {
         }
     }
 
+    /**
+     * Logs an {@code ERROR} message. Indicates errors that allow continuation.
+     * @param message
+     */
     public static void ERROR(String message) {
         if (debugModeEnabled) {
             String timestampedMessage = addTimestamp("[ERROR]\t" + message);
@@ -90,6 +123,10 @@ public class AIMsLogger {
         }
     }
 
+    /**
+     * Logs a {@code FATAL} message. Indicates unrecoverable or critical errors.
+     * @param message
+     */
     public static void FATAL(String message) {
         if (debugModeEnabled) {
             String timestampedMessage = addTimestamp("[FATAL]\t" + message);
@@ -105,7 +142,7 @@ public class AIMsLogger {
     }
 
     /**
-     * Custom OutputStream that writes to the debug console
+     * Custom OutputStream that writes System.out and System.err to the debug console
      */
     private static class LogOutputStream extends OutputStream {
         private final StringBuilder buffer = new StringBuilder();
