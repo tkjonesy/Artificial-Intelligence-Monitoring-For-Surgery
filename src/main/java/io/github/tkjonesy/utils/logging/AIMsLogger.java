@@ -36,10 +36,11 @@ public class AIMsLogger {
      */
     public static void initialize(ProgramSettings settings) {
         debugModeEnabled = settings.isDebugMode() || settings.isContinuousLogging();
-
-        if(App.getInstance().getButtonPanel()!=null) {
-            App.getInstance().getButtonPanel().updateDebugButtonVisibility();
+        App instance = App.getInstance();
+        if(instance.getButtonPanel()!=null) {
+            instance.getButtonPanel().updateDebugButtonVisibility();
         }
+        instance.updateTitle();
 
         startRedirection();
     }

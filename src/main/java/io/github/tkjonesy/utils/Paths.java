@@ -6,6 +6,7 @@ public class Paths {
     public static final String AIMS_MODELS_DIRECTORY = AIMS_DIRECTORY + "/ai_models";
     public static final String DEFAULT_AIMS_SESSIONS_DIRECTORY = AIMS_DIRECTORY + "/sessions";
     public static String AIMS_SESSIONS_DIRECTORY = AIMS_DIRECTORY + "/sessions";
+    public static final String AIMS_ERRORS_DIRECTORY = AIMS_DIRECTORY + "/errors";
     public static final String AIMS_SETTINGS_FILE_PATH = AIMS_DIRECTORY + "/settings.json";
 
     public static final String RESOURCE_DEFAULT_SETTINGS_PATH = "/defaultSettings.json";

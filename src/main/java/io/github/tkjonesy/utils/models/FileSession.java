@@ -120,7 +120,7 @@ public class FileSession {
                 throw new IllegalStateException("Failed to initialize VideoWriter. Check if the directory is writable.");
             }
         }
-       AIMsLogger.INFO("Video recording started." +
+        AIMsLogger.INFO("Video recording started." +
                 "Saving to: " + videoPath +
                 "Video Codec: " + (char) (codec & 0xFF) + (char) ((codec >> 8) & 0xFF) + (char) ((codec >> 16) & 0xFF) + (char) ((codec >> 24) & 0xFF) +
                 "FPS: " + targetFps);

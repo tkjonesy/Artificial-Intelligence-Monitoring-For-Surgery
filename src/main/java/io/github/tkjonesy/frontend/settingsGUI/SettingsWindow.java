@@ -5,6 +5,7 @@ import io.github.tkjonesy.frontend.settingsGUI.panels.AISettingsPanel;
 import io.github.tkjonesy.frontend.settingsGUI.panels.AdvancedSettingsPanel.AdvancedSettingsPanel;
 import io.github.tkjonesy.frontend.settingsGUI.panels.CameraSettingsPanel;
 import io.github.tkjonesy.frontend.settingsGUI.panels.StorageSettingsPanel;
+import io.github.tkjonesy.utils.AppVersion;
 import io.github.tkjonesy.utils.Paths;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.Getter;
@@ -14,10 +15,9 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.event.ChangeListener;
 
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.*;
 import java.beans.PropertyChangeListener;
 import java.util.*;
 
@@ -35,6 +35,8 @@ public class SettingsWindow extends JDialog implements SettingsUI {
     private JPanel buttonPanel;
 
     private JTabbedPane settingSelector;
+
+    private JLabel versionLabel;
 
     private static final Color OCEAN = new Color(55, 90, 129);
 
@@ -76,6 +78,11 @@ public class SettingsWindow extends JDialog implements SettingsUI {
         settingSelector.addTab("Storage", storagePanel);
         settingSelector.addTab("AI Model", modelPanel);
         settingSelector.addTab("Advanced", advancedPanel);
+
+        this.versionLabel = new JLabel("v " + AppVersion.getCOMMIT_ID_FULL());
+        versionLabel.setFont(new Font("SansSerif", Font.PLAIN, 10));
+        versionLabel.setForeground(Color.GRAY);
+        versionLabel.setToolTipText("Click to copy version to clipboard");
     }
 
     // Method to enable/disable the Apply button
@@ -89,6 +96,27 @@ public class SettingsWindow extends JDialog implements SettingsUI {
         cancelButton.addActionListener(e -> {handleCancelAttempt();});
 
         applyButton.addActionListener(e -> {applyChanges();});
+
+        versionLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                StringSelection selection = new StringSelection(AppVersion.getCOMMIT_ID_FULL());
+                clipboard.setContents(selection, null);
+                JOptionPane.showMessageDialog(null, "Version copied to clipboard!", "Copied", JOptionPane.INFORMATION_MESSAGE);
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                versionLabel.setForeground(Color.LIGHT_GRAY);
+                versionLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                versionLabel.setForeground(Color.GRAY);
+            }
+        });
 
         this.addWindowListener(new WindowAdapter() {
             @Override
@@ -123,6 +151,7 @@ public class SettingsWindow extends JDialog implements SettingsUI {
         buttonPanelLayout.setAutoCreateContainerGaps(true);
         buttonPanelLayout.setHorizontalGroup(
                 buttonPanelLayout.createSequentialGroup()
+                        .addComponent(versionLabel)
                         .addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(confirmButton)
                         .addPreferredGap(ComponentPlacement.RELATED)
@@ -131,7 +160,8 @@ public class SettingsWindow extends JDialog implements SettingsUI {
                         .addComponent(applyButton)
         );
         buttonPanelLayout.setVerticalGroup(
-                buttonPanelLayout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+                buttonPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                        .addComponent(versionLabel)
                         .addComponent(confirmButton)
                         .addComponent(cancelButton)
                         .addComponent(applyButton)
