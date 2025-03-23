@@ -96,7 +96,7 @@ public class OnnxRunnerErrorHandlingTest {
             // When: runInference is called.
             OnnxOutput output = onnxRunner.runInference(dummyFrame);
             // Then: The error should be logged and the output should be empty.
-            verify(inferenceLogQueue, atLeastOnce()).addRedLog(contains("Error running inference"));
+            verify(inferenceLogQueue, atLeastOnce()).addRemoveLog(contains("Error running inference"));
             assertThat(output.getDetectionList()).isEmpty();
         }
     }

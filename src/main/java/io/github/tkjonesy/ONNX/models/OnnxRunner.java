@@ -123,7 +123,7 @@ public class OnnxRunner {
             }
 
         } catch (OrtException ortException) {
-            inferenceLogQueue.addRedLog("Error running inference: " + ortException.getMessage());
+            inferenceLogQueue.addRemoveLog("Error running inference: " + ortException.getMessage());
             LogHandler.forceProcessNextLog();
             AIMsLogger.ERROR("Error running inference: " + ortException.getMessage());
         }
@@ -266,7 +266,7 @@ public class OnnxRunner {
             }else{
                 logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "Class count increased: " + newValue);
             }
-            inferenceLogQueue.addGreenLog(logMessage);
+            inferenceLogQueue.addAddLog(logMessage);
 
             int totalAdded = totalInstancesAdded.getOrDefault(detectionWithCount.label(), 0);
             totalInstancesAdded.put(detectionWithCount.label(), totalAdded + difference);
@@ -279,7 +279,7 @@ public class OnnxRunner {
             } else{
                 logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "Class count decreased: " + newValue);
             }
-            inferenceLogQueue.addRedLog(logMessage);
+            inferenceLogQueue.addRemoveLog(logMessage);
         }
 
         // Update active detections

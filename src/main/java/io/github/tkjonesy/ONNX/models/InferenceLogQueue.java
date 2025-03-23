@@ -1,7 +1,6 @@
 package io.github.tkjonesy.ONNX.models;
 
 import io.github.tkjonesy.ONNX.enums.InferenceLogEnum;
-import io.github.tkjonesy.utils.settings.ProgramSettings;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -35,7 +34,7 @@ public class InferenceLogQueue {
      *
      * @param message The message to be logged with an error level.
      */
-    public void addRedLog(String message) {
+    public void addRemoveLog(String message) {
         inferenceLogs.add(new InferenceLog(InferenceLogEnum.LOG_REMOVED, message));
     }
 
@@ -43,18 +42,18 @@ public class InferenceLogQueue {
      * Adds an informational log (yellow) to the queue.
      *
      * @param message The message to be logged with an informational level.
-
-    public void addYellowLog(String message) {
+    */
+    public void addInfoLog(String message) {
         inferenceLogs.add(new InferenceLog(InferenceLogEnum.INFO, message));
     }
-     */
+
 
     /**
      * Adds a success log to the queue.
      *
      * @param message The message to be logged with a success level.
      */
-    public void addGreenLog(String message) {
+    public void addAddLog(String message) {
         inferenceLogs.add(new InferenceLog(InferenceLogEnum.LOG_ADDED, message));
     }
 

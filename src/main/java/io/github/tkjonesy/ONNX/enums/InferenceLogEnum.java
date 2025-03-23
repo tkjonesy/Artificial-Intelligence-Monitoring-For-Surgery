@@ -12,9 +12,9 @@ import java.awt.Color;
 @Getter
 @AllArgsConstructor
 public enum InferenceLogEnum {
-    WARNING(Color.YELLOW),
-    LOG_ADDED(null),
-    LOG_REMOVED(null); // Defaults are now set in ProgramSettings
+    INFO(Color.YELLOW),
+    LOG_ADDED(Color.GREEN),
+    LOG_REMOVED(Color.RED); // Defaults are now set in ProgramSettings
 
     private Color color;
 
