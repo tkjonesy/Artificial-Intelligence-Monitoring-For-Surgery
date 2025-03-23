@@ -14,7 +14,6 @@ permissions:
 
 jobs:
   package-linux:
-    if: github.event.action == 'opened'
     name: Build JAR on Linux
     runs-on: ubuntu-latest
 
@@ -38,7 +37,6 @@ jobs:
           path: target/*.jar
 
   build-windows-installer:
-    if: github.event.action == 'opened'
     name: Build Installer on Windows
     runs-on: windows-latest
 
@@ -76,7 +74,6 @@ jobs:
           path: target/AIMs-*.exe
 
   build-macos-installer:
-    if: github.event.action == 'opened'
     name: Build Installer on macOS
     runs-on: macos-latest
 
