@@ -53,7 +53,7 @@ public class SettingsWindow extends JDialog implements SettingsUI {
 
     private void initComponents() {
         // Sizing, and exit actions
-        this.setMinimumSize(new Dimension(640, 480));
+        this.setMinimumSize(new Dimension(640, 720));
         this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
         // Icon
