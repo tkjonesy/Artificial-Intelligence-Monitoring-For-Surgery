@@ -2,7 +2,8 @@ package io.github.tkjonesy.ONNX;
 
 import ai.onnxruntime.*;
 import ai. onnxruntime. OrtSession. SessionOptions;
-import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.DialogManager;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.Getter;
 import org.bytedeco.opencv.opencv_core.Mat;
@@ -31,21 +32,21 @@ public abstract class Yolo {
         this.env = OrtEnvironment.getEnvironment();
 
         EnumSet<OrtProvider> availableProviders = OrtEnvironment.getAvailableProviders();
-        System.out.println("Available providers: " + availableProviders);
+        AIMsLogger.INFO("Available providers: " + availableProviders);
         
         boolean useGPU = availableProviders.contains(OrtProvider.CUDA) && ProgramSettings.getCurrentSettings().isUseGPU();
         SessionOptions sessionOptions = createSessionOptions(useGPU);
 
         try {
-            System.out.println("Attempting to create ONNX session...");
+            AIMsLogger.INFO("Attempting to create ONNX session...");
             this.session = this.env.createSession(modelPath, sessionOptions);
 
-            isCudaAvailable = useGPU && availableProviders.contains(OrtProvider.CUDA);
-            System.out.println("Session created successfully. CUDA available: " + isCudaAvailable);
+            isCudaAvailable = availableProviders.contains(OrtProvider.CUDA);
+            AIMsLogger.INFO("Session created successfully. CUDA available: " + isCudaAvailable);
 
         } catch (OrtException e) {
-            System.out.println("Failed to create session with GPU, falling back to CPU: " + e.getMessage());
-            ErrorDialogManager.displayErrorDialog("Failed to create session with GPU, falling back to CPU. Error: " + e.getMessage());
+            AIMsLogger.INFO("Failed to create session with GPU, falling back to CPU: " + e.getMessage());
+            DialogManager.displayErrorDialog("Failed to create session with GPU, falling back to CPU. Error: " + e.getMessage());
 
             isCudaAvailable = false;
             sessionOptions = createSessionOptions(false);
@@ -74,12 +75,12 @@ public abstract class Yolo {
 
         if (useGPU) {
             try {
-                System.out.println("Attempting to add CUDA provider...");
+                AIMsLogger.INFO("Attempting to add CUDA provider...");
                 sessionOptions.addCUDA(ProgramSettings.getCurrentSettings().getGpuDeviceId());
-                System.out.println("CUDA provider added successfully.");
+                AIMsLogger.INFO("CUDA provider added successfully.");
             } catch (OrtException e) {
-                System.out.println("Failed to add CUDA provider, falling back to CPU: " + e.getMessage());
-                ErrorDialogManager.displayErrorDialog("Failed to add CUDA provider, falling back to CPU. Error: " + e.getMessage());
+                AIMsLogger.INFO("Failed to add CUDA provider, falling back to CPU: " + e.getMessage());
+                DialogManager.displayErrorDialog("Failed to add CUDA provider, falling back to CPU. Error: " + e.getMessage());
                 useGPU = false;
             }
         }
@@ -88,7 +89,7 @@ public abstract class Yolo {
             sessionOptions.addCPU(true);
             sessionOptions.setInterOpNumThreads(1);
             sessionOptions.setIntraOpNumThreads(1);
-            System.out.println("Using CPU for inference.");
+            AIMsLogger.INFO("Using CPU for inference.");
         }
 
         return sessionOptions;

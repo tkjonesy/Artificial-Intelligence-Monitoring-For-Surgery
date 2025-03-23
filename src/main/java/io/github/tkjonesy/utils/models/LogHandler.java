@@ -1,7 +1,7 @@
 package io.github.tkjonesy.utils.models;
 
-import io.github.tkjonesy.ONNX.models.Log;
-import io.github.tkjonesy.ONNX.models.LogQueue;
+import io.github.tkjonesy.ONNX.models.InferenceLog;
+import io.github.tkjonesy.ONNX.models.InferenceLogQueue;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +13,7 @@ public class LogHandler {
     @Getter
     private static JTextPane logTextPane;
     @Getter
-    private static final LogQueue logQueue = new LogQueue();
+    private static final InferenceLogQueue INFERENCE_LOG_QUEUE = new InferenceLogQueue();
 
     // New method to set FileSession after initialization
     @Setter
@@ -32,32 +32,32 @@ public class LogHandler {
     /**
      * Processes a log entry by appending it to the log text pane and saving it to a file.
      *
-     * @param log The log entry to process.
+     * @param inferenceLog The log entry to process.
      */
-    private void processLog(Log log){
-        appendLogToPane(log);
-        saveLogToFile(log);
+    private void processLog(InferenceLog inferenceLog){
+        appendLogToPane(inferenceLog);
+        saveLogToFile(inferenceLog);
     }
 
     public static void forceProcessNextLog(){
-        Log nextLog = logQueue.getNextLog();
-        if(nextLog != null){
-            appendLogToPane(nextLog);
+        InferenceLog nextInferenceLog = INFERENCE_LOG_QUEUE.getNextLog();
+        if(nextInferenceLog != null){
+            appendLogToPane(nextInferenceLog);
         }
     }
 
     /**
      * Appends a new log entry as colored HTML text to the log text pane.
      *
-     * @param log The log entry to display.
+     * @param inferenceLog The log entry to display.
      */
-    private static void appendLogToPane(Log log) {
+    private static void appendLogToPane(InferenceLog inferenceLog) {
         // Get the color of the log type as a hex code
-        String colorHex = "#" + Integer.toHexString(log.getLogType().getColor().getRGB()).substring(2);
+        String colorHex = "#" + Integer.toHexString(inferenceLog.getLogType().getColor().getRGB()).substring(2);
 
         // Format the log entry as an HTML line with timestamp and message
         String logMessage = String.format("<span style='color:%s'>%s - %s</span><br>",
-                colorHex, log.getTimeStamp(), log.getMessage());
+                colorHex, inferenceLog.getTimeStamp(), inferenceLog.getMessage());
 
         // Append the log message to the accumulated HTML content
         logHtmlContent.append(logMessage);
@@ -70,10 +70,10 @@ public class LogHandler {
     /**
      * Saves a log entry to a file.
      *
-     * @param log The log entry to save.
+     * @param inferenceLog The log entry to save.
      */
-    private void saveLogToFile(Log log){
-        fileSession.writeLogToFile(log);
+    private void saveLogToFile(InferenceLog inferenceLog){
+        fileSession.writeLogToFile(inferenceLog);
     }
 
     /**
@@ -83,9 +83,9 @@ public class LogHandler {
         this.timer = new Timer(1000, e ->
         {
             // Process logs from the queue
-            Log nextLog;
-            while ((nextLog = logQueue.getNextLog()) != null && fileSession != null){
-                processLog(nextLog);
+            InferenceLog nextInferenceLog;
+            while ((nextInferenceLog = INFERENCE_LOG_QUEUE.getNextLog()) != null && fileSession != null){
+                processLog(nextInferenceLog);
             }
         });
         timer.start();

@@ -1,9 +1,10 @@
-package io.github.tkjonesy.frontend.settingsGUI.panels;
+package io.github.tkjonesy.frontend.settingsGUI.panels.AdvancedSettingsPanel;
 
 import ai.onnxruntime.OrtSession;
 import io.github.tkjonesy.ONNX.YoloV8;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsUI;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 
 import javax.swing.*;
@@ -22,11 +23,12 @@ import java.util.stream.Collectors;
 import static io.github.tkjonesy.frontend.settingsGUI.SettingsWindow.addSettingChangeListener;
 import static io.github.tkjonesy.frontend.settingsGUI.SettingsWindow.updateApplyButtonState;
 
-
-public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
+public class AdvancedAISection extends JPanel implements SettingsUI {
     private final ProgramSettings settings = ProgramSettings.getCurrentSettings();
-    private static  final HashMap<String, Object> settingsUpdates = SettingsWindow.getSettingsUpdates();
+    private static final HashMap<String, Object> settingsUpdates = SettingsWindow.getSettingsUpdates();
 
+    // AI settings components
+    private final JLabel aiSectionLabel;
     private final JLabel noticeLabel;
     private final JLabel useGPULabel;
     private final JLabel nmsThresholdLabel;
@@ -43,7 +45,10 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
     private final JSpinner inputSizeSpinner;
     private final JTextField inputShapeTextField;
 
-    public AdvancedSettingsPanel() {
+    public AdvancedAISection() {
+        // AI Section
+        this.aiSectionLabel = new JLabel("<html><b>Advanced AI Settings</b></html>");
+        aiSectionLabel.setForeground(Color.WHITE);
 
         // Notice label
         this.noticeLabel = new JLabel("<html><b>Only modify these settings if you truly understand their impact.</b></html>");
@@ -142,7 +147,6 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
             }
             reader.close();
         } catch (IOException e) {
-            System.err.println("Error detecting GPUs: " + e.getMessage());
             gpuList.add("No GPU detected");
         }
 
@@ -151,32 +155,39 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
 
     @Override
     public void initListeners() {
+        // AI Settings Listeners
         addSettingChangeListener(useGPUCheckbox, (ActionListener)
                 e -> {
                     boolean value = useGPUCheckbox.isSelected();
-                    System.out.println("Use GPU: " + useGPUCheckbox.isSelected());
+                    AIMsLogger.TRACE("Use GPU: " + value);
                     settingsUpdates.put("useGPU", value);
                     if(settings.isUseGPU() == value)
                         settingsUpdates.remove("useGPU");
                 }
         );
 
-
         addSettingChangeListener(gpuDeviceSelector, (ActionListener)
                 e -> {
                     String value = (String) gpuDeviceSelector.getSelectedItem();
-                    System.out.println("GPU device: " + value);
-                    assert value != null;
-                    settingsUpdates.put("gpuDeviceId", Integer.parseInt(value));
-                    if(settings.getGpuDeviceId() == Integer.parseInt(value))
-                        settingsUpdates.remove("gpuDeviceId");
+                    if (value != null && value.startsWith("GPU ")) {
+                        try {
+                            int deviceId = Integer.parseInt(value.substring(4, value.indexOf(':')));
+                            AIMsLogger.TRACE("GPU Device ID: " + deviceId);
+                            settingsUpdates.put("gpuDeviceId", deviceId);
+                            if(settings.getGpuDeviceId() == deviceId)
+                                settingsUpdates.remove("gpuDeviceId");
+                        } catch (NumberFormatException | StringIndexOutOfBoundsException ex) {
+                            // Handle parsing error
+                            System.err.println("Failed to parse GPU device ID: " + ex.getMessage());
+                        }
+                    }
                 }
         );
 
         addSettingChangeListener(nmsThresholdSlider, (ChangeListener)
                 e -> {
                     float value = nmsThresholdSlider.getValue() / 100f;
-                    System.out.println("NMS threshold: " + value);
+                    AIMsLogger.TRACE("NMS Threshold: " + value);
                     settingsUpdates.put("nmsThreshold", value);
                     if(settings.getNmsThreshold() == value)
                         settingsUpdates.remove("nmsThreshold");
@@ -186,7 +197,7 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(optimizationLevelComboBox, (ActionListener)
                 e -> {
                     String value = (String) optimizationLevelComboBox.getSelectedItem();
-                    System.out.println("Optimization level: " + value);
+                    AIMsLogger.TRACE("Optimization Level: " + value);
                     settingsUpdates.put("optimizationLevel", OrtSession.SessionOptions.OptLevel.valueOf(value));
                     if(settings.getOptimizationLevel().toString().equals(value))
                         settingsUpdates.remove("optimizationLevel");
@@ -196,7 +207,7 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(inputSizeSpinner, (ChangeListener)
                 e -> {
                     int value = (int) inputSizeSpinner.getValue();
-                    System.out.println("Input size: " + value);
+                    AIMsLogger.TRACE("Input Size: " + value);
                     settingsUpdates.put("inputSize", value);
                     if(settings.getInputSize() == value)
                         settingsUpdates.remove("inputSize");
@@ -208,24 +219,25 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
                     String newValue = inputShapeTextField.getText().trim().replaceAll(" ", "");
                     String currentValue = Arrays.toString(settings.getInputShape()).replaceAll("[\\[\\] ]", " ").trim().replaceAll(" ", "");
 
-                    System.out.println("Current value: " + currentValue);
-                    System.out.println("New value: " + newValue);
-
                     if (!newValue.equals(currentValue)) {
+                        try {
+                            long[] inputShape = Arrays.stream(newValue.split(","))
+                                    .mapToLong(Long::parseLong)
+                                    .toArray();
 
-                        long[] inputShape = Arrays.stream(newValue.split(","))
-                                .mapToLong(Long::parseLong)
-                                .toArray();
+                            long numInputElements = Arrays.stream(inputShape).reduce(1, (a, b) -> a * b);
 
-                        long numInputElements = Arrays.stream(inputShape).reduce(1, (a, b) -> a * b);
+                            AIMsLogger.TRACE("Input Shape: " + Arrays.toString(inputShape));
 
-                        settingsUpdates.put("inputShape", inputShape);
-                        settingsUpdates.put("numInputElements", (int) numInputElements);
+                            settingsUpdates.put("inputShape", inputShape);
+                            settingsUpdates.put("numInputElements", (int) numInputElements);
 
-                        System.out.println("Input shape changed: " + newValue);
-                        System.out.println("Number of input elements: " + numInputElements);
-
-                        updateApplyButtonState();
+                            updateApplyButtonState();
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(this,
+                                    "Invalid input shape format. Please use comma-separated numbers.",
+                                    "Input Error", JOptionPane.ERROR_MESSAGE);
+                        }
                     } else {
                         settingsUpdates.remove("inputShape");
                         settingsUpdates.remove("numInputElements");
@@ -245,6 +257,8 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
 
         layout.setHorizontalGroup(
                 layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        // AI Section
+                        .addComponent(aiSectionLabel)
                         .addComponent(noticeLabel)
                         .addGroup(layout.createSequentialGroup()
                                 .addComponent(useGPULabel)
@@ -274,6 +288,9 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
 
         layout.setVerticalGroup(
                 layout.createSequentialGroup()
+                        // AI Section
+                        .addComponent(aiSectionLabel)
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(noticeLabel)
                         .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
@@ -289,7 +306,6 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(optimizationLabel)
                                 .addComponent(optimizationLevelComboBox))
-                        .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                         .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(inputSizeLabel)

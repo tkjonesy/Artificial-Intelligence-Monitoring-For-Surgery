@@ -4,13 +4,12 @@ import ai.onnxruntime.OrtException;
 import io.github.tkjonesy.ONNX.Detection;
 import io.github.tkjonesy.ONNX.Yolo;
 import io.github.tkjonesy.ONNX.YoloV8;
-import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.DialogManager;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.models.LogHandler;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.*;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bytedeco.opencv.opencv_core.Mat;
 
 import java.io.IOException;
@@ -24,9 +23,6 @@ import java.util.*;
  */
 @NoArgsConstructor(force = true)
 public class OnnxRunner {
-
-    private static final Logger logger = LogManager.getLogger(OnnxRunner.class);
-
     private final ProgramSettings settings = ProgramSettings.getCurrentSettings();
 
 
@@ -43,7 +39,7 @@ public class OnnxRunner {
      * A queue of logs to be displayed in the UI.
      */
     @Getter
-    private final LogQueue logQueue;
+    private final InferenceLogQueue inferenceLogQueue;
 
     /**
      * A hashmap for tracking the currently active classes and their counts.
@@ -72,9 +68,9 @@ public class OnnxRunner {
 
     private boolean sessionActive = false;
 
-    public OnnxRunner(LogQueue logQueue) {
+    public OnnxRunner(InferenceLogQueue inferenceLogQueue) {
 
-        this.logQueue = logQueue;
+        this.inferenceLogQueue = inferenceLogQueue;
         this.activeDetections = new HashMap<>();
         this.detectionBuffer = new HashMap<>();
 
@@ -88,13 +84,12 @@ public class OnnxRunner {
         try {
             this.inferenceSession = new YoloV8(modelPath, labelPath);
         }catch (IOException | OrtException e) {
-            ErrorDialogManager.displayErrorDialog("An error occurred while loading the ONNX model: " + e.getMessage());
-            logger.error("Error loading ONNX model: {}", e.getMessage(), e);
+            DialogManager.displayErrorDialog("An error occurred while loading the ONNX model: " + e.getMessage());
+            AIMsLogger.ERROR("Error loading ONNX model: " + e.getMessage());
         }
     }
 
     public void startSession(){
-       System.out.println("🔄 Starting new tracking session.");
        bufferThreshold = settings.getBufferThreshold();
     }
 
@@ -121,13 +116,16 @@ public class OnnxRunner {
             Instant start = Instant.now();
             detectionList = inferenceSession.run(frame);
             Instant end = Instant.now();
-            long timeElapsed = end.toEpochMilli() - start.toEpochMilli();
-            System.out.println("Inference time: " + timeElapsed + "ms");
+
+            if(settings.isShowInferenceTime()){
+                long timeElapsed = end.toEpochMilli() - start.toEpochMilli();
+                AIMsLogger.INFO("Inference time: " + timeElapsed + "ms");
+            }
 
         } catch (OrtException ortException) {
-            logQueue.addRedLog("Error running inference: " + ortException.getMessage());
+            inferenceLogQueue.addRemoveLog("Error running inference: " + ortException.getMessage());
             LogHandler.forceProcessNextLog();
-            System.err.println("Error running inference: " + ortException.getMessage());
+            AIMsLogger.ERROR("Error running inference: " + ortException.getMessage());
         }
         return new OnnxOutput(detectionList);
     }
@@ -171,7 +169,7 @@ public class OnnxRunner {
             sessionActive = true;
             startCountPerClass = new HashMap<>();
             startCountPerClass.putAll(activeDetections);
-            System.out.println("✅ Initial tools captured: " + startCountPerClass);
+            AIMsLogger.INFO("Initial tools captured: " + startCountPerClass);
         }
 
         /*
@@ -268,7 +266,7 @@ public class OnnxRunner {
             }else{
                 logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "Class count increased: " + newValue);
             }
-            logQueue.addGreenLog(logMessage);
+            inferenceLogQueue.addAddLog(logMessage);
 
             int totalAdded = totalInstancesAdded.getOrDefault(detectionWithCount.label(), 0);
             totalInstancesAdded.put(detectionWithCount.label(), totalAdded + difference);
@@ -281,7 +279,7 @@ public class OnnxRunner {
             } else{
                 logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "Class count decreased: " + newValue);
             }
-            logQueue.addRedLog(logMessage);
+            inferenceLogQueue.addRemoveLog(logMessage);
         }
 
         // Update active detections

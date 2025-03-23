@@ -9,10 +9,10 @@ import static _testingUtils.HelperMethods.setPrivateField;
 
 import ai.onnxruntime.OrtException;
 import io.github.tkjonesy.ONNX.Yolo;
-import io.github.tkjonesy.ONNX.models.LogQueue;
+import io.github.tkjonesy.ONNX.models.InferenceLogQueue;
 import io.github.tkjonesy.ONNX.models.OnnxOutput;
 import io.github.tkjonesy.ONNX.models.OnnxRunner;
-import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.DialogManager;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.junit.jupiter.api.BeforeAll;
@@ -49,7 +49,7 @@ public class OnnxRunnerErrorHandlingTest {
     private Yolo mockInferenceSession;
 
     @Mock
-    private LogQueue logQueue;
+    private InferenceLogQueue inferenceLogQueue;
 
     private final Mat dummyFrame = new Mat(10, 10, 0);
 
@@ -63,12 +63,12 @@ public class OnnxRunnerErrorHandlingTest {
 
     @BeforeEach
     public void setup() throws Exception {
-        logQueue = mock(LogQueue.class);
+        inferenceLogQueue = mock(InferenceLogQueue.class);
         mockInferenceSession = mock(Yolo.class);
-        onnxRunner = spy(new OnnxRunner(logQueue));
+        onnxRunner = spy(new OnnxRunner(inferenceLogQueue));
 
         setPrivateField(onnxRunner, "inferenceSession", mockInferenceSession);
-        setPrivateField(onnxRunner, "logQueue", logQueue);
+        setPrivateField(onnxRunner, "inferenceLogQueue", inferenceLogQueue);
         onnxRunner.setBufferThreshold(3);
     }
 
@@ -92,11 +92,11 @@ public class OnnxRunnerErrorHandlingTest {
         when(mockInferenceSession.run(any(Mat.class)))
                 .thenThrow(new OrtException("Simulated inference failure"));
 
-        try (MockedStatic<ErrorDialogManager> ignored = mockStatic(ErrorDialogManager.class)) {
+        try (MockedStatic<DialogManager> ignored = mockStatic(DialogManager.class)) {
             // When: runInference is called.
             OnnxOutput output = onnxRunner.runInference(dummyFrame);
             // Then: The error should be logged and the output should be empty.
-            verify(logQueue, atLeastOnce()).addRedLog(contains("Error running inference"));
+            verify(inferenceLogQueue, atLeastOnce()).addRemoveLog(contains("Error running inference"));
             assertThat(output.getDetectionList()).isEmpty();
         }
     }
@@ -141,15 +141,15 @@ public class OnnxRunnerErrorHandlingTest {
      */
     @Test
     public void givenInvalidModelPaths_whenUpdateInferenceSession_thenErrorDialogIsDisplayed() {
-        try (MockedStatic<ErrorDialogManager> mockedErrorDialog = mockStatic(ErrorDialogManager.class)) {
-            mockedErrorDialog.when(() -> ErrorDialogManager.displayErrorDialog(any()))
+        try (MockedStatic<DialogManager> mockedErrorDialog = mockStatic(DialogManager.class)) {
+            mockedErrorDialog.when(() -> DialogManager.displayErrorDialog(any()))
                     .thenAnswer(invocation -> null);
 
             // Given: Invalid model paths. When: Updating the inference session.
             onnxRunner.updateInferenceSession("invalidModel", "invalidLabels");
 
             // Then: ErrorDialogManager should be called with the expected message.
-            mockedErrorDialog.verify(() -> ErrorDialogManager.displayErrorDialog(
+            mockedErrorDialog.verify(() -> DialogManager.displayErrorDialog(
                     argThat(message -> message != null && message.contains("Load model from invalidModel failed"))
             ), atLeast(1));
         }

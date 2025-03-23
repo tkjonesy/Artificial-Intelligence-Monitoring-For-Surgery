@@ -1,17 +1,16 @@
 package io.github.tkjonesy.utils.models;
 
-import io.github.tkjonesy.ONNX.models.Log;
+import io.github.tkjonesy.ONNX.models.InferenceLog;
 import io.github.tkjonesy.ONNX.models.OnnxRunner;
-import io.github.tkjonesy.frontend.App;
+import io.github.tkjonesy.utils.DialogManager;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
-import io.github.tkjonesy.frontend.models.EndSessionPopUp;
+import io.github.tkjonesy.frontend.miscGUI.EndSessionPopUp;
 import lombok.Getter;
 
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.Size;
 import org.bytedeco.opencv.opencv_videoio.VideoWriter;
-
-import javax.swing.*;
 
 import static org.bytedeco.opencv.global.opencv_imgproc.resize;
 
@@ -47,18 +46,19 @@ public class FileSession {
 
     // Field to store the intended frame size for the video
     private Size videoFrameSize;
+    private final double targetFps;
 
     public FileSession(OnnxRunner onnxRunner, String title, String description, LogHandler logHandler)  {
         this.onnxRunner = onnxRunner;
         this.title = title;
         this.sessionDescription = description;
         this.logHandler = logHandler;
+        this.targetFps = settings.getCameraFps();
+
         try{
             startNewSession(); // Throws IOException if fails
         }catch (IOException e) {
-            JOptionPane.showMessageDialog(App.getInstance(),
-                    "Failed to start session. "+e.getMessage(),
-                    "Session Start Failed", JOptionPane.ERROR_MESSAGE);
+            DialogManager.displayErrorDialog("Failed to start new FileSession: "+ e.getMessage());
             throw new RuntimeException("Failed to start new FileSession: "+e.getMessage(), e);
         }
     }
@@ -106,13 +106,24 @@ public class FileSession {
         // Set the intended video frame size based on the first frame
         videoFrameSize = new Size(frame.cols(), frame.rows());
         String videoPath = sessionDirectory + "/recording.mp4";
+
+        // H.264 codec
         int codec = VideoWriter.fourcc((byte) 'a', (byte) 'v', (byte) 'c', (byte) '1');
 
-        videoWriter = new VideoWriter(videoPath, codec, 30.0, videoFrameSize, true);
+        videoWriter = new VideoWriter(videoPath, codec, targetFps, videoFrameSize, true);
 
         if (!videoWriter.isOpened()) {
-            throw new IllegalStateException("Failed to open VideoWriter with path: " + videoPath);
+            codec = VideoWriter.fourcc((byte) 'm', (byte) 'j', (byte) 'p', (byte) 'g');
+            videoWriter = new VideoWriter(videoPath, codec, targetFps, videoFrameSize, true);
+
+            if (!videoWriter.isOpened()) {
+                throw new IllegalStateException("Failed to initialize VideoWriter. Check if the directory is writable.");
+            }
         }
+        AIMsLogger.INFO("Video recording started." +
+                "Saving to: " + videoPath +
+                "Video Codec: " + (char) (codec & 0xFF) + (char) ((codec >> 8) & 0xFF) + (char) ((codec >> 16) & 0xFF) + (char) ((codec >> 24) & 0xFF) +
+                "FPS: " + targetFps);
     }
 
     public void destroyVideoWriter(){
@@ -120,7 +131,7 @@ public class FileSession {
             videoWriter.release();
             videoWriter = null;
 
-            System.out.println("\u001B[32m☑ Video recording ended. Video saved to: " + sessionDirectory + "/recording.mp4\u001B[0m");
+            AIMsLogger.INFO("Video recording ended. Video saved to: " + sessionDirectory + "/recording.mp4");
         }
     }
 
@@ -131,16 +142,20 @@ public class FileSession {
      */
     public void writeVideoFrame(Mat frame) {
         if (videoWriter != null && videoWriter.isOpened()) {
-            // TODO: Experiment on other computers. It seems to inconsistent
-            // Check if the frame dimensions match the expected videoFrameSize
-            if(frame.cols() != videoFrameSize.width() || frame.rows() != videoFrameSize.height()){
-                // Resize frame if dimensions do not match
-                Mat resizedFrame = new Mat();
-                resize(frame, resizedFrame, videoFrameSize);
-                videoWriter.write(resizedFrame);
-                resizedFrame.release();
-            } else {
-                videoWriter.write(frame);
+            try {
+                // Resize the frame if it doesn't match the intended video frame size
+                if (frame.cols() != videoFrameSize.width() || frame.rows() != videoFrameSize.height()) {
+                    Mat resizedFrame = new Mat();
+                    resize(frame, resizedFrame, videoFrameSize);
+                    videoWriter.write(resizedFrame);
+                    resizedFrame.release();
+
+                } else {
+                    videoWriter.write(frame);
+                }
+
+            } catch (Exception e) {
+                AIMsLogger.FATAL("Error writing video frame: " + e.getMessage());
             }
         }
     }
@@ -148,21 +163,21 @@ public class FileSession {
     /**
      * Writes a log message to the log file.
      *
-     * @param log The log entry to write.
+     * @param inferenceLog The log entry to write.
      */
-    protected void writeLogToFile(Log log) {
+    protected void writeLogToFile(InferenceLog inferenceLog) {
         if (logBufferedWriter != null) {
             try {
-                String fullMessage = log.getTimeStamp() + " - " + log.getMessage();
+                String fullMessage = inferenceLog.getTimeStamp() + " - " + inferenceLog.getMessage();
                 if(settings.isSaveLogsTEXT())
                     this.logBufferedWriter.write(fullMessage + "\n");
 
-                String[]parsedMessage = parseLogMessage(log.getMessage());
+                String[]parsedMessage = parseLogMessage(inferenceLog.getMessage());
                 if(settings.isSaveLogsCSV())
-                    this.csvBufferedWriter.write(log.getTimeStamp() + "," + parsedMessage[0] + "," + parsedMessage[1] + "," + parsedMessage[2] + "\n");
+                    this.csvBufferedWriter.write(inferenceLog.getTimeStamp() + "," + parsedMessage[0] + "," + parsedMessage[1] + "," + parsedMessage[2] + "\n");
 
             } catch (IOException e) {
-                System.err.println("IO Exception writing log to file: " + e.getMessage());
+                AIMsLogger.ERROR("IO Exception writing log to file: " + e.getMessage());
             }
         }
     }
@@ -183,7 +198,7 @@ public class FileSession {
                 logNumber = message;
             }
         } catch(Exception e){
-            System.err.println("Error parsing log message: " + e.getMessage());
+            AIMsLogger.ERROR("Error parsing log message: " + e.getMessage());
         }
         return new String[]{logNumber, object, action};
     }
@@ -192,7 +207,7 @@ public class FileSession {
      * Ends the current session by releasing resources such as the VideoWriter and BufferedWriter.
      */
     public void endSession() {
-        System.out.println("\u001B[33m☐ Ending current FileSession...\u001B[0m");
+        AIMsLogger.TRACE("Ending session: " + title);
 
         if(settings.isSaveVideo())
             destroyVideoWriter();
@@ -206,7 +221,6 @@ public class FileSession {
         Duration recordDuration = Duration.between(startTime, Instant.now());
 
         generateAAR(recordDuration);
-        EndSessionPopUp.showSessionEndDialog(sessionDirectory);
         onnxRunner.endSession();
     }
 
@@ -337,10 +351,22 @@ public class FileSession {
             }
             writer.write("-----------------------------------------------------\n\n");
 
-            System.out.println("✅ AAR saved to: " + aarPath);
+            AIMsLogger.INFO("AAR saved to: " + aarPath);
         } catch (IOException e) {
-            System.err.println("❌ Failed to write AAR: " + e.getMessage());
+            AIMsLogger.INFO("Failed to write AAR: " + e.getMessage());
         }
+
+        // Save values for popup
+        String formattedDuration = formatDuration(recordDuration);
+        EndSessionPopUp.showSessionEndDialog(
+                title,
+                formattedDuration,
+                peakObjects,
+                finalToolCounts,
+                totalToolsAdded,
+                toolsRemoved,
+                sessionDirectory
+        );
     }
 
     /**
@@ -353,7 +379,7 @@ public class FileSession {
                 logBufferedWriter.close();
             }
         } catch (IOException e) {
-            System.err.println("Failed to close log writer: " + e.getMessage());
+            AIMsLogger.FATAL("Failed to close log writer: " + e.getMessage());
         } finally {
             logBufferedWriter = null;
         }
@@ -366,7 +392,7 @@ public class FileSession {
                 csvBufferedWriter.close();
             }
         } catch (IOException e) {
-            System.err.println("Failed to close csv writer: " + e.getMessage());
+            AIMsLogger.FATAL("Failed to close csv writer: " + e.getMessage());
         } finally {
             csvBufferedWriter = null;
         }
