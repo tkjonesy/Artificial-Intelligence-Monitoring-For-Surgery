@@ -5,6 +5,7 @@ on:
     branches:
       - main
     types:
+      - opened
       - closed
 
 permissions:
@@ -13,7 +14,7 @@ permissions:
 
 jobs:
   package-linux:
-    if: github.event.pull_request.merged == true
+    if: github.event.action == 'opened'
     name: Build JAR on Linux
     runs-on: ubuntu-latest
 
@@ -37,7 +38,7 @@ jobs:
           path: target/*.jar
 
   build-windows-installer:
-    if: github.event.pull_request.merged == true
+    if: github.event.action == 'opened'
     name: Build Installer on Windows
     runs-on: windows-latest
 
@@ -75,7 +76,7 @@ jobs:
           path: target/AIMs-*.exe
 
   build-macos-installer:
-    if: github.event.pull_request.merged == true
+    if: github.event.action == 'opened'
     name: Build Installer on macOS
     runs-on: macos-latest
 
@@ -132,6 +133,7 @@ jobs:
           path: target/AIMs.dmg
 
   release:
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
     needs: [package-linux, build-windows-installer, build-macos-installer]
     runs-on: ubuntu-latest
 
