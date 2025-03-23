@@ -4,9 +4,6 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
 
 permissions:
   contents: write
@@ -130,7 +127,7 @@ jobs:
           path: target/AIMs.dmg
 
   release:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
     needs: [package-linux, build-windows-installer, build-macos-installer]
     runs-on: ubuntu-latest
 
