@@ -4,12 +4,17 @@ import ai.onnxruntime.OrtException;
 import io.github.tkjonesy.ONNX.Detection;
 import io.github.tkjonesy.ONNX.Yolo;
 import io.github.tkjonesy.ONNX.YoloV8;
+import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.models.LogHandler;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.*;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bytedeco.opencv.opencv_core.Mat;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -17,7 +22,13 @@ import java.util.*;
  * using ONNX models. It manages model inference sessions, logging, and tracking of
  * detected classes.
  */
+@NoArgsConstructor(force = true)
 public class OnnxRunner {
+
+    private static final Logger logger = LogManager.getLogger(OnnxRunner.class);
+
+    private final ProgramSettings settings = ProgramSettings.getCurrentSettings();
+
 
     private int logCounter = 1;
     @Getter
@@ -26,7 +37,6 @@ public class OnnxRunner {
     /**
      * The YOLO inference session used to run the YOLO model.
      */
-    @Setter
     private Yolo inferenceSession;
 
     /**
@@ -58,7 +68,7 @@ public class OnnxRunner {
     private final HashMap<String, Integer> totalInstancesAdded = new HashMap<>();
 
     @Setter
-    private int bufferThreshold = 3;
+    private int bufferThreshold;
 
     private boolean sessionActive = false;
 
@@ -70,18 +80,22 @@ public class OnnxRunner {
 
         this.startCountPerClass = new HashMap<>();
 
+        updateInferenceSession(settings.getModelPath(), settings.getLabelPath());
+
+    }
+
+    public void updateInferenceSession(String modelPath, String labelPath) {
         try {
-            ProgramSettings settings = ProgramSettings.getCurrentSettings();
-            this.inferenceSession = new YoloV8(settings.getModelPath(), settings.getLabelPath());
-        } catch (OrtException | IOException exception) {
-            System.err.println("Error initializing YOLO model: " + exception.getMessage());
-            System.exit(1);
+            this.inferenceSession = new YoloV8(modelPath, labelPath);
+        }catch (IOException | OrtException e) {
+            ErrorDialogManager.displayErrorDialog("An error occurred while loading the ONNX model: " + e.getMessage());
+            logger.error("Error loading ONNX model: {}", e.getMessage(), e);
         }
-        printHeader();
     }
 
     public void startSession(){
        System.out.println("🔄 Starting new tracking session.");
+       bufferThreshold = settings.getBufferThreshold();
     }
 
     public void endSession() {
@@ -92,7 +106,6 @@ public class OnnxRunner {
         peakObjectsSeen = 0;      // Resets peak object count
         totalInstancesAdded.clear();
         logCounter = 1;
-        System.out.println("🔄 Tracking data reset for new session.");
     }
 
     /**
@@ -105,14 +118,17 @@ public class OnnxRunner {
         List<Detection> detectionList = new ArrayList<>();
 
         try {
+            Instant start = Instant.now();
             detectionList = inferenceSession.run(frame);
+            Instant end = Instant.now();
+            long timeElapsed = end.toEpochMilli() - start.toEpochMilli();
+            System.out.println("Inference time: " + timeElapsed + "ms");
 
         } catch (OrtException ortException) {
-
             logQueue.addRedLog("Error running inference: " + ortException.getMessage());
+            LogHandler.forceProcessNextLog();
             System.err.println("Error running inference: " + ortException.getMessage());
         }
-
         return new OnnxOutput(detectionList);
     }
 
@@ -125,15 +141,6 @@ public class OnnxRunner {
         }
 
         return currentDetections;
-    }
-
-
-    // Method to print the header row
-    private void printHeader() {
-        String header = String.format("%-10s %-20s %-20s",
-                "Index", "Object", "Log Action");
-        System.out.println(header);
-        System.out.println("=".repeat(header.length()));  // Underline the header with equals signs
     }
 
     // Utility method to format log messages
@@ -167,10 +174,12 @@ public class OnnxRunner {
             System.out.println("✅ Initial tools captured: " + startCountPerClass);
         }
 
-        // <String, Integer> activeDetections
-        // key = label
-        // value = count
-        // For labels that are in activeDetections but not in the current frame, add the label with count 0 to currentDetections
+        /*
+         * <String, Integer> activeDetections
+         * key = label
+         * value = count
+         * For labels that are in activeDetections but not in the current frame, add the label with count 0 to currentDetections
+         */
         for (var detection : activeDetections.entrySet()) {
             // If the label is in the current frame, skip
             if (currentDetections.containsKey(detection.getKey())) {
@@ -219,10 +228,12 @@ public class OnnxRunner {
         // Since you can't remove items from a hashmap while iterating through it, we need to store the items to be removed in a queue
         Queue<DetectionWithCount> queueForBufferRemoval = new LinkedList<>();
 
-        // <DetectionWithCount, Integer> detectionBuffer
-        // key = label + count
-        // value = number of consecutive frames the detection has been in the buffer
-        // For labels that are in the buffer but not in the current frame, decrement. Aka decrement detection outliers/flickers
+        /*
+         * <DetectionWithCount, Integer> detectionBuffer
+         * key = label + count
+         * value = number of consecutive frames the detection has been in the buffer
+         * For labels that are in the buffer but not in the current frame, decrement. Aka decrement detection outliers/flickers
+         */
         for (var detection : detectionBuffer.entrySet()) {
 
             // Grab the count of the detection in the buffer and the current count of the detection
@@ -251,30 +262,26 @@ public class OnnxRunner {
 
         //  Green log - New object detected or class count increased
         if (difference > 0) {
+            String logMessage;
             if(originalValue == 0){
-                String logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "New Object Detected: " + newValue);
-                logQueue.addGreenLog(logMessage);
-                System.out.println("🟢 DEBUG: Added to Log - " + logMessage);
+                logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "New Object Detected: " + newValue);
             }else{
-                String logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "Class count increased: " + newValue);
-                logQueue.addGreenLog(logMessage);
-                System.out.println("🟢 DEBUG: Count Increased - " + logMessage);
+                logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "Class count increased: " + newValue);
             }
+            logQueue.addGreenLog(logMessage);
 
             int totalAdded = totalInstancesAdded.getOrDefault(detectionWithCount.label(), 0);
             totalInstancesAdded.put(detectionWithCount.label(), totalAdded + difference);
 
         //  Red log - Object removed or class count decreased
         } else if (difference < 0) {
+            String logMessage;
             if(newValue == 0) {
-                String logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "Object Removed");
-                logQueue.addRedLog(logMessage);
-                System.out.println("🔴 DEBUG: Removed from Log - " + logMessage);
+                logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "Object Removed");
             } else{
-                String logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "Class count decreased: " + newValue);
-                logQueue.addRedLog(logMessage);
-                System.out.println("🔴 DEBUG: Count Decreased - " + logMessage);
+                logMessage = formatLogMessage(logCounter++, detectionWithCount.label(), "Class count decreased: " + newValue);
             }
+            logQueue.addRedLog(logMessage);
         }
 
         // Update active detections
@@ -284,6 +291,6 @@ public class OnnxRunner {
             activeDetections.remove(detectionWithCount.label());
         }
     }
-}
 
-record DetectionWithCount(String label, int count) {}
+    record DetectionWithCount(String label, int count) {}
+}

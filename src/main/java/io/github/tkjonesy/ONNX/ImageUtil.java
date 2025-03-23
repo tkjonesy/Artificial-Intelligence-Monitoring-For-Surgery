@@ -1,5 +1,6 @@
 package io.github.tkjonesy.ONNX;
 
+import io.github.tkjonesy.utils.settings.ProgramSettings;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.Point;
 import org.bytedeco.opencv.opencv_core.Scalar;
@@ -14,6 +15,7 @@ import static org.bytedeco.opencv.global.opencv_imgproc.LINE_8;
 import static org.bytedeco.opencv.global.opencv_core.copyMakeBorder;
 import static org.bytedeco.opencv.global.opencv_core.BORDER_CONSTANT;
 
+import java.awt.*;
 import java.util.List;
 
 /**
@@ -21,6 +23,8 @@ import java.util.List;
  * including resizing images with padding, reordering color channels, and drawing predictions on images.
  */
 public class ImageUtil {
+
+    private static final ProgramSettings settings = ProgramSettings.getCurrentSettings();
 
     /**
      * Resizes the source image to fit within the specified dimensions, adding padding
@@ -96,9 +100,13 @@ public class ImageUtil {
      *                      bounding box coordinates and a label.
      */
     public static void drawPredictions(Mat img, List<Detection> detectionList) {
+
+        if(!settings.isShowBoundingBoxes()){return;}
+
         for (Detection detection : detectionList) {
             float[] bbox = detection.bbox();
-            Scalar color = new Scalar(249.0, 218.0, 60.0, 0.0);
+            int[] boundingBoxColor = settings.getBoundingBoxColor();
+            Scalar color = new Scalar(boundingBoxColor[2], boundingBoxColor[1], boundingBoxColor[0], 0);
             rectangle(img,                    // Matrix object of the image
                     new Point((int) bbox[0], (int) bbox[1]),      // Top-left point
                     new Point((int) bbox[2], (int) bbox[3]),      // Bottom-right point
@@ -107,17 +115,36 @@ public class ImageUtil {
                     LINE_8,                           // Type of line
                     0                                  // Shift
             );
-            putText(
-                    img,
-                    detection.label(),
-                    new Point((int) bbox[0] - 1, (int) bbox[1] - 5),
-                    FONT_HERSHEY_SIMPLEX,
-                    0.5,
-                    color,
-                    1,       // thickness
-                    LINE_8,  // lineType
-                    false    // bottomLeftOrigin
-            );
+
+
+            if(settings.isShowLabels()){
+                putText(
+                        img,
+                        detection.label(),
+                        new Point((int) bbox[0] - 1, (int) bbox[1] - 5),
+                        FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        color,
+                        1,       // thickness
+                        LINE_8,  // lineType
+                        false    // bottomLeftOrigin
+                );
+            }
+
+            if(settings.isShowConfidences()){
+                putText(
+                        img,
+                        String.format("%.2f", detection.confidence()),
+                        new Point((int) bbox[0] - 1, (int) bbox[1] - 20),
+                        FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        color,
+                        1,       // thickness
+                        LINE_8,  // lineType
+                        false    // bottomLeftOrigin
+                );
+            }
+
         }
     }
 }

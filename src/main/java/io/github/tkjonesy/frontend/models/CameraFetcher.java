@@ -6,15 +6,19 @@ import io.github.tkjonesy.ONNX.models.OnnxOutput;
 import io.github.tkjonesy.ONNX.models.OnnxRunner;
 
 import io.github.tkjonesy.frontend.App;
+import io.github.tkjonesy.utils.models.FileSession;
+import io.github.tkjonesy.utils.models.SessionHandler;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import org.bytedeco.javacpp.BytePointer;
 
 import org.bytedeco.opencv.opencv_core.Mat;
+import org.bytedeco.opencv.opencv_core.Point;
+import org.bytedeco.opencv.opencv_core.Scalar;
 import org.bytedeco.opencv.opencv_core.Size;
 import org.bytedeco.opencv.opencv_videoio.VideoCapture;
 import org.bytedeco.opencv.opencv_videoio.VideoWriter;
 
-import static org.bytedeco.opencv.global.opencv_imgproc.resize;
+import static org.bytedeco.opencv.global.opencv_imgproc.*;
 import static org.bytedeco.opencv.global.opencv_videoio.CAP_PROP_FRAME_WIDTH;
 import static org.bytedeco.opencv.global.opencv_videoio.CAP_PROP_FRAME_HEIGHT;
 
@@ -28,6 +32,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 
 public class CameraFetcher implements Runnable {
@@ -37,6 +44,9 @@ public class CameraFetcher implements Runnable {
     private final Timer timer;
     private final SessionHandler sessionHandler;
     private final OnnxRunner onnxRunner;
+
+    // Executor for running inference on a separate thread pool
+    private final ExecutorService inferenceExecutor = Executors.newSingleThreadExecutor();
 
     private final ProgramSettings settings = ProgramSettings.getCurrentSettings();
 
@@ -86,6 +96,8 @@ public class CameraFetcher implements Runnable {
             private static OnnxOutput onnxOutput;
             private static List<Detection> detections = new ArrayList<>();
 
+            private final Scalar redColor = new Scalar(0, 0, 255, 0);
+
             @Override
             public void run() {
                 if(camera != App.getCamera()) {
@@ -94,15 +106,23 @@ public class CameraFetcher implements Runnable {
                 }
                 if (!Thread.currentThread().isInterrupted()) {
                     camera.read(frame);
+
+                    if(settings.isMirrorCamera()){
+                        opencv_core.flip(frame, frame, 1);
+                    }
+
                     Mat inferenceFrame = frame.clone();
 
                     // Every Nth frame, run object detection
                     if (++currentFrame % settings.getProcessEveryNthFrame() == 0) {
-                        new Thread(() -> {
-                            onnxOutput = onnxRunner.runInference(inferenceFrame);
-                            detections = onnxOutput.getDetectionList();
-                            inferenceFrame.deallocate();
-                        }).start();
+                        inferenceExecutor.submit(() -> {
+                            try {
+                                onnxOutput = onnxRunner.runInference(inferenceFrame);
+                                detections = onnxOutput.getDetectionList();
+                            } finally {
+                                inferenceFrame.release();
+                            }
+                        });
                         currentFrame = 0;
                     }
 
@@ -121,10 +141,25 @@ public class CameraFetcher implements Runnable {
                         }
 
                         opencv_core.rotate(frame, frame, ROTA);
+
+                        // TODO: This is temporary way to show the session time. It should be moved to a more appropriate place.
+                        String sessionTime = sessionHandler.getSessionDuration();
+                        putText(
+                                frame,
+                                sessionTime,
+                                new Point(frame.cols()-100, 30),
+                                FONT_HERSHEY_COMPLEX,
+                                1.0,
+                                redColor,
+                                1,
+                                LINE_8,
+                                false
+                        );
+
                         // Show frame in label
                         BufferedImage biFrame = cvt2bi(frame);
-
                         cameraFeed.setIcon(new ImageIcon(biFrame));
+                        biFrame.flush();
                     } catch (Exception e ){
                         System.out.println("Camera Fetcher had to stop! If you are closing the program, this is expected.");
                         this.cancel();
@@ -134,17 +169,18 @@ public class CameraFetcher implements Runnable {
                         FileSession fileSession = sessionHandler.getFileSession();
                         VideoWriter writer = fileSession.getVideoWriter();
                         // Initializes the video writer
-                        if ((writer == null || !writer.isOpened())) {
+                        if ((writer == null || !writer.isOpened()) && settings.isSaveVideo()) {
                             fileSession.initVideoWriter(frame);
-                            onnxRunner.getLogQueue().addGreenLog("---Video recording started.---");
                         }
-                        fileSession.writeVideoFrame(frame);
+
+                        if(settings.isSaveVideo())
+                            fileSession.writeVideoFrame(frame);
+
                         if (currentFrame % settings.getProcessEveryNthFrame() == 0)
                             onnxRunner.processDetections(detections);
-
-
                     }
                 }
+                frame.release();
             }
         };
         // Schedule the capture task
