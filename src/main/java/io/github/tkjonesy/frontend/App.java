@@ -87,6 +87,13 @@ public class App extends JFrame {
     public App() {
         instance = this;
 
+        try {
+            SettingsLoader.initializeAIMsDirectories();
+        } catch (RuntimeException e) {
+            AIMsLogger.ERROR("Failed to initialize AIMs directories. Exiting application.");
+            DialogManager.displayErrorDialogFatal("Failed to initialize AIMs directories. Exiting application.");
+        }
+
         new Thread(() -> {
             initializeSettingsAndLogger();
 
@@ -98,12 +105,6 @@ public class App extends JFrame {
 
             collectAvailableCameras();
 
-            try {
-                SettingsLoader.initializeAIMsDirectories();
-            } catch (RuntimeException e) {
-                AIMsLogger.ERROR("Failed to initialize AIMs directories. Exiting application.");
-                DialogManager.displayErrorDialogFatal("Failed to initialize AIMs directories. Exiting application.");
-            }
 
             SwingUtilities.invokeLater(() -> {
                 initComponents();
