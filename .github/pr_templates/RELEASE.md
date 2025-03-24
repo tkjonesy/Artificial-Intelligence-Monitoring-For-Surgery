@@ -1,11 +1,13 @@
-*version: 1.2.3*
+# Release Notes
 
-## Summary
-Please describe the new release, any breaking changes, and list major improvements.
+## What's New? [REQUIRED]
+* Feature #1
+* Feature #2
 
-## Release Notes
-- Item 1
-- Item 2
-- Item 3
+## Bug Fixes
+* Fix #1
+* Fix #2
 
-*(This PR body was generated automatically. Please verify that the content is correct before merging.)*
+## Changes Moving Forward
+* To-Do #1
+* To-Do #2
