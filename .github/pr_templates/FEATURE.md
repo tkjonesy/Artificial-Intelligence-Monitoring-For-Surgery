@@ -1,12 +1,30 @@
-# New Feature
+# Proposed Changes
 
-## Overview
-Describe the new feature and its benefits.
+## Description
 
-## Implementation Details
-Outline the key changes in the implementation.
+Please include a summary of the changes and the related issue/fix. Please also include relevant motivation and context. List any dependencies that are required for this change.
 
-## Testing
-Explain how this feature was tested. Include any relevant test cases or scenarios.
+## Type of Change
 
-*(This PR body was generated automatically. Please double-check for completeness.)*
+Choose all that applies:
+
+- [ ] Code cleanup (non-breaking change that does not affect functionality)
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] This change requires a documentation update
+
+## How Has This Been Tested?
+
+Please describe the tests that you ran to verify your changes. Include your OS, camera, and any other pertinent information to these tests. If no tests were ran, put N/A.
+
+*Test(s) Performed:*
+
+## Checklist:
+
+- [ ] I have performed a self-review of my code
+- [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have made corresponding changes to the documentation
+- [ ] My changes generate no new warnings
+- [ ] I have added tests that prove my fix is effective or that my feature works
+- [ ] New and existing unit tests pass locally with my changes
