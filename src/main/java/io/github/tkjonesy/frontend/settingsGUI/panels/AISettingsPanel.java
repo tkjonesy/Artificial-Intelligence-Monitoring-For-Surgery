@@ -4,6 +4,7 @@ import io.github.tkjonesy.frontend.settingsGUI.SettingsUI;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
 import io.github.tkjonesy.frontend.settingsGUI.listenersANDevents.AISettingsListener;
 import io.github.tkjonesy.frontend.settingsGUI.listenersANDevents.BoundingBoxColorChangeEvent;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 
 import javax.swing.*;
@@ -38,6 +39,23 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
     private final JTextField gInputTextField;
     private final JTextField bInputTextField;
     private final JButton colorPreviewButton;
+
+    private int[] logAddedColor = new int[3];
+    private int[] logRemovedColor = new int[3];
+
+    private final JTextField logAddedRInputTextField;
+    private final JTextField logAddedGInputTextField;
+    private final JTextField logAddedBInputTextField;
+    private final JButton logAddedColorPreviewButton;
+
+    private final JTextField logRemovedRInputTextField;
+    private final JTextField logRemovedGInputTextField;
+    private final JTextField logRemovedBInputTextField;
+    private final JButton logRemovedColorPreviewButton;
+
+    private final JLabel logAddedColorLabel = new JLabel("Log Added Color (RGB):");
+    private final JLabel logRemovedColorLabel = new JLabel("Log Removed Color (RGB):");
+
 
     private final JComboBox<String> modelSelector;
     private final JComboBox<String> labelSelector;
@@ -93,6 +111,37 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
 
         colorPreviewButton.addActionListener(e -> openColorChooser());
 
+        // Initialize Log Added Color
+        int logAddedR = settings.getLogAddedColor()[0];
+        int logAddedG = settings.getLogAddedColor()[1];
+        int logAddedB = settings.getLogAddedColor()[2];
+
+        this.logAddedRInputTextField = new JTextField(String.valueOf(logAddedR), 3);
+        this.logAddedGInputTextField = new JTextField(String.valueOf(logAddedG), 3);
+        this.logAddedBInputTextField = new JTextField(String.valueOf(logAddedB), 3);
+
+        logAddedRInputTextField.addActionListener(e -> updateLogAddedColor());
+        logAddedGInputTextField.addActionListener(e -> updateLogAddedColor());
+        logAddedBInputTextField.addActionListener(e -> updateLogAddedColor());
+
+        this.logAddedColorPreviewButton = createColorPreviewButton(logAddedR, logAddedG, logAddedB, this::openLogAddedColorChooser);
+
+// Initialize Log Removed Color
+        int logRemovedR = settings.getLogRemovedColor()[0];
+        int logRemovedG = settings.getLogRemovedColor()[1];
+        int logRemovedB = settings.getLogRemovedColor()[2];
+
+        this.logRemovedRInputTextField = new JTextField(String.valueOf(logRemovedR), 3);
+        this.logRemovedGInputTextField = new JTextField(String.valueOf(logRemovedG), 3);
+        this.logRemovedBInputTextField = new JTextField(String.valueOf(logRemovedB), 3);
+
+        logRemovedRInputTextField.addActionListener(e -> updateLogRemovedColor());
+        logRemovedGInputTextField.addActionListener(e -> updateLogRemovedColor());
+        logRemovedBInputTextField.addActionListener(e -> updateLogRemovedColor());
+
+        this.logRemovedColorPreviewButton = createColorPreviewButton(logRemovedR, logRemovedG, logRemovedB, this::openLogRemovedColorChooser);
+
+
         this.boundingBoxCheckbox = new JCheckBox("Bounding Boxes:", settings.isShowBoundingBoxes());
         this.showLabelsCheckbox = new JCheckBox("Show Labels:", settings.isShowLabels());
         this.showConfidencesCheckbox = new JCheckBox("Show Confidences:", settings.isShowConfidences());
@@ -122,8 +171,8 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
     public void initListeners() {
         this.addAISettingsListener(
                 newColor -> {
-                    System.out.println("Bounding box color changed: " + Arrays.toString(newColor));
                     settingsUpdates.put("boundingBoxColor", newColor);
+                    AIMsLogger.TRACE("Bounding box color changed to: " + Arrays.toString(newColor));
                     if(Arrays.equals(settings.getBoundingBoxColor(), newColor))
                         settingsUpdates.remove("boundingBoxColor");
                     updateApplyButtonState();
@@ -152,7 +201,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                 e -> {
                     String value = (String) modelSelector.getSelectedItem();
                     String path = AIMS_MODELS_DIRECTORY + "/" + value;
-                    System.out.println("Model: " + modelSelector.getSelectedItem());
+                    AIMsLogger.TRACE("Selected model: " + value);
                     settingsUpdates.put("modelPath", path);
                     if(settings.getModelPath().equals(path))
                         settingsUpdates.remove("modelPath");
@@ -163,7 +212,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                 e -> {
                     String value = (String) labelSelector.getSelectedItem();
                     String path = AIMS_MODELS_DIRECTORY + "/" + value;
-                    System.out.println("Labels: " + labelSelector.getSelectedItem());
+                    AIMsLogger.TRACE("Selected label file: " + value);
                     settingsUpdates.put("labelPath", path);
                     if(settings.getLabelPath().equals(path))
                         settingsUpdates.remove("labelPath");
@@ -173,7 +222,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(boundingBoxCheckbox, (ActionListener)
                 e -> {
                     boolean value = boundingBoxCheckbox.isSelected();
-                    System.out.println("Bounding boxes: " + boundingBoxCheckbox.isSelected());
+                    AIMsLogger.TRACE("Bounding box visibility changed to: " + value);
                     settingsUpdates.put("showBoundingBoxes", value);
                     if(settings.isShowBoundingBoxes() == value)
                         settingsUpdates.remove("showBoundingBoxes");
@@ -183,7 +232,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(showLabelsCheckbox, (ActionListener)
                 e -> {
                     boolean value = showLabelsCheckbox.isSelected();
-                    System.out.println("Show labels: " + showLabelsCheckbox.isSelected());
+                    AIMsLogger.TRACE("Label visibility changed to: " + value);
                     settingsUpdates.put("showLabels", value);
                     if(settings.isShowLabels() == value)
                         settingsUpdates.remove("showLabels");
@@ -193,7 +242,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(showConfidencesCheckbox, (ActionListener)
                 e -> {
                     boolean value = showConfidencesCheckbox.isSelected();
-                    System.out.println("Show confidences: " + showConfidencesCheckbox.isSelected());
+                    AIMsLogger.TRACE("Confidence visibility changed to: " + value);
                     settingsUpdates.put("showConfidences", value);
                     if(settings.isShowConfidences() == value)
                         settingsUpdates.remove("showConfidences");
@@ -203,7 +252,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(processEveryNthFrameSpinner, (ChangeListener)
                 e -> {
                     int value = (int) processEveryNthFrameSpinner.getValue();
-                    System.out.println("Process every nth frame: " + processEveryNthFrameSpinner.getValue());
+                    AIMsLogger.TRACE("Processing every Nth frame changed to: " + value);
                     settingsUpdates.put("processEveryNthFrame", value);
                     if(settings.getProcessEveryNthFrame() == value)
                         settingsUpdates.remove("processEveryNthFrame");
@@ -213,7 +262,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(bufferThresholdSpinner, (ChangeListener)
                 e -> {
                     int value = (int) bufferThresholdSpinner.getValue();
-                    System.out.println("Buffer threshold: " + bufferThresholdSpinner.getValue());
+                    AIMsLogger.TRACE("Buffer threshold changed to: " + value);
                     settingsUpdates.put("bufferThreshold", value);
                     if(settings.getBufferThreshold() == value)
                         settingsUpdates.remove("bufferThreshold");
@@ -223,7 +272,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(confThresholdSlider, (ChangeListener)
                 e -> {
                     float value = confThresholdSlider.getValue() / 100f;
-                    System.out.println("Confidence threshold: " + value);
+                    AIMsLogger.TRACE("Confidence threshold changed to: " + value);
                     settingsUpdates.put("confThreshold", value);
                     if(settings.getConfThreshold() == value)
                         settingsUpdates.remove("confThreshold");
@@ -256,11 +305,22 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                         )
                         .addGroup(layout.createSequentialGroup()
                                 .addComponent(colorLabel)
-                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(rInputTextField)
                                 .addComponent(gInputTextField)
                                 .addComponent(bInputTextField)
                                 .addComponent(colorPreviewButton))
+                        .addGroup(layout.createSequentialGroup()
+                                .addComponent(logAddedColorLabel)
+                                .addComponent(logAddedRInputTextField)
+                                .addComponent(logAddedGInputTextField)
+                                .addComponent(logAddedBInputTextField)
+                                .addComponent(logAddedColorPreviewButton))
+                        .addGroup(layout.createSequentialGroup()
+                                .addComponent(logRemovedColorLabel)
+                                .addComponent(logRemovedRInputTextField)
+                                .addComponent(logRemovedGInputTextField)
+                                .addComponent(logRemovedBInputTextField)
+                                .addComponent(logRemovedColorPreviewButton))
                         .addGroup(
                                 layout.createSequentialGroup()
                                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
@@ -322,6 +382,18 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                                 .addComponent(gInputTextField)
                                 .addComponent(bInputTextField)
                                 .addComponent(colorPreviewButton))
+                        .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(logAddedColorLabel)
+                                .addComponent(logAddedRInputTextField)
+                                .addComponent(logAddedGInputTextField)
+                                .addComponent(logAddedBInputTextField)
+                                .addComponent(logAddedColorPreviewButton))
+                        .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(logRemovedColorLabel)
+                                .addComponent(logRemovedRInputTextField)
+                                .addComponent(logRemovedGInputTextField)
+                                .addComponent(logRemovedBInputTextField)
+                                .addComponent(logRemovedColorPreviewButton))
                         .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(
                                 layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
@@ -358,6 +430,21 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                         )
 
         );
+    }
+
+    private JButton createColorPreviewButton(int r, int g, int b, Runnable action) {
+        JButton button = new JButton() {
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(30, 30);
+            }
+        };
+        button.setBackground(new Color(r, g, b));
+        button.setMinimumSize(new Dimension(30, 30));
+        button.setMaximumSize(new Dimension(30, 30));
+        button.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        button.addActionListener(e -> action.run());
+        return button;
     }
 
     private String[] getFilesWithExtension(String extension) {
@@ -416,6 +503,71 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         colorDialog.setVisible(true);
     }
 
+    // Open color chooser for Log Added Color
+    private void openLogAddedColorChooser() {
+        JColorChooser colorChooser = new JColorChooser(logAddedColorPreviewButton.getBackground());
+        removeUnwantedTabs(colorChooser);
+
+        JDialog colorDialog = JColorChooser.createDialog(
+                this,
+                "Choose Log Added Color",
+                true,
+                colorChooser,
+                e -> {
+                    Color selectedColor = colorChooser.getColor();
+                    if (selectedColor != null) {
+                        logAddedColorPreviewButton.setBackground(selectedColor);
+                        logAddedRInputTextField.setText(String.valueOf(selectedColor.getRed()));
+                        logAddedGInputTextField.setText(String.valueOf(selectedColor.getGreen()));
+                        logAddedBInputTextField.setText(String.valueOf(selectedColor.getBlue()));
+
+                        this.logAddedColor = new int[]{
+                                selectedColor.getRed(),
+                                selectedColor.getGreen(),
+                                selectedColor.getBlue()
+                        };
+                        fireLogAddedColorChangedEvent(this.logAddedColor);
+                    }
+                },
+                null
+        );
+
+        colorDialog.setVisible(true);
+    }
+
+    // Open color chooser for Log Removed Color
+    private void openLogRemovedColorChooser() {
+        JColorChooser colorChooser = new JColorChooser(logRemovedColorPreviewButton.getBackground());
+        removeUnwantedTabs(colorChooser);
+
+        JDialog colorDialog = JColorChooser.createDialog(
+                this,
+                "Choose Log Removed Color",
+                true,
+                colorChooser,
+                e -> {
+                    Color selectedColor = colorChooser.getColor();
+                    if (selectedColor != null) {
+                        logRemovedColorPreviewButton.setBackground(selectedColor);
+                        logRemovedRInputTextField.setText(String.valueOf(selectedColor.getRed()));
+                        logRemovedGInputTextField.setText(String.valueOf(selectedColor.getGreen()));
+                        logRemovedBInputTextField.setText(String.valueOf(selectedColor.getBlue()));
+
+                        this.logRemovedColor = new int[]{
+                                selectedColor.getRed(),
+                                selectedColor.getGreen(),
+                                selectedColor.getBlue()
+                        };
+                        fireLogRemovedColorChangedEvent(this.logRemovedColor);
+                    }
+                },
+                null
+        );
+
+        colorDialog.setVisible(true);
+    }
+
+
     // Ensure only the "Swatches" and "RGB" tabs are visible
     private void removeUnwantedTabs(JColorChooser colorChooser) {
         for (Component comp : colorChooser.getComponents()) {
@@ -461,6 +613,54 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         }
     }
 
+    private void updateLogAddedColor() {
+        try {
+            int r = Integer.parseInt(logAddedRInputTextField.getText());
+            int g = Integer.parseInt(logAddedGInputTextField.getText());
+            int b = Integer.parseInt(logAddedBInputTextField.getText());
+
+            r = Math.max(0, Math.min(255, r));
+            g = Math.max(0, Math.min(255, g));
+            b = Math.max(0, Math.min(255, b));
+
+            logAddedRInputTextField.setText(String.valueOf(r));
+            logAddedGInputTextField.setText(String.valueOf(g));
+            logAddedBInputTextField.setText(String.valueOf(b));
+
+            this.logAddedColor = new int[]{r, g, b};
+            logAddedColorPreviewButton.setBackground(new Color(r, g, b));
+
+            fireLogAddedColorChangedEvent(this.logAddedColor);
+
+        } catch (NumberFormatException ex) {
+            System.err.println("Invalid RGB input for log added color. Must be a number between 0-255.");
+        }
+    }
+
+    private void updateLogRemovedColor() {
+        try {
+            int r = Integer.parseInt(logRemovedRInputTextField.getText());
+            int g = Integer.parseInt(logRemovedGInputTextField.getText());
+            int b = Integer.parseInt(logRemovedBInputTextField.getText());
+
+            r = Math.max(0, Math.min(255, r));
+            g = Math.max(0, Math.min(255, g));
+            b = Math.max(0, Math.min(255, b));
+
+            logRemovedRInputTextField.setText(String.valueOf(r));
+            logRemovedGInputTextField.setText(String.valueOf(g));
+            logRemovedBInputTextField.setText(String.valueOf(b));
+
+            this.logRemovedColor = new int[]{r, g, b};
+            logRemovedColorPreviewButton.setBackground(new Color(r, g, b));
+
+            fireLogRemovedColorChangedEvent(this.logRemovedColor);
+
+        } catch (NumberFormatException ex) {
+            System.err.println("Invalid RGB input for log removed color. Must be a number between 0-255.");
+        }
+    }
+
     public void addAISettingsListener(AISettingsListener listener) {
         listeners.add(listener);
     }
@@ -473,5 +673,19 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         for (AISettingsListener listener : listeners) {
             listener.onBoundingBoxColorChanged(event.newColor());
         }
+    }
+
+    private void fireLogAddedColorChangedEvent(int[] newColor) {
+        settingsUpdates.put("logAddedColor", newColor);
+        if (Arrays.equals(settings.getLogAddedColor(), newColor))
+            settingsUpdates.remove("logAddedColor");
+        updateApplyButtonState();
+    }
+
+    private void fireLogRemovedColorChangedEvent(int[] newColor) {
+        settingsUpdates.put("logRemovedColor", newColor);
+        if (Arrays.equals(settings.getLogRemovedColor(), newColor))
+            settingsUpdates.remove("logRemovedColor");
+        updateApplyButtonState();
     }
 }

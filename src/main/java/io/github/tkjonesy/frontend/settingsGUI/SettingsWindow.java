@@ -1,23 +1,27 @@
 package io.github.tkjonesy.frontend.settingsGUI;
 
 import io.github.tkjonesy.frontend.settingsGUI.panels.AISettingsPanel;
-import io.github.tkjonesy.frontend.settingsGUI.panels.AdvancedSettingsPanel;
+import io.github.tkjonesy.frontend.settingsGUI.panels.AdvancedSettingsPanel.AdvancedSettingsPanel;
 import io.github.tkjonesy.frontend.settingsGUI.panels.CameraSettingsPanel;
 import io.github.tkjonesy.frontend.settingsGUI.panels.StorageSettingsPanel;
+import io.github.tkjonesy.utils.AppVersion;
 import io.github.tkjonesy.utils.Paths;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.Getter;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.event.ChangeListener;
 
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.*;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 import static io.github.tkjonesy.frontend.App.AVAILABLE_CAMERAS;
@@ -35,6 +39,8 @@ public class SettingsWindow extends JDialog implements SettingsUI {
 
     private JTabbedPane settingSelector;
 
+    private JLabel versionLabel;
+
     private static final Color OCEAN = new Color(55, 90, 129);
 
     public SettingsWindow(JFrame parent) {
@@ -47,16 +53,15 @@ public class SettingsWindow extends JDialog implements SettingsUI {
 
     private void initComponents() {
         // Sizing, and exit actions
-        this.setMinimumSize(new Dimension(640, 480));
+        this.setMinimumSize(new Dimension(640, 720));
         this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
         // Icon
-        try {
-            ImageIcon appIcon = new ImageIcon(Paths.LOGO16_PATH);
+        try (InputStream stream = getClass().getResourceAsStream(Paths.LOGO32_PATH)) {
+            if (stream == null) throw new IOException("Resource not found: " + Paths.LOGO32_PATH);
+            ImageIcon appIcon = new ImageIcon(ImageIO.read(stream));
             this.setIconImage(appIcon.getImage());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        } catch (Exception ignored) {}
 
         CameraSettingsPanel cameraPanel = new CameraSettingsPanel(settings, AVAILABLE_CAMERAS);
         StorageSettingsPanel storagePanel = new StorageSettingsPanel();
@@ -75,6 +80,11 @@ public class SettingsWindow extends JDialog implements SettingsUI {
         settingSelector.addTab("Storage", storagePanel);
         settingSelector.addTab("AI Model", modelPanel);
         settingSelector.addTab("Advanced", advancedPanel);
+
+        this.versionLabel = new JLabel("v " + AppVersion.getCOMMIT_ID_FULL());
+        versionLabel.setFont(new Font("SansSerif", Font.PLAIN, 10));
+        versionLabel.setForeground(Color.GRAY);
+        versionLabel.setToolTipText("Click to copy version to clipboard");
     }
 
     // Method to enable/disable the Apply button
@@ -88,6 +98,27 @@ public class SettingsWindow extends JDialog implements SettingsUI {
         cancelButton.addActionListener(e -> {handleCancelAttempt();});
 
         applyButton.addActionListener(e -> {applyChanges();});
+
+        versionLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                StringSelection selection = new StringSelection(AppVersion.getCOMMIT_ID_FULL());
+                clipboard.setContents(selection, null);
+                JOptionPane.showMessageDialog(null, "Version copied to clipboard!", "Copied", JOptionPane.INFORMATION_MESSAGE);
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                versionLabel.setForeground(Color.LIGHT_GRAY);
+                versionLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                versionLabel.setForeground(Color.GRAY);
+            }
+        });
 
         this.addWindowListener(new WindowAdapter() {
             @Override
@@ -122,6 +153,7 @@ public class SettingsWindow extends JDialog implements SettingsUI {
         buttonPanelLayout.setAutoCreateContainerGaps(true);
         buttonPanelLayout.setHorizontalGroup(
                 buttonPanelLayout.createSequentialGroup()
+                        .addComponent(versionLabel)
                         .addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(confirmButton)
                         .addPreferredGap(ComponentPlacement.RELATED)
@@ -130,7 +162,8 @@ public class SettingsWindow extends JDialog implements SettingsUI {
                         .addComponent(applyButton)
         );
         buttonPanelLayout.setVerticalGroup(
-                buttonPanelLayout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+                buttonPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                        .addComponent(versionLabel)
                         .addComponent(confirmButton)
                         .addComponent(cancelButton)
                         .addComponent(applyButton)
@@ -219,7 +252,7 @@ public class SettingsWindow extends JDialog implements SettingsUI {
     }
 
     private void applyChanges() {
-        System.out.println("Applying changed settings");
+        AIMsLogger.INFO("Applying settings...");
         settings.updateSettings(settingsUpdates);
         settingsUpdates.clear();
         updateApplyButtonState();

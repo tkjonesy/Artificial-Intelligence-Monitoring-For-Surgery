@@ -14,6 +14,8 @@
   "labelPath": "/ai_models/yolo11m.names",
   "processEveryNthFrame": 30,
   "boundingBoxColor": [255, 0, 0],
+  "logAddedColor": [0, 255, 0],
+  "logRemovedColor": [255, 0, 0],
   "showBoundingBoxes": true,
   "showLabels": true,
   "showConfidences": true,
@@ -27,6 +29,10 @@
   "numInputElements": 1228800,
   "inputSize": 640,
   "inputShape": [1, 3, 640, 640],
+
+  "continuousLogging": true,
+  "debugMode": false,
+  "showInferenceTime": false,
 
   "notZeroNum": 1
 }

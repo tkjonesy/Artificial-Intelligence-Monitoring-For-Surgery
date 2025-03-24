@@ -1,0 +1,345 @@
+package io.github.tkjonesy.frontend.utils;
+
+import io.github.tkjonesy.ONNX.Detection;
+import io.github.tkjonesy.ONNX.ImageUtil;
+import io.github.tkjonesy.ONNX.models.OnnxOutput;
+import io.github.tkjonesy.ONNX.models.OnnxRunner;
+
+import io.github.tkjonesy.frontend.App;
+import io.github.tkjonesy.utils.DialogManager;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
+import io.github.tkjonesy.utils.models.FileSession;
+import io.github.tkjonesy.utils.models.SessionHandler;
+import io.github.tkjonesy.utils.settings.ProgramSettings;
+import lombok.Setter;
+import org.bytedeco.javacpp.BytePointer;
+
+import org.bytedeco.opencv.opencv_core.Mat;
+import org.bytedeco.opencv.opencv_core.Point;
+import org.bytedeco.opencv.opencv_core.Scalar;
+import org.bytedeco.opencv.opencv_core.Size;
+import org.bytedeco.opencv.opencv_videoio.VideoCapture;
+import org.bytedeco.opencv.opencv_videoio.VideoWriter;
+
+import static org.bytedeco.opencv.global.opencv_imgproc.*;
+import static org.bytedeco.opencv.global.opencv_videoio.*;
+
+import org.bytedeco.opencv.global.opencv_core;
+
+import javax.swing.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.*;
+
+/**
+ * FrameManager is responsible for capturing, processing, displaying the different frames.
+ */
+public class FrameManager implements Runnable {
+
+    private final JLabel cameraFeed;
+    @Setter
+    private VideoCapture camera;
+    private final Timer timer;
+    private final SessionHandler sessionHandler;
+    private final OnnxRunner onnxRunner;
+
+    // Executors for inference, display, and recording
+    private final ExecutorService inferenceExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService processExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService displayExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService recordingExecutor = Executors.newSingleThreadExecutor();
+
+    // Queue for frames
+    private final LinkedBlockingQueue<Mat> rawFrameQueue = new LinkedBlockingQueue<>();
+    private final LinkedBlockingQueue<Mat> processedFrameQueue = new LinkedBlockingQueue<>();
+    private final LinkedBlockingQueue<Mat> recordingFrameQueue = new LinkedBlockingQueue<>();
+
+    // Current state
+    private volatile List<Detection> currentDetections = new ArrayList<>();
+    private volatile int frameCounter = 0;
+    private volatile boolean isRunning = true;
+
+
+    private final ProgramSettings settings = ProgramSettings.getCurrentSettings();
+    private final Scalar redColor = new Scalar(0, 0, 255, 0);
+
+    public FrameManager(JLabel cameraFeed, VideoCapture camera, OnnxRunner onnxRunner, SessionHandler sessionHandler) {
+        this.cameraFeed = cameraFeed;
+        this.camera = camera;
+        this.timer = new Timer();
+        this.onnxRunner = onnxRunner;
+        this.sessionHandler = sessionHandler;
+
+        startFrameProcessingThread();
+        startDisplayThread();
+        startRecordingThread();
+    }
+
+    /**
+     * Converts an OpenCV Mat frame into a BufferedImage.
+     * This is used to render video frames in the Swing GUI.
+     *
+     * @param frame The OpenCV Mat to convert
+     * @return A BufferedImage representation of the frame
+     */
+    private static BufferedImage cvt2bi(Mat frame) {
+        // Dimensions
+        int width = frame.cols();
+        int height = frame.rows();
+        int channels = frame.channels();
+
+        BytePointer dataPtr = frame.data();
+        byte[] b = new byte[width * height * channels];
+        dataPtr.get(b);
+
+        // Determine the correct BufferedImage type
+        int type = (channels > 1) ? BufferedImage.TYPE_3BYTE_BGR : BufferedImage.TYPE_BYTE_GRAY;
+        BufferedImage image = new BufferedImage(width, height, type);
+
+        // Copy the raw bytes into the BufferedImage
+        byte[] targetPixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+        System.arraycopy(b, 0, targetPixels, 0, b.length);
+
+        return image;
+    }
+
+    /**
+     * Starts the frame capture loop using a Timer.
+     * Captures frames from the camera at the configured resolution and FPS,
+     * and places them into the raw frame queue.
+     */
+    @Override
+    public void run() {
+        // Configure camera resolution and FPS
+        camera.set(CAP_PROP_FRAME_WIDTH, cameraFeed.getWidth());
+        camera.set(CAP_PROP_FRAME_HEIGHT, cameraFeed.getHeight());
+        camera.set(CAP_PROP_FPS, settings.getCameraFps());
+
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                if (Thread.currentThread().isInterrupted() || !isRunning) {
+                    this.cancel();
+                    return;
+                }
+
+                if (camera != App.getCamera()) {
+                    AIMsLogger.INFO("Camera has been updated, changing to new camera");
+                    camera = App.getCamera();
+
+                    try{
+                        camera.set(CAP_PROP_FRAME_WIDTH, cameraFeed.getWidth());
+                        camera.set(CAP_PROP_FRAME_HEIGHT, cameraFeed.getHeight());
+                        camera.set(CAP_PROP_FPS, settings.getCameraFps());
+                    }catch (Exception e) {
+                        AIMsLogger.ERROR("Error updating camera: " + e.getMessage());
+                    }
+
+
+                    AIMsLogger.INFO("Camera updated");
+                }
+
+                try {
+                    Mat frame = new Mat();
+                    if (camera.read(frame)) {
+                        if(!rawFrameQueue.offer(frame)){
+                            frame.release();
+                        }
+                    }else{
+                        frame.release();
+                    }
+                }catch (Exception e) {
+                    AIMsLogger.ERROR("Error capturing frame: " + e.getMessage());
+                }
+            }
+        };
+
+        timer.scheduleAtFixedRate(task, 0, 1000 / settings.getCameraFps());
+    }
+
+    /**
+     * Launches a thread that processes raw frames:
+     * flips them (if needed), performs inference every Nth frame,
+     * overlays predictions, resizes the result, and queues it for display or recording.
+     */
+    private void startFrameProcessingThread(){
+        AIMsLogger.TRACE("Starting Frame Processing Thread");
+        processExecutor.submit(() -> {
+            while(isRunning && !Thread.currentThread().isInterrupted()){
+
+                try(Mat frame = rawFrameQueue.poll(50, TimeUnit.MILLISECONDS)){
+                    if(frame == null)
+                        continue;
+                    if(settings.isMirrorCamera()){
+                        opencv_core.flip(frame, frame, 1);
+                    }
+
+                    if (++frameCounter % settings.getProcessEveryNthFrame() == 0) {
+                        Mat inferenceFrame = frame.clone();
+                        inferenceExecutor.submit(() -> {
+                            try {
+
+                                OnnxOutput onnxOutput = onnxRunner.runInference(inferenceFrame);
+                                currentDetections = onnxOutput.getDetectionList();
+
+                                if(sessionHandler.isSessionActive()) {
+                                    onnxRunner.processDetections(currentDetections);
+                                }
+                            } finally {
+                                inferenceFrame.release();
+                            }
+                        });
+                        frameCounter = 0;
+                    }
+
+                    Mat processedFrame = frame.clone();
+
+                    // Overlay predictions & resize
+                    if(settings.isShowBoundingBoxes())
+                        ImageUtil.drawPredictions(processedFrame, currentDetections);
+
+                    resize(processedFrame, processedFrame, new Size(cameraFeed.getWidth(), cameraFeed.getHeight()));
+
+                    int settingsRotation = settings.getCameraRotation();
+                    int ROTA = 3;
+                    switch (settingsRotation) {
+                        case 90 -> ROTA = opencv_core.ROTATE_90_CLOCKWISE;
+                        case 180 -> ROTA = opencv_core.ROTATE_180;
+                        case 270 -> ROTA = opencv_core.ROTATE_90_COUNTERCLOCKWISE;
+                    }
+
+                    if (settingsRotation != 0) {
+                        opencv_core.rotate(processedFrame, processedFrame, ROTA);
+                    }
+
+                    // TODO: This is temporary way to show the session time. It should be moved to a more appropriate place.
+                    String sessionTime = sessionHandler.getSessionDuration();
+                    putText(
+                            processedFrame,
+                            sessionTime,
+                            new Point(processedFrame.cols()-100, 30),
+                            FONT_HERSHEY_COMPLEX,
+                            1.0,
+                            redColor,
+                            1,
+                            LINE_8,
+                            false
+                    );
+
+                    processedFrameQueue.offer(processedFrame);
+
+                    if(sessionHandler.isSessionActive() && settings.isSaveVideo()) {
+                        Mat recordingFrame = processedFrame.clone();
+                        if(!recordingFrameQueue.offer(recordingFrame, 50, TimeUnit.MILLISECONDS)){
+                            AIMsLogger.FATAL("Failed to add frame to recording queue");
+                            recordingFrame.release();
+                        }
+                    }
+
+                } catch (InterruptedException e) {
+                    AIMsLogger.FATAL("Frame processing thread interrupted: " + e.getMessage());
+                    DialogManager.displayErrorDialog("Frame processing thread interrupted: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    /**
+     * Starts a thread that pulls processed frames and displays them
+     * in the {@code cameraFeed} panel.
+     */
+    private void startDisplayThread(){
+        AIMsLogger.TRACE("Starting Display Thread");
+        displayExecutor.submit(() -> {
+            while(isRunning && !Thread.currentThread().isInterrupted()){
+                try {
+                    Mat displayFrame = processedFrameQueue.poll(50, TimeUnit.MILLISECONDS);
+                    if(displayFrame == null)
+                        continue;
+
+                    BufferedImage biFrame = cvt2bi(displayFrame);
+                    SwingUtilities.invokeLater(() -> {
+                        cameraFeed.setIcon(new ImageIcon(biFrame));
+                        biFrame.flush();
+                    });
+
+                    displayFrame.release();
+                } catch (Exception e) {
+                    AIMsLogger.ERROR("Error displaying frame: " + e.getMessage());
+                    DialogManager.displayErrorDialog("Error displaying frame: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    /**
+     * Launches a thread to save processed frames to video to {@link FileSession}
+     * if recording is enabled and a session is active.
+     */
+    private void startRecordingThread(){
+        AIMsLogger.TRACE("Starting Recording Thread");
+        recordingExecutor.submit(() -> {
+            while (isRunning || !Thread.currentThread().isInterrupted()) {
+                try {
+                    Mat recordingFrame = recordingFrameQueue.poll(50, TimeUnit.MILLISECONDS);
+                    if (recordingFrame == null)
+                        continue;
+
+                    if (sessionHandler.isSessionActive() && settings.isSaveVideo()) {
+                        FileSession fileSession = sessionHandler.getFileSession();
+
+                        VideoWriter videoWriter = fileSession.getVideoWriter();
+                        if(videoWriter == null || !videoWriter.isOpened()){
+                            fileSession.initVideoWriter(recordingFrame);
+                        }
+
+                        try{
+                            fileSession.writeVideoFrame(recordingFrame);
+                        }catch (Exception e) {
+                            AIMsLogger.ERROR("Error writing video frame: " + e.getMessage());
+                        } finally {
+                            recordingFrame.release();
+                        }
+                    }
+                }catch (Exception e) {
+                    AIMsLogger.FATAL("Error in recording thread: " + e.getMessage());
+                    DialogManager.displayErrorDialog("Error in recording thread: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    /**
+     * Stops all threads, clears frame queues, cancels the timer,
+     * and shuts down executor services to clean up resources.
+     */
+    public void shutdown(){
+        isRunning = false;
+        timer.cancel();
+
+        clearFrameQueues();
+
+        try{
+            inferenceExecutor.awaitTermination(500, TimeUnit.MILLISECONDS);
+            displayExecutor.awaitTermination(500, TimeUnit.MILLISECONDS);
+            recordingExecutor.awaitTermination(500, TimeUnit.MILLISECONDS);
+        }catch (InterruptedException e) {
+           AIMsLogger.ERROR("Error shutting down frame handler: " + e.getMessage());
+        }
+
+        if(!inferenceExecutor.isTerminated()) inferenceExecutor.shutdownNow();
+        if(!displayExecutor.isTerminated()) displayExecutor.shutdownNow();
+        if(!recordingExecutor.isTerminated()) recordingExecutor.shutdownNow();
+    }
+
+    private void clearFrameQueues() {
+        Mat frame;
+        while ((frame = rawFrameQueue.poll()) != null) frame.release();
+        while ((frame = processedFrameQueue.poll()) != null) frame.release();
+        while ((frame = recordingFrameQueue.poll()) != null) frame.release();
+    }
+}

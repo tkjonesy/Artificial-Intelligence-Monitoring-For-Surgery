@@ -2,7 +2,8 @@ package io.github.tkjonesy.frontend.settingsGUI.panels;
 
 import io.github.tkjonesy.frontend.settingsGUI.SettingsUI;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
-import io.github.tkjonesy.utils.ErrorDialogManager;
+import io.github.tkjonesy.utils.DialogManager;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import javax.swing.*;
 import javax.swing.event.ChangeListener;
@@ -18,7 +19,6 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
 
     private static final ProgramSettings settings = ProgramSettings.getCurrentSettings();
     private static final HashMap<String, Object> settingsUpdates = SettingsWindow.getSettingsUpdates();
-
 
     private final JLabel cameraSelectorLabel;
     private final JLabel cameraFpsLabel;
@@ -85,7 +85,7 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
         cameraFpsSpinner.addChangeListener(
                 e -> {
                     if((int) cameraFpsSpinner.getValue() > 30)
-                        ErrorDialogManager.displayWarningDialog("Values over 30 may not be supported by all cameras. Setting this value higher than 30 will not make the recording smoother if the camera does not have a refresh rate this high. Additionally, values over 60 may cause extreme performance issues.");
+                        DialogManager.displayWarningDialog("Values over 30 may not be supported by all cameras. Setting this value higher than 30 will not make the recording smoother if the camera does not have a refresh rate this high. Additionally, values over 60 may cause extreme performance issues.");
                     }
         );
 
@@ -93,7 +93,7 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(cameraSelector, (ActionListener)
                 e -> {
                     String value = (String) cameraSelector.getSelectedItem();
-                    System.out.println("Camera: " + cameraSelector.getSelectedItem());
+                    AIMsLogger.TRACE("Camera selected: " + value);
                     settingsUpdates.put("cameraDeviceId", AVAILABLE_CAMERAS.get(value));
                     if(settings.getCameraDeviceId() == AVAILABLE_CAMERAS.get(value))
                         settingsUpdates.remove("cameraDeviceId");
@@ -103,7 +103,7 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(cameraFpsSpinner, (ChangeListener)
                 e -> {
                     int value = (int) cameraFpsSpinner.getValue();
-                    System.out.println("Camera FPS: " + cameraFpsSpinner.getValue());
+                    AIMsLogger.TRACE("FPS selected: " + value);
                     settingsUpdates.put("cameraFps", value);
                     if(settings.getCameraFps() == value)
                         settingsUpdates.remove("cameraFps");
@@ -113,7 +113,7 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(cameraRotationSlider, (ChangeListener)
                 e -> {
                     int value = cameraRotationSlider.getValue();
-                    System.out.println("Camera rotation: " + cameraRotationSlider.getValue());
+                    AIMsLogger.TRACE("Camera rotation selected: " + value);
                     settingsUpdates.put("cameraRotation", value);
                     if(settings.getCameraRotation() == value)
                         settingsUpdates.remove("cameraRotation");
@@ -123,7 +123,7 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(mirrorCameraCheckbox, (ActionListener)
                 e -> {
                     boolean value = mirrorCameraCheckbox.isSelected();
-                    System.out.println("Mirror camera: " + mirrorCameraCheckbox.isSelected());
+                    AIMsLogger.TRACE("Mirror camera selected: " + value);
                     settingsUpdates.put("mirrorCamera", value);
                     if(settings.isMirrorCamera() == value)
                         settingsUpdates.remove("mirrorCamera");
@@ -133,7 +133,7 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(preserveAspectRatioCheckbox, (ActionListener)
                 e -> {
                     boolean value = preserveAspectRatioCheckbox.isSelected();
-                    System.out.println("Preserve aspect ratio: " + preserveAspectRatioCheckbox.isSelected());
+                    AIMsLogger.TRACE("Preserve aspect ratio selected: " + value);
                     settingsUpdates.put("preserveAspectRatio", value);
                     if(settings.isPreserveAspectRatio() == value)
                         settingsUpdates.remove("preserveAspectRatio");

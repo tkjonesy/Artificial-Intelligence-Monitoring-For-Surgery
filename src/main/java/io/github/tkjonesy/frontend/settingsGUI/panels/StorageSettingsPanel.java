@@ -3,6 +3,7 @@ package io.github.tkjonesy.frontend.settingsGUI.panels;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsUI;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
 import io.github.tkjonesy.utils.Paths;
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 
 import javax.swing.*;
@@ -83,9 +84,11 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(customSaveOption, (ActionListener)
                 e -> {
                     folderSelectorButton.setEnabled(true);
-                    settingsUpdates.put("fileDirectory", selectedFolderLabel.getText());
-                    System.out.println("File directory: " + selectedFolderLabel.getText());
-                    if(settings.getFileDirectory().equals(selectedFolderLabel.getText()))
+                    String selectedFolderPath = selectedFolderLabel.getText();
+                    AIMsLogger.TRACE("Custom save option selected: "+ selectedFolderPath);
+
+                    settingsUpdates.put("fileDirectory", selectedFolderPath);
+                    if(settings.getFileDirectory().equals(selectedFolderPath))
                         settingsUpdates.remove("fileDirectory");
                 }
         );
@@ -93,8 +96,8 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(defaultSaveOption, (ActionListener)
                 e -> {
                     folderSelectorButton.setEnabled(false);
+                    AIMsLogger.TRACE("Default save option selected");
                     selectedFolderLabel.setText(Paths.DEFAULT_AIMS_SESSIONS_DIRECTORY);
-                    settingsUpdates.put("fileDirectory", Paths.DEFAULT_AIMS_SESSIONS_DIRECTORY);
                     if(settings.getFileDirectory().equals(Paths.DEFAULT_AIMS_SESSIONS_DIRECTORY))
                         settingsUpdates.remove("fileDirectory");
                 }
@@ -110,7 +113,6 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
                     if (returnVal == JFileChooser.APPROVE_OPTION) {
                         selectedFolder[0] = folderChooser.getSelectedFile();
                         selectedFolderLabel.setText(selectedFolder[0].getAbsolutePath());
-                        System.out.println("Selected Folder: " + selectedFolder[0].getAbsolutePath());
                         settingsUpdates.put("fileDirectory", selectedFolder[0].getAbsolutePath());
                     }
                 }
@@ -119,7 +121,7 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(saveVideoCheckbox, (ActionListener)
                 e -> {
                     boolean value = saveVideoCheckbox.isSelected();
-                    System.out.println("Save video: " + saveVideoCheckbox.isSelected());
+                    AIMsLogger.TRACE("Save video checkbox selected: "+ value);
                     settingsUpdates.put("saveVideo", value);
                     if(settings.isSaveVideo() == value)
                         settingsUpdates.remove("saveVideo");
@@ -128,7 +130,7 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(saveLogsTextCheckbox, (ActionListener)
                 e -> {
                     boolean value = saveLogsTextCheckbox.isSelected();
-                    System.out.println("Save logs to text: " + saveLogsTextCheckbox.isSelected());
+                    AIMsLogger.TRACE("Save logs as text checkbox selected: "+ value);
                     settingsUpdates.put("saveLogsTEXT", value);
                     if(settings.isSaveLogsTEXT() == value)
                         settingsUpdates.remove("saveLogsTEXT");
@@ -137,7 +139,7 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
         addSettingChangeListener(saveLogsCSVCheckbox, (ActionListener)
                 e -> {
                     boolean value = saveLogsCSVCheckbox.isSelected();
-                    System.out.println("Save logs to csv: " + saveLogsCSVCheckbox.isSelected());
+                    AIMsLogger.TRACE("Save logs as CSV checkbox selected: "+ value);
                     settingsUpdates.put("saveLogsCSV", value);
                     if(settings.isSaveLogsCSV() == value)
                         settingsUpdates.remove("saveLogsCSV");

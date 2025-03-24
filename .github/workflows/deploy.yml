@@ -1,0 +1,170 @@
+name: Release on PR Merge
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - closed
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  package-linux:
+    name: Build JAR on Linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Branch
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build JAR
+        run: mvn clean package
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-jar
+          path: target/*.jar
+
+  build-windows-installer:
+    name: Build Installer on Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Branch
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build JAR
+        run: mvn clean package
+
+      - name: Build Installer
+        run: |
+          jpackage --name "AIMs" `
+          --input target/ `
+          --dest target/ `
+          --main-jar AIMs-1.0-SNAPSHOT.jar `
+          --main-class io.github.tkjonesy.frontend.App `
+          --icon "src/main/resources/images/logo.ico" `
+          --type exe `
+          --win-shortcut `
+          --win-dir-chooser `
+          --win-per-user-install `
+          --win-upgrade-uuid "123e4567-e89b-12d3-a456-426614174000"
+
+      - name: Upload Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: target/AIMs-*.exe
+
+  build-macos-installer:
+    name: Build Installer on macOS
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Branch
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build JAR
+        run: mvn clean package
+
+      - name: Build .dmg via jPackage
+        run: |
+          jpackage \
+            --input target/ \
+            --dest target/ \
+            --name "AIMs" \
+            --main-jar AIMs-1.0-SNAPSHOT.jar \
+            --main-class io.github.tkjonesy.frontend.App \
+            --icon "src/main/resources/images/aims_logo.icns" \
+            --type dmg \
+            --resource-dir macBuildResources
+
+      - name: Find DMG File
+        id: find-dmg
+        run: |
+          DMG_PATH=$(find target -name "*.dmg" -type f | head -n 1)
+          echo "DMG_PATH=$DMG_PATH" >> $GITHUB_ENV
+          echo "Found DMG file at: $DMG_PATH"
+
+      - name: Prepare Signing Certificate
+        run: |
+          echo "${{ secrets.MAC_SIGNING_CERTIFICATE }}" | base64 --decode > signing_certificate.p12
+
+      - name: Sign DMG without Notarization
+        uses: indygreg/apple-code-sign-action@v1
+        with:
+          input_path: ${{ env.DMG_PATH }}
+          output_path: target/AIMs.dmg
+          p12_file: signing_certificate.p12
+          p12_password: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+
+      # TODO: Add Notarization to prevent Gatekeeper warnings
+
+      - name: Upload Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-installer
+          path: target/AIMs.dmg
+
+  release:
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    needs: [package-linux, build-windows-installer, build-macos-installer]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Linux JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-jar
+          path: artifacts/linux
+
+      - name: Download Windows Installer
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-installer
+          path: artifacts/windows
+
+      - name: Download macOS Installer
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-installer
+          path: artifacts/macos
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/linux/AIMs*.jar
+            artifacts/windows/AIMs*.exe
+            artifacts/macos/AIMs*.dmg
+          name: ${{ github.event.pull_request.title }} - v1.0.${{ github.run_number }}
+          tag_name: v1.0.${{ github.run_number }}
+          body: ${{ github.event.pull_request.body }}
