@@ -108,7 +108,7 @@ jobs:
           DMG_PATH=$(find target -name "*.dmg" -type f | head -n 1)
           echo "DMG_PATH=$DMG_PATH" >> $GITHUB_ENV
           echo "Found DMG file at: $DMG_PATH"
-          
+
       - name: Prepare Signing Certificate
         run: |
           echo "${{ secrets.MAC_SIGNING_CERTIFICATE }}" | base64 --decode > signing_certificate.p12
@@ -135,37 +135,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download Linux JAR
         uses: actions/download-artifact@v4
         with:
           name: linux-jar
+          path: artifacts/linux
 
       - name: Download Windows Installer
         uses: actions/download-artifact@v4
         with:
           name: windows-installer
+          path: artifacts/windows
 
       - name: Download macOS Installer
         uses: actions/download-artifact@v4
         with:
           name: macos-installer
-
-      - name: Get Latest Merged PR Title and Body
-        id: pr_data
-        run: |
-          PR_DATA=$(gh pr list --state merged --base main --limit 1 --json title,body --jq '.[0]')
-          echo "PR_TITLE=$(echo "$PR_DATA" | jq -r .title)" >> $GITHUB_ENV
-          echo "PR_BODY=$(echo "$PR_DATA" | jq -r .body)" >> $GITHUB_ENV
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: artifacts/macos
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            AIMs*.jar
-            AIMs*.exe
-            AIMs*.dmg
-          name: ${{ env.PR_TITLE }} - v1.0.${{ github.run_number }}
+            artifacts/linux/AIMs*.jar
+            artifacts/windows/AIMs*.exe
+            artifacts/macos/AIMs*.dmg
+          name: ${{ github.event.pull_request.title }} - v1.0.${{ github.run_number }}
           tag_name: v1.0.${{ github.run_number }}
-          body: ${{ env.PR_BODY }}
+          body: ${{ github.event.pull_request.body }}
