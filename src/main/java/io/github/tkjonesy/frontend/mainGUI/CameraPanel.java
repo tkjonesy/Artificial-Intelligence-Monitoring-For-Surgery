@@ -16,7 +16,8 @@ public class CameraPanel extends JPanel {
         this.appInstance = appInstance;
         this.setBorder(BorderFactory.createTitledBorder("Camera"));
         cameraFeed = new JLabel("");
-        cameraFeed.setMinimumSize(new Dimension(320, 240));
+        cameraFeed.setMinimumSize(new Dimension(0, 0));
+        cameraFeed.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         this.add(cameraFeed, BorderLayout.CENTER);
     }
 }
