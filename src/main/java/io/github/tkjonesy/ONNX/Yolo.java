@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 
 public abstract class Yolo {
 
+    private static final ProgramSettings settings = ProgramSettings.getCurrentSettings();
+
     @Getter
     private static boolean isCudaAvailable = false;
 
@@ -34,7 +36,7 @@ public abstract class Yolo {
         EnumSet<OrtProvider> availableProviders = OrtEnvironment.getAvailableProviders();
         AIMsLogger.INFO("Available providers: " + availableProviders);
         
-        boolean useGPU = availableProviders.contains(OrtProvider.CUDA) && ProgramSettings.getCurrentSettings().isUseGPU();
+        boolean useGPU = availableProviders.contains(OrtProvider.CUDA) && settings.isUseGPU();
         SessionOptions sessionOptions = createSessionOptions(useGPU);
 
         try {
@@ -76,7 +78,7 @@ public abstract class Yolo {
         if (useGPU) {
             try {
                 AIMsLogger.INFO("Attempting to add CUDA provider...");
-                sessionOptions.addCUDA(ProgramSettings.getCurrentSettings().getGpuDeviceId());
+                sessionOptions.addCUDA(settings.getGpuDeviceId());
                 AIMsLogger.INFO("CUDA provider added successfully.");
             } catch (OrtException e) {
                 AIMsLogger.INFO("Failed to add CUDA provider, falling back to CPU: " + e.getMessage());
@@ -87,8 +89,8 @@ public abstract class Yolo {
 
         if (!useGPU) {
             sessionOptions.addCPU(true);
-            sessionOptions.setInterOpNumThreads(1);
-            sessionOptions.setIntraOpNumThreads(1);
+            sessionOptions.setInterOpNumThreads(settings.getNumOnnxThreads());
+            sessionOptions.setIntraOpNumThreads(settings.getNumOnnxThreads());
             AIMsLogger.INFO("Using CPU for inference.");
         }
 

@@ -26,6 +26,7 @@
   "gpuDeviceId": 0,
   "nmsThreshold": 0.45,
   "optimizationLevel": "ALL_OPT",
+  "numOnnxThreads": 3,
   "numInputElements": 1228800,
   "inputSize": 640,
   "inputShape": [1, 3, 640, 640],
