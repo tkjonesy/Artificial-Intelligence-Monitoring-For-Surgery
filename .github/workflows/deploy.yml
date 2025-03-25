@@ -3,7 +3,7 @@ name: Release on PR Merge
 on:
   push:
     branches:
-      - *
+      - '**'
 
 permissions:
   contents: write
