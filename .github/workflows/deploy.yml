@@ -1,13 +1,9 @@
 name: Release on PR Merge
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
-    types:
-      - opened
-      - synchronize
-      - closed
+      - *
 
 permissions:
   contents: write
