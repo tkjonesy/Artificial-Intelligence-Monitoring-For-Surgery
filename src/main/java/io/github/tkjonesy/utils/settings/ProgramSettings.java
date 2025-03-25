@@ -81,6 +81,8 @@ public class ProgramSettings {
     private float nmsThreshold;
     @SettingsLabel(value = "optimizationLevel", type = OrtSession.SessionOptions.OptLevel.class) // all, extended, basic, no
     private OrtSession.SessionOptions.OptLevel optimizationLevel;
+    @SettingsLabel(value = "numOnnxThreads", type = Integer.class)
+    private int numOnnxThreads;
     @SettingsLabel(value = "inputSize", type = Integer.class)
     private int inputSize;
     @SettingsLabel(value = "inputShape", type = long[].class)
@@ -106,7 +108,8 @@ public class ProgramSettings {
         for (String key : newSettings.keySet()) {
             setSettings(key, newSettings.get(key));
 
-            if (key.equals("modelPath") || key.equals("labelPath") || key.equals("useGPU")) {
+            if (key.equals("modelPath") || key.equals("labelPath") || key.equals("useGPU") || key.equals("gpuDeviceId") ||
+                    key.equals("optimizationLevel") || key.equals("numOnnxThreads")) {
                 updateONNX = true;
             }
             if (key.equals("cameraDeviceId")) {
