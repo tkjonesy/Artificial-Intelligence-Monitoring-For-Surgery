@@ -8,6 +8,7 @@ on:
       - opened
       - synchronize
       - closed
+
 permissions:
   contents: write
   pull-requests: read
@@ -49,16 +50,17 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'maven'
 
       - name: Build JAR
-        run: mvn clean package
+        run: mvn clean -B package
 
       - name: Build Installer
         run: |
           jpackage --name "AIMs" `
           --input target/ `
           --dest target/ `
-          --main-jar AIMs-1.0-SNAPSHOT.jar `
+          --main-jar "$JAR_FILE" `
           --main-class io.github.tkjonesy.frontend.App `
           --icon "src/main/resources/images/logo.ico" `
           --type exe `
@@ -86,9 +88,10 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'maven'
 
       - name: Build JAR
-        run: mvn clean package
+        run: mvn clean -B package
 
       - name: Build .dmg via jPackage
         run: |
@@ -96,7 +99,7 @@ jobs:
             --input target/ \
             --dest target/ \
             --name "AIMs" \
-            --main-jar AIMs-1.0-SNAPSHOT.jar \
+            --main-jar "$JAR_FILE" \
             --main-class io.github.tkjonesy.frontend.App \
             --icon "src/main/resources/images/aims_logo.icns" \
             --type dmg \
