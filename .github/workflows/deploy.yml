@@ -158,13 +158,17 @@ jobs:
           name: macos-installer
           path: artifacts/macos
 
+      - name: Set short SHA
+        id: vars
+        run: echo "SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
+
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             artifacts/linux/AIMs*.jar
             artifacts/windows/AIMs*.exe
             artifacts/macos/AIMs*.dmg
-          name: ${{ github.event.pull_request.title }} - v1.0.${{ github.run_number }}
+          name: ${{ github.event.pull_request.title }} - ${{ env.SHORT_SHA }}
           tag_name: v1.0.${{ github.run_number }}
           body: ${{ github.event.pull_request.body }}
