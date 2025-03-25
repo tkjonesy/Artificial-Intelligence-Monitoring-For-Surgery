@@ -1,13 +1,9 @@
 name: Release on PR Merge
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
-    types:
-      - opened
-      - synchronize
-      - closed
+      - *
 permissions:
   contents: write
   pull-requests: read
@@ -90,13 +86,20 @@ jobs:
       - name: Build JAR
         run: mvn clean package
 
+      - name: Find generated .jar
+        id: find-jar
+        run: |
+            JAR_PATH=$(find target -name "AIMs-*.jar" -type f | head -n 1)
+            echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
+            echo "Found JAR file at: $JAR_PATH"
+
       - name: Build .dmg via jPackage
         run: |
           jpackage \
             --input target/ \
             --dest target/ \
             --name "AIMs" \
-            --main-jar AIMs-1.0-SNAPSHOT.jar \
+            --main-jar "$JAR_FILE" \
             --main-class io.github.tkjonesy.frontend.App \
             --icon "src/main/resources/images/aims_logo.icns" \
             --type dmg \
