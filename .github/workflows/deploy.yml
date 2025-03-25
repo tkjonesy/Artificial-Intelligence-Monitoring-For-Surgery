@@ -1,9 +1,13 @@
 name: Release on PR Merge
 
 on:
-  push:
+  pull_request:
     branches:
-      - '**'
+      - main
+    types:
+      - opened
+      - synchronize
+      - closed
 
 permissions:
   contents: write
@@ -46,9 +50,10 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'maven'
 
       - name: Build JAR
-        run: mvn clean package
+        run: mvn clean -B package
 
       - name: Build Installer
         run: |
@@ -83,9 +88,10 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'maven'
 
       - name: Build JAR
-        run: mvn clean package
+        run: mvn clean -B package
 
       - name: Build .dmg via jPackage
         run: |
