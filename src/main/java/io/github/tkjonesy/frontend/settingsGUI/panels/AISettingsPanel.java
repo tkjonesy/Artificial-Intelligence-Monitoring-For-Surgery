@@ -86,6 +86,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
 
         this.colorLabel = new JLabel("Bounding box color (RGB):");
 
+        int[] boundingBoxColor = settings.getBoundingBoxColor();
         int r = settings.getBoundingBoxColor()[0];
         int g = settings.getBoundingBoxColor()[1];
         int b = settings.getBoundingBoxColor()[2];
@@ -126,7 +127,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
 
         this.logAddedColorPreviewButton = createColorPreviewButton(logAddedR, logAddedG, logAddedB, this::openLogAddedColorChooser);
 
-// Initialize Log Removed Color
+        // Initialize Log Removed Color
         int logRemovedR = settings.getLogRemovedColor()[0];
         int logRemovedG = settings.getLogRemovedColor()[1];
         int logRemovedB = settings.getLogRemovedColor()[2];
@@ -566,7 +567,6 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
 
         colorDialog.setVisible(true);
     }
-
 
     // Ensure only the "Swatches" and "RGB" tabs are visible
     private void removeUnwantedTabs(JColorChooser colorChooser) {
