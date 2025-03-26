@@ -14,7 +14,7 @@ import java.awt.Color;
 public enum InferenceLogEnum {
     INFO(Color.YELLOW),
     LOG_ADDED(Color.GREEN),
-    LOG_REMOVED(Color.RED); // Defaults are now set in ProgramSettings
+    LOG_REMOVED(Color.RED);
 
     private Color color;
 
