@@ -6,6 +6,7 @@ import io.github.tkjonesy.frontend.settingsGUI.listenersANDevents.AISettingsList
 import io.github.tkjonesy.frontend.settingsGUI.listenersANDevents.BoundingBoxColorChangeEvent;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
+import io.github.tkjonesy.utils.settings.SettingsLoader;
 
 import javax.swing.*;
 import javax.swing.event.ChangeListener;
@@ -87,9 +88,19 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         this.colorLabel = new JLabel("Bounding box color (RGB):");
 
         int[] boundingBoxColor = settings.getBoundingBoxColor();
-        int r = settings.getBoundingBoxColor()[0];
-        int g = settings.getBoundingBoxColor()[1];
-        int b = settings.getBoundingBoxColor()[2];
+        int r;
+        int g;
+        int b;
+        try{
+            r = boundingBoxColor[0];
+            g = boundingBoxColor[1];
+            b = boundingBoxColor[2];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            int[] defaultColor = SettingsLoader.getDEFAULT_SETTINGS().getBoundingBoxColor();
+            r = defaultColor[0];
+            g = defaultColor[1];
+            b = defaultColor[2];
+        }
 
         this.rInputTextField = new JTextField(String.valueOf(r), 3);
         this.gInputTextField = new JTextField(String.valueOf(g), 3);

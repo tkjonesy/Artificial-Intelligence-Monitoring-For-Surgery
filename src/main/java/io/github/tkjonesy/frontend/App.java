@@ -140,7 +140,7 @@ public class App extends JFrame {
         AIMsLogger.INFO("Settings: " + settings);
     }
 
-    private void collectAvailableCameras() {
+    public void collectAvailableCameras() {
         CameraGrabber grabber = CameraGrabber.createForPlatform();
         AVAILABLE_CAMERAS = grabber.getCameraNames();
     }
