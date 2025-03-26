@@ -41,7 +41,7 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
     private int rotation = 0;
     private boolean isRefreshing = false;
 
-    public CameraSettingsPanel(ProgramSettings settings, HashMap<String, Integer> availableCameras) {
+    public CameraSettingsPanel(ProgramSettings settings) {
         // Components
         this.cameraSelectorLabel = new JLabel("Camera Selection");
         this.cameraSelector = new JComboBox<>();
@@ -50,14 +50,7 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
         this.cameraFpsWarningLabel = new JLabel("");
 
         // Populate camera selection menu with available cameras
-        int itemIndex = 0;
-        for(String cameraName : availableCameras.keySet()) {
-            cameraSelector.addItem(cameraName);
-            if(availableCameras.get(cameraName) == settings.getCameraDeviceId()) {
-                cameraSelector.setSelectedIndex(itemIndex);
-            }
-            itemIndex++;
-        }
+        populateCameraSelector();
 
         // Camera Rotation
         this.cameraRotationLabel = new JLabel("Camera Rotation:");
@@ -94,6 +87,18 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
         initListeners();
     }
 
+    private void populateCameraSelector(){
+        int itemIndex = 0;
+        HashMap<String, Integer> availableCameras = AVAILABLE_CAMERAS;
+        for(String cameraName : availableCameras.keySet()) {
+            cameraSelector.addItem(cameraName);
+            if(availableCameras.get(cameraName) == settings.getCameraDeviceId()) {
+                cameraSelector.setSelectedIndex(itemIndex);
+            }
+            itemIndex++;
+        }
+    }
+
     @Override
     public void initListeners() {
         // FPS Warning Label
@@ -108,6 +113,7 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
 
         addSettingChangeListener(cameraSelector, (ActionListener)
                 e -> {
+                    if(isRefreshing) return;
                     String value = (String) cameraSelector.getSelectedItem();
                     AIMsLogger.TRACE("Camera selected: " + value);
                     settingsUpdates.put("cameraDeviceId", AVAILABLE_CAMERAS.get(value));
@@ -248,56 +254,93 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
     }
 
     /**
-     * Creates a simple refresh icon
+     * Creates a refresh icon from an image resource
+     * The icon can be animated by rotating it when refreshing
      */
     private Icon createRefreshIcon() {
+        ImageIcon originalIcon;
+
+        try {
+            originalIcon = new ImageIcon(getClass().getResource("/images/refresh.png"));
+
+            if (originalIcon.getIconWidth() == -1) {
+                throw new Exception("Resource not found");
+            }
+
+            Image img = originalIcon.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+            originalIcon = new ImageIcon(img);
+        } catch (Exception e) {
+            AIMsLogger.WARN("Refresh icon not found, using fallback");
+            return new Icon() {
+                @Override
+                public void paintIcon(Component c, Graphics g, int x, int y) {
+                    Graphics2D g2d = (Graphics2D) g.create();
+                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                    if (isRefreshing) {
+                        g2d.rotate(Math.toRadians(rotation), x + 10, y + 10);
+                    }
+
+                    // Draw a circular background
+                    g2d.setColor(new Color(240, 240, 240));
+                    g2d.fillOval(x + 2, y + 2, 16, 16);
+
+                    // Draw border
+                    g2d.setColor(new Color(59, 89, 152));
+                    g2d.drawOval(x + 2, y + 2, 16, 16);
+
+                    // Draw "R" letter
+                    g2d.setFont(new Font("Arial", Font.BOLD, 12));
+                    g2d.drawString("R", x + 7, y + 15);
+
+                    if (isRefreshing) {
+                        g2d.setTransform(new AffineTransform());
+                    }
+
+                    g2d.dispose();
+                }
+
+                @Override
+                public int getIconWidth() {
+                    return 20;
+                }
+
+                @Override
+                public int getIconHeight() {
+                    return 20;
+                }
+            };
+        }
+
+        // Return an icon that will handle the rotation animation
+        final ImageIcon finalIcon = originalIcon;
         return new Icon() {
             @Override
             public void paintIcon(Component c, Graphics g, int x, int y) {
                 Graphics2D g2d = (Graphics2D) g.create();
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                // Apply rotation transformation if refreshing
                 if (isRefreshing) {
-                    AffineTransform old = g2d.getTransform();
-                    g2d.rotate(Math.toRadians(rotation), x + 10, y + 10);
-
-                    // Draw refresh arrow
-                    g2d.setColor(new Color(59, 89, 152));
-                    g2d.setStroke(new BasicStroke(2));
-
-                    // Draw circular arrow
-                    g2d.drawArc(x + 3, y + 3, 14, 14, 40, 280);
-
-                    // Draw arrowhead
-                    g2d.drawLine(x + 15, y + 7, x + 17, y + 3);
-                    g2d.drawLine(x + 15, y + 7, x + 19, y + 8);
-
-                    g2d.setTransform(old);
-                } else {
-                    // Draw static refresh arrow when not animating
-                    g2d.setColor(new Color(59, 89, 152));
-                    g2d.setStroke(new BasicStroke(2));
-
-                    // Draw circular arrow
-                    g2d.drawArc(x + 3, y + 3, 14, 14, 40, 280);
-
-                    // Draw arrowhead
-                    g2d.drawLine(x + 15, y + 7, x + 17, y + 3);
-                    g2d.drawLine(x + 15, y + 7, x + 19, y + 8);
+                    // Rotate around the center of the icon
+                    g2d.rotate(Math.toRadians(rotation),
+                            x + (double) finalIcon.getIconWidth() / 2,
+                            y + (double) finalIcon.getIconHeight() / 2);
                 }
+
+                // Draw the image
+                finalIcon.paintIcon(c, g2d, x, y);
 
                 g2d.dispose();
             }
 
             @Override
             public int getIconWidth() {
-                return 20;
+                return finalIcon.getIconWidth();
             }
 
             @Override
             public int getIconHeight() {
-                return 20;
+                return finalIcon.getIconHeight();
             }
         };
     }
@@ -325,6 +368,8 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
      * Stops the refresh animation
      */
     public void stopRefreshAnimation() {
+        this.cameraSelector.removeAllItems();
+        populateCameraSelector();
         isRefreshing = false;
         animationTimer.stop();
         rotation = 0;
