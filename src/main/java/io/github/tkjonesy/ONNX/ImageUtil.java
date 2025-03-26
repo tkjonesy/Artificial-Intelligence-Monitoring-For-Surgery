@@ -1,5 +1,6 @@
 package io.github.tkjonesy.ONNX;
 
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.Point;
@@ -105,7 +106,12 @@ public class ImageUtil {
 
         for (Detection detection : detectionList) {
             float[] bbox = detection.bbox();
+
             int[] boundingBoxColor = settings.getBoundingBoxColor();
+            if(boundingBoxColor.length != 3){
+                boundingBoxColor = new int[]{255, 0, 0};
+            }
+
             Scalar color = new Scalar(boundingBoxColor[2], boundingBoxColor[1], boundingBoxColor[0], 0);
             rectangle(img,                    // Matrix object of the image
                     new Point((int) bbox[0], (int) bbox[1]),      // Top-left point

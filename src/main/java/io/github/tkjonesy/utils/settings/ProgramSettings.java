@@ -24,11 +24,11 @@ public class ProgramSettings {
 
     // Camera variables
     @SettingsLabel(value = "cameraDeviceId", type = Integer.class)
-    private int cameraDeviceId;
+    private int cameraDeviceId = 0;
     @SettingsLabel(value = "cameraFps", type = Integer.class)
-    private int cameraFps;
+    private int cameraFps = 30;
     @SettingsLabel(value = "cameraRotation", type = Integer.class)
-    private int cameraRotation;
+    private int cameraRotation = 0;
     @SettingsLabel(value = "mirrorCamera", type = Boolean.class)
     private boolean mirrorCamera;
     @SettingsLabel(value = "preserveAspectRatio", type = Boolean.class)
@@ -53,11 +53,11 @@ public class ProgramSettings {
     @SettingsLabel(value = "labelPath", type = String.class)
     private String labelPath;
     @SettingsLabel(value = "boundingBoxColor", type = int[].class)
-    private int[] boundingBoxColor;
+    private int[] boundingBoxColor = {255, 0, 0};
     @SettingsLabel(value = "logAddedColor", type = int[].class)
-    private int[] logAddedColor;
+    private int[] logAddedColor = {0, 255, 0};
     @SettingsLabel(value = "logRemovedColor", type = int[].class)
-    private int[] logRemovedColor;
+    private int[] logRemovedColor = {255, 0, 0};
     @SettingsLabel(value = "showBoundingBoxes", type = Boolean.class)
     private boolean showBoundingBoxes;
     @SettingsLabel(value = "showLabels", type = Boolean.class)
@@ -65,40 +65,37 @@ public class ProgramSettings {
     @SettingsLabel(value = "showConfidences", type = Boolean.class)
     private boolean showConfidences;
     @SettingsLabel(value = "processEveryNthFrame", type = Integer.class)
-    private int processEveryNthFrame;
+    private int processEveryNthFrame = 30;
     @SettingsLabel(value = "bufferThreshold", type = Integer.class)
-    private int bufferThreshold;
+    private int bufferThreshold = 3;
     @SettingsLabel(value = "confThreshold", type = Float.class)
-    private float confThreshold;
+    private float confThreshold = 0.6f;
 
     // Advanced AI settings
     @Setter
     @SettingsLabel(value = "useGPU", type = Boolean.class)
     private boolean useGPU;
     @SettingsLabel(value = "gpuDeviceId", type = Integer.class)
-    private int gpuDeviceId;
+    private int gpuDeviceId = 0;
     @SettingsLabel(value = "nmsThreshold", type = Float.class)
-    private float nmsThreshold;
+    private float nmsThreshold = 0.45f;
     @SettingsLabel(value = "optimizationLevel", type = OrtSession.SessionOptions.OptLevel.class) // all, extended, basic, no
-    private OrtSession.SessionOptions.OptLevel optimizationLevel;
+    private OrtSession.SessionOptions.OptLevel optimizationLevel = OrtSession.SessionOptions.OptLevel.ALL_OPT;
     @SettingsLabel(value = "numOnnxThreads", type = Integer.class)
-    private int numOnnxThreads;
+    private int numOnnxThreads = 1;
     @SettingsLabel(value = "inputSize", type = Integer.class)
-    private int inputSize;
+    private int inputSize = 640;
     @SettingsLabel(value = "inputShape", type = long[].class)
-    private long[] inputShape;
+    private long[] inputShape = {1, 3, 640, 640};
     @SettingsLabel(value = "numInputElements", type = Integer.class)
     private int numInputElements;
 
     @SettingsLabel(value = "debugMode", type = Boolean.class)
     private boolean debugMode;
     @SettingsLabel(value = "continuousLogging", type = Boolean.class)
-    private boolean continuousLogging;
+    private boolean continuousLogging = true;
     @SettingsLabel(value = "showInferenceTime", type = Boolean.class)
     private boolean showInferenceTime;
-
-    @SettingsLabel(value = "notZeroNum", type = Integer.class)
-    private int notZeroNum;
 
     // -------------------------------------------------------------------------
 

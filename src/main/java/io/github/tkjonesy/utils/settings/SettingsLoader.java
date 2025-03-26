@@ -19,16 +19,13 @@ public class SettingsLoader {
 
     // Default model to use if none is specified
     private static final String DEFAULT_MODEL = "yolo11m";
+    private static final ProgramSettings DEFAULT_SETTINGS = loadSettingsFromResource(new ObjectMapper());
 
     public static void resetToDefaultSettings(){
-        // Load default settings from resources
-        ObjectMapper objectMapper = new ObjectMapper();
-        ProgramSettings defaultSettings = loadSettingsFromResource(objectMapper);
-
         // Save the default settings to the file
-        if(defaultSettings != null){
-            saveSettings(defaultSettings);
-            ProgramSettings.setCurrentSettings(defaultSettings);
+        if(DEFAULT_SETTINGS != null){
+            saveSettings(DEFAULT_SETTINGS);
+            ProgramSettings.setCurrentSettings(DEFAULT_SETTINGS);
             AIMsLogger.WARN("Reset settings to default.");
         }
     }
@@ -51,10 +48,9 @@ public class SettingsLoader {
 
             // Ensure all the values in the current settings are set. Compare to default settings.
             // If not set, assign default values.
-            ProgramSettings defaultSettings = loadSettingsFromResource(objectMapper);
-            if (defaultSettings != null) {
-                syncMissingFields(settings, defaultSettings);
-            }
+//            if (DEFAULT_SETTINGS != null) {
+//                sanitizeBrokenFields(settings);
+//            }
 
             if(settings.getFileDirectory() == null){
                 settings.setFileDirectory(DEFAULT_AIMS_SESSIONS_DIRECTORY);
@@ -65,40 +61,6 @@ public class SettingsLoader {
         }
 
         return settings;
-    }
-
-    private static void syncMissingFields(ProgramSettings userSettings, ProgramSettings defaultSettings) {
-        try {
-            // Get all fields from the ProgramSettings class
-            Field[] fields = ProgramSettings.class.getDeclaredFields();
-
-            // Add missing fields from default settings
-            for (Field field : fields) {
-                field.setAccessible(true);
-                Object defaultValue = field.get(defaultSettings);
-                Object userValue = field.get(userSettings);
-
-                // If the user's value is null but the default has a value, copy it over
-                if (userValue == null && defaultValue != null) {
-                    field.set(userSettings, defaultValue);
-                }
-            }
-
-            // Remove extra fields not defined in ProgramSettings
-            ObjectMapper mapper = new ObjectMapper();
-            String json = mapper.writeValueAsString(userSettings);
-            ProgramSettings cleanSettings = mapper.readValue(json, ProgramSettings.class);
-
-            // Copy all values from cleanSettings back to userSettings
-            for (Field field : fields) {
-                field.setAccessible(true);
-                Object cleanValue = field.get(cleanSettings);
-                field.set(userSettings, cleanValue);
-            }
-
-        } catch (IllegalAccessException | IOException e) {
-            AIMsLogger.ERROR("Failed to sync settings fields: " + e.getMessage());
-        }
     }
 
     public static void initializeAIMsDirectories() {
@@ -127,12 +89,7 @@ public class SettingsLoader {
         File settingsFile = new File(AIMS_SETTINGS_FILE_PATH);
         if (settingsFile.exists()) {
             try {
-                ProgramSettings settings = objectMapper.readValue(settingsFile, ProgramSettings.class);
-                if(settings.getNotZeroNum() == 0){
-                    return null;
-                }else{
-                    return settings;
-                }
+                return objectMapper.readValue(settingsFile, ProgramSettings.class);
             } catch (IOException e) {
                 AIMsLogger.ERROR("Failed to load settings from file: " + e.getMessage());
             }

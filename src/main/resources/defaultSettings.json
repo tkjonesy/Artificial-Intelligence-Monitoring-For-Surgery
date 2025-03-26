@@ -33,7 +33,5 @@
 
   "continuousLogging": true,
   "debugMode": false,
-  "showInferenceTime": false,
-
-  "notZeroNum": 1
+  "showInferenceTime": false
 }
