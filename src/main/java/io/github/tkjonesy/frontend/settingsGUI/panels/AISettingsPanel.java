@@ -4,6 +4,7 @@ import io.github.tkjonesy.frontend.settingsGUI.SettingsUI;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
+import io.github.tkjonesy.ONNX.enums.colorChangeEnum;
 
 import javax.swing.*;
 import javax.swing.event.ChangeListener;
@@ -96,9 +97,9 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         this.gInputTextField = new JTextField(String.valueOf(g), 3);
         this.bInputTextField = new JTextField(String.valueOf(b), 3);
 
-        rInputTextField.addActionListener(e -> updateColor(1));
-        gInputTextField.addActionListener(e -> updateColor(1));
-        bInputTextField.addActionListener(e -> updateColor(1));
+        rInputTextField.addActionListener(e -> updateColor(colorChangeEnum.BOUNDINGBOX.getCode()));
+        gInputTextField.addActionListener(e -> updateColor(colorChangeEnum.BOUNDINGBOX.getCode()));
+        bInputTextField.addActionListener(e -> updateColor(colorChangeEnum.BOUNDINGBOX.getCode()));
 
         this.colorPreviewButton = new JButton() {
             @Override
@@ -122,9 +123,9 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         this.logAddedGInputTextField = new JTextField(String.valueOf(logAddedG), 3);
         this.logAddedBInputTextField = new JTextField(String.valueOf(logAddedB), 3);
 
-        logAddedRInputTextField.addActionListener(e -> updateColor(2));
-        logAddedGInputTextField.addActionListener(e -> updateColor(2));
-        logAddedBInputTextField.addActionListener(e -> updateColor(2));
+        logAddedRInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGADDED.getCode()));
+        logAddedGInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGADDED.getCode()));
+        logAddedBInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGADDED.getCode()));
 
         this.logAddedColorPreviewButton = createColorPreviewButton(logAddedR, logAddedG, logAddedB, this::openLogAddedColorChooser);
 
@@ -137,9 +138,9 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         this.logRemovedGInputTextField = new JTextField(String.valueOf(logRemovedG), 3);
         this.logRemovedBInputTextField = new JTextField(String.valueOf(logRemovedB), 3);
 
-        logRemovedRInputTextField.addActionListener(e -> updateColor(3));
-        logRemovedGInputTextField.addActionListener(e -> updateColor(3));
-        logRemovedBInputTextField.addActionListener(e -> updateColor(3));
+        logRemovedRInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGREMOVED.getCode()));
+        logRemovedGInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGREMOVED.getCode()));
+        logRemovedBInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGREMOVED.getCode()));
 
         this.logRemovedColorPreviewButton = createColorPreviewButton(logRemovedR, logRemovedG, logRemovedB, this::openLogRemovedColorChooser);
 
