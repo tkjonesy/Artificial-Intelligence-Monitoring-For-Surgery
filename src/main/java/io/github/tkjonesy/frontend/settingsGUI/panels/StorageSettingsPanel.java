@@ -13,6 +13,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
+import static io.github.tkjonesy.utils.Paths.AIMS_DIRECTORY;
+
 import static io.github.tkjonesy.frontend.settingsGUI.SettingsWindow.addSettingChangeListener;
 
 public class StorageSettingsPanel extends JPanel implements SettingsUI {
@@ -43,7 +45,7 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
 
         ButtonGroup storageSelectorGroup = new ButtonGroup();
 
-        this.directoryButton = new JButton("Directory");
+        this.directoryButton = new JButton("Open Directory");
 
         this.defaultSaveOption = new JRadioButtonMenuItem("Default");
         defaultSaveOption.setToolTipText("Save to default location: " + Paths.DEFAULT_AIMS_SESSIONS_DIRECTORY);
@@ -95,7 +97,6 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
                         settingsUpdates.remove("fileDirectory");
                 }
         );
-
         addSettingChangeListener(defaultSaveOption, (ActionListener)
                 e -> {
                     folderSelectorButton.setEnabled(false);
@@ -105,9 +106,8 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
                         settingsUpdates.remove("fileDirectory");
                 }
         );
-
-        addSettingChangeListener(directoryButton, (ActionListener) e -> {
-            String selectedPath = selectedFolderLabel.getText().trim();
+        directoryButton.addActionListener(e -> {
+            String selectedPath = AIMS_DIRECTORY;
             File directory = new File(selectedPath);
 
             AIMsLogger.TRACE("Attempting to open: " + directory.getAbsolutePath());
@@ -127,7 +127,6 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
                         "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
-
         addSettingChangeListener(folderSelectorButton, (ActionListener)
                 e -> {
                     JFileChooser folderChooser = new JFileChooser();
@@ -146,8 +145,6 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
                     }
                 }
         );
-
-
         addSettingChangeListener(saveVideoCheckbox, (ActionListener)
                 e -> {
                     boolean value = saveVideoCheckbox.isSelected();
@@ -189,7 +186,6 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
                                         .addGroup(
                                                 layout.createSequentialGroup()
                                                         .addComponent(directoryButton, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(directoryButton, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                                         )
                                         .addComponent(storageSelectorLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                                         .addComponent(defaultSaveOption, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
@@ -225,8 +221,7 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
         layout.setVerticalGroup(
                 layout.createSequentialGroup()
                         .addGroup(
-                                layout.createParallelGroup()
-                                        .addComponent(directoryButton, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                                layout.createSequentialGroup()
                                         .addComponent(directoryButton, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                         )
                         .addComponent(storageSelectorLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
