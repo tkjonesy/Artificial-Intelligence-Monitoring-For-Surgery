@@ -70,6 +70,8 @@ public class ProgramSettings {
     private int bufferThreshold = 3;
     @SettingsLabel(value = "confThreshold", type = Float.class)
     private float confThreshold = 0.6f;
+    @SettingsLabel(value = "logFontSize", type = Integer.class)
+    private int logFontSize = 12;
 
     // Advanced AI settings
     @Setter

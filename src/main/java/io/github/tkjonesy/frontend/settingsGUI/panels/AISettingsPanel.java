@@ -32,7 +32,12 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
     private final JLabel bufferThresholdLabel;
     private final JLabel confThresholdLabel;
     private final JLabel noticeLabel;
+    private final JLabel logFontSizeLabel;
+    private final JTextPane logFontPreviewPane;
     private final JButton openFolderButton;
+    private final JSpinner logFontSizeSpinner;
+    private final JScrollPane logFontPreviewScrollPane;
+
 
     private int[] boundingBoxColor = new int[3];
     private final JTextField rInputTextField;
@@ -41,13 +46,12 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
     private final JButton colorPreviewButton;
 
     private int[] logAddedColor = new int[3];
-    private int[] logRemovedColor = new int[3];
-
     private final JTextField logAddedRInputTextField;
     private final JTextField logAddedGInputTextField;
     private final JTextField logAddedBInputTextField;
     private final JButton logAddedColorPreviewButton;
 
+    private int[] logRemovedColor = new int[3];
     private final JTextField logRemovedRInputTextField;
     private final JTextField logRemovedGInputTextField;
     private final JTextField logRemovedBInputTextField;
@@ -55,7 +59,6 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
 
     private final JLabel logAddedColorLabel = new JLabel("Log Added Color (RGB):");
     private final JLabel logRemovedColorLabel = new JLabel("Log Removed Color (RGB):");
-
 
     private final JComboBox<String> modelSelector;
     private final JComboBox<String> labelSelector;
@@ -162,6 +165,19 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
 
         this.confThresholdTextField = new JTextField(String.format("%.2f", settings.getConfThreshold()), 4);
         this.confThresholdTextField.setHorizontalAlignment(JTextField.CENTER);
+
+        this.logFontSizeLabel = new JLabel("Log Font Size:");
+        this.logFontSizeSpinner = new JSpinner(new SpinnerNumberModel(settings.getLogFontSize(), 8, 48, 1)); // min 8, max 48
+
+        this.logFontPreviewPane = new JTextPane();
+        logFontPreviewPane.setContentType("text/html");
+        logFontPreviewPane.setEditable(false);
+        logFontPreviewPane.setBackground(Color.BLACK);
+        logFontPreviewPane.setText(generateLogPreviewHTML(settings.getLogFontSize()));
+
+        this.logFontPreviewScrollPane = new JScrollPane(logFontPreviewPane);
+        logFontPreviewScrollPane.setPreferredSize(new Dimension(400, 80)); // Adjust to match your log view
+
 
         setLayout();
         initListeners();
@@ -279,7 +295,23 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                         settingsUpdates.remove("confThreshold");
                 }
         );
+
+        addSettingChangeListener(logFontSizeSpinner, (ChangeListener) e -> {
+            int value = (int) logFontSizeSpinner.getValue();
+            AIMsLogger.TRACE("Log font size changed to: " + value);
+            settingsUpdates.put("logFontSize", value);
+
+            updateLogPreview();
+
+            // Update preview content
+            logFontPreviewPane.setText(generateLogPreviewHTML(value));
+
+            if (settings.getLogFontSize() == value)
+                settingsUpdates.remove("logFontSize");
+        });
     }
+
+
 
     @Override
     public void setLayout() {
@@ -357,6 +389,13 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(confThresholdTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                         )
+                        .addGroup(
+                                layout.createSequentialGroup()
+                                        .addComponent(logFontSizeLabel)
+                                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(logFontSizeSpinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        )
+                        .addComponent(logFontPreviewScrollPane)
         );
 
         layout.setVerticalGroup(
@@ -429,7 +468,12 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                                         .addComponent(confThresholdSlider)
                                         .addComponent(confThresholdTextField)
                         )
-
+                        .addGroup(
+                                layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                        .addComponent(logFontSizeLabel)
+                                        .addComponent(logFontSizeSpinner)
+                        )
+                        .addComponent(logFontPreviewScrollPane)
         );
     }
 
@@ -631,7 +675,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
             logAddedColorPreviewButton.setBackground(new Color(r, g, b));
 
             fireLogAddedColorChangedEvent(this.logAddedColor);
-
+            updateLogPreview();
         } catch (NumberFormatException ex) {
             System.err.println("Invalid RGB input for log added color. Must be a number between 0-255.");
         }
@@ -655,7 +699,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
             logRemovedColorPreviewButton.setBackground(new Color(r, g, b));
 
             fireLogRemovedColorChangedEvent(this.logRemovedColor);
-
+            updateLogPreview();
         } catch (NumberFormatException ex) {
             System.err.println("Invalid RGB input for log removed color. Must be a number between 0-255.");
         }
@@ -687,5 +731,25 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         if (Arrays.equals(settings.getLogRemovedColor(), newColor))
             settingsUpdates.remove("logRemovedColor");
         updateApplyButtonState();
+    }
+
+    private String generateLogPreviewHTML(int fontSize) {
+        int[] addedColor = settings.getLogAddedColor();     // e.g. {255, 165, 0}
+        int[] removedColor = settings.getLogRemovedColor(); // e.g. {255, 0, 0}
+
+        String addedHex = String.format("#%02x%02x%02x", addedColor[0], addedColor[1], addedColor[2]);
+        String removedHex = String.format("#%02x%02x%02x", removedColor[0], removedColor[1], removedColor[2]);
+        return "<html><body style='color:white; font-size:" + fontSize + "pt; font-family:monospace;'>"
+                + "<span style='color:" + addedHex + ";'>[ADDED] 12:35:20 - Tool added: scissors</span><br>"
+                + "<span style='color:"+ removedHex  +";'>[REMOVED] 12:35:10 - Tool removed: scissors</span><br>"
+                + "<span style='color:" + addedHex + ";'>[ADDED] 12:35:20 - Tool added: scissors</span><br>"
+                + "<span style='color:" + addedHex + ";'>[ADDED] 12:35:20 - Tool added: scissors</span><br>"
+                + "<span style='color:"+ removedHex  +";'>[REMOVED] 12:35:10 - Tool removed: scissors</span><br>"
+                + "</body></html>";
+    }
+
+    private void updateLogPreview() {
+        int fontSize = (int) logFontSizeSpinner.getValue();
+        logFontPreviewPane.setText(generateLogPreviewHTML(fontSize));
     }
 }
