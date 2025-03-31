@@ -172,6 +172,7 @@ public class App extends JFrame {
         splitPane.setResizeWeight(0.67); // This enforces the 2/3 to 1/3 ratio
         splitPane.setContinuousLayout(true);
         splitPane.setDividerSize(5);
+        splitPane.setOneTouchExpandable(true);
 
         // Create a wrapper panel for the button panel with FlowLayout to center it
         JPanel buttonPanelWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
