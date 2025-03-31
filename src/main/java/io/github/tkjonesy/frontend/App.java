@@ -21,10 +21,7 @@ import io.github.tkjonesy.frontend.mainGUI.LoggingPanel;
 import io.github.tkjonesy.frontend.utils.*;
 import io.github.tkjonesy.frontend.miscGUI.SplashScreen;
 import io.github.tkjonesy.frontend.utils.cameraGrabber.CameraGrabber;
-import io.github.tkjonesy.utils.AppVersion;
-import io.github.tkjonesy.utils.DialogManager;
-import io.github.tkjonesy.utils.ErrorUtils;
-import io.github.tkjonesy.utils.Paths;
+import io.github.tkjonesy.utils.*;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.models.LogHandler;
 import io.github.tkjonesy.utils.models.SessionHandler;
@@ -138,6 +135,8 @@ public class App extends JFrame {
         AIMsLogger.initialize(ProgramSettings.getCurrentSettings());
 
         AIMsLogger.INFO("Settings: " + settings);
+
+        UpdateChecker.checkForUpdatesAsync();
     }
 
     public void collectAvailableCameras() {
