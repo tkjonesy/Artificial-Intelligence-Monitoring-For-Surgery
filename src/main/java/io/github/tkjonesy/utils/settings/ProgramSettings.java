@@ -31,8 +31,6 @@ public class ProgramSettings {
     private int cameraRotation = 0;
     @SettingsLabel(value = "mirrorCamera", type = Boolean.class)
     private boolean mirrorCamera;
-    @SettingsLabel(value = "preserveAspectRatio", type = Boolean.class)
-    private boolean preserveAspectRatio;
     @SettingsLabel(value = "aspectRatio", type = String.class)
     private String aspectRatio = "4:3";
 

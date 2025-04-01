@@ -24,14 +24,12 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
     private final JLabel cameraFpsLabel;
     private final JLabel cameraRotationLabel;
     private final JLabel mirrorCameraLabel;
-    private final JLabel preserveAspectRatioLabel;
     private final JLabel aspectRatioLabel;
 
     private final JComboBox<String> cameraSelector;
     private final JSpinner cameraFpsSpinner;
     private final JSlider cameraRotationSlider;
     private final JCheckBox mirrorCameraCheckbox;
-    private final JCheckBox preserveAspectRatioCheckbox;
     private final JLabel cameraFpsWarningLabel;
 
     // Aspect ratio components
@@ -73,14 +71,10 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
         labelTable.put(270, new JLabel("270"));
         cameraRotationSlider.setLabelTable(labelTable);
 
-        // Mirror & Aspect Ratio
+        // Mirror Camera
         this.mirrorCameraLabel = new JLabel("Mirror Camera");
         this.mirrorCameraCheckbox = new JCheckBox();
         this.mirrorCameraCheckbox.setSelected(settings.isMirrorCamera());
-
-        this.preserveAspectRatioLabel = new JLabel("Preserve Aspect Ratio");
-        this.preserveAspectRatioCheckbox = new JCheckBox();
-        this.preserveAspectRatioCheckbox.setSelected(settings.isPreserveAspectRatio());
 
         // Aspect Ratio Selection Group
         this.aspectRatioLabel = new JLabel("Aspect Ratio:");
@@ -102,8 +96,6 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
         aspectRatioPanel.add(ratioFillButton);
 
         // Set default selection based on settings
-        // Assuming you have an aspectRatio setting in your ProgramSettings class
-        // If not, you can default to 4:3 or whatever you prefer
         String aspectRatio = settings.getAspectRatio();
         if (aspectRatio == null) {
             aspectRatio = "4:3"; // Default if not set
@@ -179,16 +171,6 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
                 }
         );
 
-        addSettingChangeListener(preserveAspectRatioCheckbox, (ActionListener)
-                e -> {
-                    boolean value = preserveAspectRatioCheckbox.isSelected();
-                    AIMsLogger.TRACE("Preserve aspect ratio selected: " + value);
-                    settingsUpdates.put("preserveAspectRatio", value);
-                    if(settings.isPreserveAspectRatio() == value)
-                        settingsUpdates.remove("preserveAspectRatio");
-                }
-        );
-
         // Aspect Ratio radio button listeners
         ActionListener aspectRatioListener = e -> {
             String aspectRatio;
@@ -249,12 +231,6 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
                         )
                         .addGroup(
                                 layout.createSequentialGroup()
-                                        .addComponent(preserveAspectRatioLabel)
-                                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(preserveAspectRatioCheckbox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        )
-                        .addGroup(
-                                layout.createSequentialGroup()
                                         .addComponent(aspectRatioLabel)
                                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(aspectRatioPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
@@ -286,12 +262,6 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
                                 layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                         .addComponent(mirrorCameraLabel)
                                         .addComponent(mirrorCameraCheckbox)
-                        )
-                        .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(
-                                layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                        .addComponent(preserveAspectRatioLabel)
-                                        .addComponent(preserveAspectRatioCheckbox)
                         )
                         .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(
