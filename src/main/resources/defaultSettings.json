@@ -21,6 +21,7 @@
   "showConfidences": true,
   "bufferThreshold": 3,
   "confThreshold": 0.6,
+  "logFontSize": 14,
 
   "useGPU": false,
   "gpuDeviceId": 0,
