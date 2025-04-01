@@ -34,5 +34,7 @@
 
   "continuousLogging": true,
   "debugMode": false,
-  "showInferenceTime": false
+  "showInferenceTime": false,
+
+  "skipVersion": "abc123"
 }

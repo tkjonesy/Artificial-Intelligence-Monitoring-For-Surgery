@@ -2,6 +2,7 @@ package io.github.tkjonesy.utils.settings;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
+import lombok.Getter;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +20,7 @@ public class SettingsLoader {
 
     // Default model to use if none is specified
     private static final String DEFAULT_MODEL = "yolo11m";
+    @Getter
     private static final ProgramSettings DEFAULT_SETTINGS = loadSettingsFromResource(new ObjectMapper());
 
     public static void resetToDefaultSettings(){

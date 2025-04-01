@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-import static io.github.tkjonesy.frontend.App.AVAILABLE_CAMERAS;
-
 public class SettingsWindow extends JDialog implements SettingsUI {
 
     private final ProgramSettings settings = ProgramSettings.getCurrentSettings();
@@ -63,7 +61,7 @@ public class SettingsWindow extends JDialog implements SettingsUI {
             this.setIconImage(appIcon.getImage());
         } catch (Exception ignored) {}
 
-        CameraSettingsPanel cameraPanel = new CameraSettingsPanel(settings, AVAILABLE_CAMERAS);
+        CameraSettingsPanel cameraPanel = new CameraSettingsPanel(settings);
         StorageSettingsPanel storagePanel = new StorageSettingsPanel();
         AISettingsPanel modelPanel = new AISettingsPanel();
         AdvancedSettingsPanel advancedPanel = new AdvancedSettingsPanel();
