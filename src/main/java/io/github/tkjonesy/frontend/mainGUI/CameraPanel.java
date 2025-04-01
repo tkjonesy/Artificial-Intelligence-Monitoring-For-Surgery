@@ -77,6 +77,12 @@ public class CameraPanel extends JPanel {
             public void componentResized(ComponentEvent e) {
                 handleResize();
             }
+
+            @Override
+            public void componentShown(ComponentEvent e) {
+                // Also handle resize when component becomes visible
+                handleResize();
+            }
         });
 
         // Initialize aspect ratio from settings
@@ -85,9 +91,10 @@ public class CameraPanel extends JPanel {
 
     /**
      * Handles resizing of the panel by calculating the appropriate camera size
-     * based on the available space and maintaining aspect ratio if needed
+     * based on the available space and maintaining aspect ratio if needed.
+     * This method is now public to allow external classes to trigger resize.
      */
-    private void handleResize() {
+    public void handleResize() {
         if (resizeInProgress) {
             return; // Prevent recursive calls
         }
@@ -99,8 +106,8 @@ public class CameraPanel extends JPanel {
         int availableWidth = getWidth() - insets.left - insets.right - 20; // Add some padding
         int availableHeight = getHeight() - insets.top - insets.bottom - 20;
 
-        // Don't resize if dimensions are too small
-        if (availableWidth <= 0 || availableHeight <= 0) {
+        // Don't resize if dimensions are too small or component is not visible
+        if (availableWidth <= 0 || availableHeight <= 0 || !isVisible()) {
             resizeInProgress = false;
             return;
         }
@@ -120,10 +127,30 @@ public class CameraPanel extends JPanel {
             newSize = new Dimension(availableWidth, availableHeight);
         }
 
-        // Update camera size
-        setCameraSize(newSize);
+        // Only update if there's a significant change in size
+        if (Math.abs(cameraSize.width - newSize.width) > 5 ||
+                Math.abs(cameraSize.height - newSize.height) > 5) {
+            // Update camera size
+            setCameraSize(newSize);
+
+            // Force immediate container updates
+            cameraContainer.invalidate();
+            centeringPanel.revalidate();
+            centeringPanel.repaint();
+        }
 
         resizeInProgress = false;
+
+        // Schedule another resize after a short delay to catch any post-layout changes
+        SwingUtilities.invokeLater(() -> {
+            // This helps with certain window managers that perform resize in multiple steps
+            if (!resizeInProgress && isVisible()) {
+                resizeInProgress = true;
+                centeringPanel.revalidate();
+                centeringPanel.repaint();
+                resizeInProgress = false;
+            }
+        });
     }
 
     /**
@@ -182,10 +209,5 @@ public class CameraPanel extends JPanel {
 
         // Trigger resize handling to update the UI immediately
         handleResize();
-
-        // Update camera container to reflect the changes
-        cameraContainer.invalidate();
-        centeringPanel.revalidate();
-        centeringPanel.repaint();
     }
 }
