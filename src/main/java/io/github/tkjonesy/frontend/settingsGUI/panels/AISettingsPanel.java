@@ -72,6 +72,10 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
 
     private final List<AISettingsListener> listeners = new ArrayList<>();
 
+    public interface AISettingsListener {
+        void onColorChanged(String settingKey, int[] newColor);
+    }
+
     public AISettingsPanel() {
         this.noticeLabel = new JLabel("<html><b>Only YOLOv8+ models in .onnx format are supported.</b></html>");
         this.noticeLabel.setForeground(Color.GRAY);
@@ -98,9 +102,9 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         this.gInputTextField = new JTextField(String.valueOf(g), 3);
         this.bInputTextField = new JTextField(String.valueOf(b), 3);
 
-        rInputTextField.addActionListener(e -> updateBoundingBoxColor());
-        gInputTextField.addActionListener(e -> updateBoundingBoxColor());
-        bInputTextField.addActionListener(e -> updateBoundingBoxColor());
+        rInputTextField.addActionListener(e -> updateColor(colorChangeEnum.BOUNDINGBOX.getCode()));
+        gInputTextField.addActionListener(e -> updateColor(colorChangeEnum.BOUNDINGBOX.getCode()));
+        bInputTextField.addActionListener(e -> updateColor(colorChangeEnum.BOUNDINGBOX.getCode()));
 
         this.colorPreviewButton = new JButton() {
             @Override
@@ -124,9 +128,9 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         this.logAddedGInputTextField = new JTextField(String.valueOf(logAddedG), 3);
         this.logAddedBInputTextField = new JTextField(String.valueOf(logAddedB), 3);
 
-        logAddedRInputTextField.addActionListener(e -> updateLogAddedColor());
-        logAddedGInputTextField.addActionListener(e -> updateLogAddedColor());
-        logAddedBInputTextField.addActionListener(e -> updateLogAddedColor());
+        logAddedRInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGADDED.getCode()));
+        logAddedGInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGADDED.getCode()));
+        logAddedBInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGADDED.getCode()));
 
         this.logAddedColorPreviewButton = createColorPreviewButton(logAddedR, logAddedG, logAddedB, this::openLogAddedColorChooser);
 
@@ -139,9 +143,9 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         this.logRemovedGInputTextField = new JTextField(String.valueOf(logRemovedG), 3);
         this.logRemovedBInputTextField = new JTextField(String.valueOf(logRemovedB), 3);
 
-        logRemovedRInputTextField.addActionListener(e -> updateLogRemovedColor());
-        logRemovedGInputTextField.addActionListener(e -> updateLogRemovedColor());
-        logRemovedBInputTextField.addActionListener(e -> updateLogRemovedColor());
+        logRemovedRInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGREMOVED.getCode()));
+        logRemovedGInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGREMOVED.getCode()));
+        logRemovedBInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGREMOVED.getCode()));
 
         this.logRemovedColorPreviewButton = createColorPreviewButton(logRemovedR, logRemovedG, logRemovedB, this::openLogRemovedColorChooser);
 
@@ -186,15 +190,14 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
 
     @Override
     public void initListeners() {
-        this.addAISettingsListener(
-                newColor -> {
-                    settingsUpdates.put("boundingBoxColor", newColor);
-                    AIMsLogger.TRACE("Bounding box color changed to: " + Arrays.toString(newColor));
-                    if(Arrays.equals(settings.getBoundingBoxColor(), newColor))
-                        settingsUpdates.remove("boundingBoxColor");
-                    updateApplyButtonState();
-                }
-        );
+        this.addAISettingsListener((key, newColor) -> {
+            switch (key) {
+                case "boundingBoxColor" -> handleColorChange(key, newColor, settings.getBoundingBoxColor());
+                case "logAddedColor" -> handleColorChange(key, newColor, settings.getLogAddedColor());
+                case "logRemovedColor" -> handleColorChange(key, newColor, settings.getLogRemovedColor());
+                default -> AIMsLogger.WARN("Unknown color key: " + key);
+            }
+        });
 
         // Sync text field to slider (with validation)
         confThresholdTextField.addActionListener(e -> {
@@ -310,8 +313,6 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                 settingsUpdates.remove("logFontSize");
         });
     }
-
-
 
     @Override
     public void setLayout() {
@@ -539,8 +540,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                         bInputTextField.setText(String.valueOf(selectedColor.getBlue()));
 
                         this.boundingBoxColor = new int[]{selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue()};
-                        fireBoundingBoxColorChangedEvent(boundingBoxColor);
-                    }
+                        fireColorChangedEvent("boundingBoxColor", this.boundingBoxColor);                    }
                 },
                 null
         );
@@ -571,7 +571,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                                 selectedColor.getGreen(),
                                 selectedColor.getBlue()
                         };
-                        fireLogAddedColorChangedEvent(this.logAddedColor);
+                        fireColorChangedEvent("logAddedColor", this.logAddedColor);
                     }
                 },
                 null
@@ -603,7 +603,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                                 selectedColor.getGreen(),
                                 selectedColor.getBlue()
                         };
-                        fireLogRemovedColorChangedEvent(this.logRemovedColor);
+                        fireColorChangedEvent("logRemovedColor", this.logRemovedColor);
                     }
                 },
                 null
@@ -626,7 +626,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         }
     }
 
-    private void updateBoundingBoxColor() {
+    private void updateColor(int key) {
         try {
             int r = Integer.parseInt(rInputTextField.getText());
             int g = Integer.parseInt(gInputTextField.getText());
@@ -649,59 +649,15 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
             colorPreviewButton.setBackground(new Color(r, g, b));
 
             // Fire the event
-            fireBoundingBoxColorChangedEvent(this.boundingBoxColor);
-
+            switch (key) {
+                case 1 -> fireColorChangedEvent("boundingBoxColor", this.boundingBoxColor);
+                case 2 -> fireColorChangedEvent("logAddedColor", this.logAddedColor);
+                case 3 -> fireColorChangedEvent("logRemovedColor", this.logRemovedColor);
+                default -> AIMsLogger.WARN("Unknown color key: " + key);
+            }
         } catch (NumberFormatException ex) {
             // Handle invalid input (non-numeric)
             System.err.println("Invalid RGB input. Must be a number between 0-255.");
-        }
-    }
-
-    private void updateLogAddedColor() {
-        try {
-            int r = Integer.parseInt(logAddedRInputTextField.getText());
-            int g = Integer.parseInt(logAddedGInputTextField.getText());
-            int b = Integer.parseInt(logAddedBInputTextField.getText());
-
-            r = Math.max(0, Math.min(255, r));
-            g = Math.max(0, Math.min(255, g));
-            b = Math.max(0, Math.min(255, b));
-
-            logAddedRInputTextField.setText(String.valueOf(r));
-            logAddedGInputTextField.setText(String.valueOf(g));
-            logAddedBInputTextField.setText(String.valueOf(b));
-
-            this.logAddedColor = new int[]{r, g, b};
-            logAddedColorPreviewButton.setBackground(new Color(r, g, b));
-
-            fireLogAddedColorChangedEvent(this.logAddedColor);
-            updateLogPreview();
-        } catch (NumberFormatException ex) {
-            System.err.println("Invalid RGB input for log added color. Must be a number between 0-255.");
-        }
-    }
-
-    private void updateLogRemovedColor() {
-        try {
-            int r = Integer.parseInt(logRemovedRInputTextField.getText());
-            int g = Integer.parseInt(logRemovedGInputTextField.getText());
-            int b = Integer.parseInt(logRemovedBInputTextField.getText());
-
-            r = Math.max(0, Math.min(255, r));
-            g = Math.max(0, Math.min(255, g));
-            b = Math.max(0, Math.min(255, b));
-
-            logRemovedRInputTextField.setText(String.valueOf(r));
-            logRemovedGInputTextField.setText(String.valueOf(g));
-            logRemovedBInputTextField.setText(String.valueOf(b));
-
-            this.logRemovedColor = new int[]{r, g, b};
-            logRemovedColorPreviewButton.setBackground(new Color(r, g, b));
-
-            fireLogRemovedColorChangedEvent(this.logRemovedColor);
-            updateLogPreview();
-        } catch (NumberFormatException ex) {
-            System.err.println("Invalid RGB input for log removed color. Must be a number between 0-255.");
         }
     }
 
@@ -710,26 +666,22 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
     }
 
     /**
-     * Fires an event to all registered listeners when the bounding box color changes.
+     * Fires an event to all registered listeners when any color changes.
      */
-    private void fireBoundingBoxColorChangedEvent(int[] newColor) {
-        BoundingBoxColorChangeEvent event = new BoundingBoxColorChangeEvent(newColor);
+    private void fireColorChangedEvent(String key, int[] newColor) {
         for (AISettingsListener listener : listeners) {
-            listener.onBoundingBoxColorChanged(event.newColor());
+            listener.onColorChanged(key, newColor);
         }
     }
 
-    private void fireLogAddedColorChangedEvent(int[] newColor) {
-        settingsUpdates.put("logAddedColor", newColor);
-        if (Arrays.equals(settings.getLogAddedColor(), newColor))
-            settingsUpdates.remove("logAddedColor");
-        updateApplyButtonState();
-    }
+    private void handleColorChange(String key, int[] newColor, int[] originalColor) {
+        settingsUpdates.put(key, newColor);
+        AIMsLogger.TRACE(key + " changed to: " + Arrays.toString(newColor));
 
-    private void fireLogRemovedColorChangedEvent(int[] newColor) {
-        settingsUpdates.put("logRemovedColor", newColor);
-        if (Arrays.equals(settings.getLogRemovedColor(), newColor))
-            settingsUpdates.remove("logRemovedColor");
+        if (Arrays.equals(originalColor, newColor)) {
+            settingsUpdates.remove(key);
+        }
+
         updateApplyButtonState();
     }
 

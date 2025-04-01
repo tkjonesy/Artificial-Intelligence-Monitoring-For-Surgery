@@ -2,7 +2,6 @@ package io.github.tkjonesy.ONNX.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import io.github.tkjonesy.utils.settings.ProgramSettings;
 import java.awt.Color;
 
 /**
