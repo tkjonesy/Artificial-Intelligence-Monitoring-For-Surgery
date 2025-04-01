@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.tkjonesy.frontend.App;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
+import io.github.tkjonesy.utils.settings.ProgramSettings;
+import lombok.AllArgsConstructor;
+import lombok.ToString;
 
 import javax.swing.*;
 import java.awt.*;
@@ -44,18 +47,15 @@ public class UpdateChecker {
         if (latestRelease != null) {
             // Get the commit hash for the tag
             String releaseCommitHash = getCommitHashForTag(latestRelease.tagName);
-            AIMsLogger.DEBUG("Latest commit hash: " + releaseCommitHash);
-            AIMsLogger.DEBUG("Current commit hash: " + currentCommitHash);
+            AIMsLogger.INFO("Latest commit hash: " + releaseCommitHash);
+            AIMsLogger.INFO("Current commit hash: " + currentCommitHash);
 
-            if (releaseCommitHash != null && !currentCommitHash.equals(releaseCommitHash)) {
-                // Check if the current commit is actually behind the release commit
-                if (isCurrentCommitBehind(currentCommitHash, releaseCommitHash)) {
-                    latestRelease.commitHash = releaseCommitHash;
-                    AIMsLogger.DEBUG("New version available: " + latestRelease.commitHash);
-                    showUpdateAvailableDialog(latestRelease);
-                } else {
-                    AIMsLogger.DEBUG("Current commit is not behind the latest release commit. No update needed.");
-                }
+            if (releaseCommitHash != null && isCurrentCommitBehind(currentCommitHash, releaseCommitHash)) {
+                latestRelease.commitHash = releaseCommitHash;
+                AIMsLogger.INFO("New version available: " + latestRelease.commitHash);
+                showUpdateAvailableDialog(latestRelease);
+            }else {
+                AIMsLogger.INFO("Current commit is not behind the latest release commit. No update needed.");
             }
         }
     }
@@ -87,10 +87,10 @@ public class UpdateChecker {
             JsonNode rootNode = mapper.readTree(response.toString());
 
             String tagName = rootNode.path("tag_name").asText();
-            String name = rootNode.path("name").asText();
             String htmlUrl = rootNode.path("html_url").asText();
-
-            return new ReleaseInfo(tagName, name, null, htmlUrl);
+            ReleaseInfo releaseInfo = new ReleaseInfo(tagName, null, htmlUrl);
+            AIMsLogger.INFO("Latest release: " + releaseInfo);
+            return releaseInfo;
         }
     }
 
@@ -126,7 +126,6 @@ public class UpdateChecker {
 
             // For an annotated tag, we need an extra step
             String objectType = rootNode.path("object").path("type").asText();
-
 
             if ("tag".equals(objectType)) {
                 // This is an annotated tag, we need to get the commit it points to
@@ -177,15 +176,14 @@ public class UpdateChecker {
             int aheadBy = rootNode.path("ahead_by").asInt();
 
             if("identical".equals(status)){
-                AIMsLogger.DEBUG("Current commit is identical to the latest release commit.");
+                AIMsLogger.INFO("Current commit is identical to the latest release commit.");
             } else if("ahead".equals(status)){
-                AIMsLogger.DEBUG("Current commit is ahead of the latest release commit by " + aheadBy + " commits.");
+                AIMsLogger.INFO("Current commit is ahead of the latest release commit by " + aheadBy + " commits.");
             } else if("diverged".equals(status)){
-                AIMsLogger.DEBUG("Current commit has diverged from the latest release commit.");
+                AIMsLogger.INFO("Current commit has diverged from the latest release commit.");
             } else {
-                AIMsLogger.DEBUG("Current commit is behind the latest release commit by " + behindBy + " commits.");
+                AIMsLogger.INFO("Current commit is behind the latest release commit by " + behindBy + " commits.");
             }
-
             return "behind".equals(status) && behindBy > 0;
         }
     }
@@ -223,45 +221,54 @@ public class UpdateChecker {
      * Shows a dialog notifying the user of an available update
      */
     private static void showUpdateAvailableDialog(ReleaseInfo releaseInfo) {
+
+        if(releaseInfo.commitHash.equals(ProgramSettings.getCurrentSettings().getSkipVersion())) return;
+
         SwingUtilities.invokeLater(() -> {
             String message = "A new version of AIMs is available!\n\n" +
                     "Current version: " + AppVersion.getCOMMIT_ID_ABBREV() + "\n" +
                     "Latest version: " + releaseInfo.commitHash.substring(0, 8) + "\n\n" +
                     "Would you like to open the download page?";
 
-            int option = JOptionPane.showConfirmDialog(
+            // Create custom button options
+            Object[] options = {"Download", "Remind Later", "Skip This Version"};
+
+            int option = JOptionPane.showOptionDialog(
                     App.getInstance(),
                     message,
                     "Update Available",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    options,
+                    options[0]
             );
 
-            if (option == JOptionPane.YES_OPTION) {
+            if (option == 0) {
                 try {
                     Desktop.getDesktop().browse(new URI(releaseInfo.downloadUrl));
                 } catch (Exception e) {
                     AIMsLogger.ERROR("Failed to open browser: " + e.getMessage());
                     DialogManager.displayErrorDialog("Could not open the browser. Please visit: " + releaseInfo.downloadUrl);
                 }
+            } else if (option == 2) {
+                ProgramSettings settings = ProgramSettings.getCurrentSettings();
+                settings.setSkipVersion(releaseInfo.commitHash);
+
+                AIMsLogger.INFO("User chose to skip version: " + releaseInfo.commitHash.substring(0, 8));
             }
         });
     }
 
+
     /**
      * Helper class to store release information
      */
+    @AllArgsConstructor
+    @ToString
     private static class ReleaseInfo {
         private final String tagName;
-        private final String version;
         private String commitHash;
         private final String downloadUrl;
-
-        public ReleaseInfo(String tagName, String version, String commitHash, String downloadUrl) {
-            this.tagName = tagName;
-            this.version = version;
-            this.commitHash = commitHash;
-            this.downloadUrl = downloadUrl;
-        }
     }
 }

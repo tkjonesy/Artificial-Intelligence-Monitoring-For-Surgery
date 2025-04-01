@@ -97,6 +97,10 @@ public class ProgramSettings {
     @SettingsLabel(value = "showInferenceTime", type = Boolean.class)
     private boolean showInferenceTime;
 
+    @Setter
+    @SettingsLabel(value = "skipVersion", type = String.class)
+    private String skipVersion = "";
+
     // -------------------------------------------------------------------------
 
     public void updateSettings(HashMap<String, Object> newSettings) {
