@@ -8,6 +8,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -232,6 +233,27 @@ public class App extends JFrame {
             public void componentResized(ComponentEvent e) {
                 int totalWidth = splitPane.getWidth();
                 splitPane.setDividerLocation((int)(totalWidth * 0.67));
+                // Force camera panel resize on component resize
+                if (cameraPanel != null) {
+                    cameraPanel.handleResize();
+                }
+            }
+        });
+
+        // Add window state listener to handle maximizing
+        this.addWindowStateListener(new WindowStateListener() {
+            @Override
+            public void windowStateChanged(WindowEvent e) {
+                // If window is maximized or restored from maximized state
+                if ((e.getNewState() & Frame.MAXIMIZED_BOTH) != 0 ||
+                        (e.getOldState() & Frame.MAXIMIZED_BOTH) != 0) {
+                    // Force a recalculation of camera panel size
+                    SwingUtilities.invokeLater(() -> {
+                        if (cameraPanel != null) {
+                            cameraPanel.handleResize();
+                        }
+                    });
+                }
             }
         });
     }
