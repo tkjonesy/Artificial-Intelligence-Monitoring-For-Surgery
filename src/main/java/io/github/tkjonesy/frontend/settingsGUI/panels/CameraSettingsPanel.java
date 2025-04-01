@@ -25,6 +25,7 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
     private final JLabel cameraRotationLabel;
     private final JLabel mirrorCameraLabel;
     private final JLabel preserveAspectRatioLabel;
+    private final JLabel aspectRatioLabel;
 
     private final JComboBox<String> cameraSelector;
     private final JSpinner cameraFpsSpinner;
@@ -32,6 +33,13 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
     private final JCheckBox mirrorCameraCheckbox;
     private final JCheckBox preserveAspectRatioCheckbox;
     private final JLabel cameraFpsWarningLabel;
+
+    // Aspect ratio components
+    private final JPanel aspectRatioPanel;
+    private final ButtonGroup aspectRatioGroup;
+    private final JRadioButton ratio16_9Button;
+    private final JRadioButton ratio4_3Button;
+    private final JRadioButton ratioFillButton;
 
     public CameraSettingsPanel(ProgramSettings settings, HashMap<String, Integer> availableCameras) {
         // Components
@@ -74,6 +82,48 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
         this.preserveAspectRatioCheckbox = new JCheckBox();
         this.preserveAspectRatioCheckbox.setSelected(settings.isPreserveAspectRatio());
 
+        // Aspect Ratio Selection Group
+        this.aspectRatioLabel = new JLabel("Aspect Ratio:");
+        this.aspectRatioPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        this.aspectRatioGroup = new ButtonGroup();
+
+        this.ratio16_9Button = new JRadioButton("16:9");
+        this.ratio4_3Button = new JRadioButton("4:3");
+        this.ratioFillButton = new JRadioButton("Fill");
+
+        // Add radio buttons to group
+        aspectRatioGroup.add(ratio16_9Button);
+        aspectRatioGroup.add(ratio4_3Button);
+        aspectRatioGroup.add(ratioFillButton);
+
+        // Add radio buttons to panel
+        aspectRatioPanel.add(ratio16_9Button);
+        aspectRatioPanel.add(ratio4_3Button);
+        aspectRatioPanel.add(ratioFillButton);
+
+        // Set default selection based on settings
+        // Assuming you have an aspectRatio setting in your ProgramSettings class
+        // If not, you can default to 4:3 or whatever you prefer
+        String aspectRatio = settings.getAspectRatio();
+        if (aspectRatio == null) {
+            aspectRatio = "4:3"; // Default if not set
+        }
+
+        switch (aspectRatio) {
+            case "16:9":
+                ratio16_9Button.setSelected(true);
+                break;
+            case "4:3":
+                ratio4_3Button.setSelected(true);
+                break;
+            case "fill":
+                ratioFillButton.setSelected(true);
+                break;
+            default:
+                ratio4_3Button.setSelected(true); // Default to 4:3
+                break;
+        }
+
         setLayout();
         initListeners();
     }
@@ -86,9 +136,8 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
                 e -> {
                     if((int) cameraFpsSpinner.getValue() > 30)
                         DialogManager.displayWarningDialog("Values over 30 may not be supported by all cameras. Setting this value higher than 30 will not make the recording smoother if the camera does not have a refresh rate this high. Additionally, values over 60 may cause extreme performance issues.");
-                    }
+                }
         );
-
 
         addSettingChangeListener(cameraSelector, (ActionListener)
                 e -> {
@@ -139,6 +188,30 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
                         settingsUpdates.remove("preserveAspectRatio");
                 }
         );
+
+        // Aspect Ratio radio button listeners
+        ActionListener aspectRatioListener = e -> {
+            String aspectRatio;
+            if (ratio16_9Button.isSelected()) {
+                aspectRatio = "16:9";
+            } else if (ratio4_3Button.isSelected()) {
+                aspectRatio = "4:3";
+            } else {
+                aspectRatio = "fill";
+            }
+
+            AIMsLogger.TRACE("Aspect ratio selected: " + aspectRatio);
+            settingsUpdates.put("aspectRatio", aspectRatio);
+
+            // Only remove if the setting matches the current value
+            if (settings.getAspectRatio() != null && settings.getAspectRatio().equals(aspectRatio)) {
+                settingsUpdates.remove("aspectRatio");
+            }
+        };
+
+        addSettingChangeListener(ratio16_9Button, (ActionListener) aspectRatioListener);
+        addSettingChangeListener(ratio4_3Button, (ActionListener) aspectRatioListener);
+        addSettingChangeListener(ratioFillButton, (ActionListener) aspectRatioListener);
     }
 
     @Override
@@ -180,6 +253,12 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
                                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(preserveAspectRatioCheckbox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                         )
+                        .addGroup(
+                                layout.createSequentialGroup()
+                                        .addComponent(aspectRatioLabel)
+                                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(aspectRatioPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        )
         );
 
         layout.setVerticalGroup(
@@ -213,6 +292,12 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
                                 layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                         .addComponent(preserveAspectRatioLabel)
                                         .addComponent(preserveAspectRatioCheckbox)
+                        )
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(
+                                layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                        .addComponent(aspectRatioLabel)
+                                        .addComponent(aspectRatioPanel)
                         )
         );
     }
