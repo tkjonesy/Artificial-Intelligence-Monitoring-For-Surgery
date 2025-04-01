@@ -2,6 +2,7 @@ package io.github.tkjonesy.frontend.mainGUI;
 
 import io.github.tkjonesy.frontend.App;
 import io.github.tkjonesy.frontend.utils.AspectRatioCalculator;
+import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.Getter;
 
 import javax.swing.*;
@@ -11,14 +12,18 @@ import java.awt.event.ComponentEvent;
 
 @Getter
 public class CameraPanel extends JPanel {
+
+    private static final ProgramSettings settings = ProgramSettings.getCurrentSettings();
+
     private final App appInstance;
     private final JLabel cameraFeed;
     private Dimension cameraSize;
     private final JPanel cameraContainer;
     private final JPanel centeringPanel;
-    private final int aspectRatioWidth = 4; // Default 4:3 aspect ratio
-    private final int aspectRatioHeight = 3;
+    private int aspectRatioWidth = 1; // Default aspect ratio components
+    private int aspectRatioHeight = 1;
     private boolean resizeInProgress = false;
+    private boolean useAspectRatio = true; // Flag to determine if aspect ratio should be maintained
 
     /**
      * Creates a camera panel with the camera feed centered
@@ -73,11 +78,14 @@ public class CameraPanel extends JPanel {
                 handleResize();
             }
         });
+
+        // Initialize aspect ratio from settings
+        updateAspectRatio();
     }
 
     /**
      * Handles resizing of the panel by calculating the appropriate camera size
-     * based on the available space and maintaining aspect ratio
+     * based on the available space and maintaining aspect ratio if needed
      */
     private void handleResize() {
         if (resizeInProgress) {
@@ -97,13 +105,20 @@ public class CameraPanel extends JPanel {
             return;
         }
 
-        // Calculate the optimal size while maintaining aspect ratio
-        Dimension newSize = AspectRatioCalculator.calculateRatio(
-                availableWidth,
-                availableHeight,
-                aspectRatioWidth,
-                aspectRatioHeight
-        );
+        Dimension newSize;
+
+        if (useAspectRatio && aspectRatioWidth > 0 && aspectRatioHeight > 0) {
+            // Calculate the optimal size while maintaining aspect ratio
+            newSize = AspectRatioCalculator.calculateRatio(
+                    availableWidth,
+                    availableHeight,
+                    aspectRatioWidth,
+                    aspectRatioHeight
+            );
+        } else {
+            // Fill panel completely in case of no aspect ratio constraint
+            newSize = new Dimension(availableWidth, availableHeight);
+        }
 
         // Update camera size
         setCameraSize(newSize);
@@ -143,4 +158,34 @@ public class CameraPanel extends JPanel {
         return new Dimension(cameraSize);
     }
 
+    /**
+     * Updates the aspect ratio based on the settings and triggers a UI update
+     */
+    public void updateAspectRatio() {
+        switch(settings.getAspectRatio()) {
+            case "16:9":
+                aspectRatioWidth = 16;
+                aspectRatioHeight = 9;
+                useAspectRatio = true;
+                break;
+            case "4:3":
+                aspectRatioWidth = 4;
+                aspectRatioHeight = 3;
+                useAspectRatio = true;
+                break;
+            default:
+                // Default case: fill the panel completely
+                useAspectRatio = false;
+                aspectRatioWidth = 0;
+                aspectRatioHeight = 0;
+        }
+
+        // Trigger resize handling to update the UI immediately
+        handleResize();
+
+        // Update camera container to reflect the changes
+        cameraContainer.invalidate();
+        centeringPanel.revalidate();
+        centeringPanel.repaint();
+    }
 }
