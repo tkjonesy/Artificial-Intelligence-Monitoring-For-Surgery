@@ -3,7 +3,7 @@
   "cameraFps": 30,
   "cameraRotation": 0,
   "mirrorCamera": true,
-  "preserveAspectRatio": true,
+  "aspectRatio": "fill",
 
   "fileDirectory": null,
   "saveVideo": true,

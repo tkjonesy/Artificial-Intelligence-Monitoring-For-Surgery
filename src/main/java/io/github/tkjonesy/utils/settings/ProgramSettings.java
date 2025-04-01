@@ -31,8 +31,8 @@ public class ProgramSettings {
     private int cameraRotation = 0;
     @SettingsLabel(value = "mirrorCamera", type = Boolean.class)
     private boolean mirrorCamera;
-    @SettingsLabel(value = "preserveAspectRatio", type = Boolean.class)
-    private boolean preserveAspectRatio;
+    @SettingsLabel(value = "aspectRatio", type = String.class)
+    private String aspectRatio = "4:3";
 
     // Storage variables
     @Setter
@@ -100,7 +100,7 @@ public class ProgramSettings {
     // -------------------------------------------------------------------------
 
     public void updateSettings(HashMap<String, Object> newSettings) {
-        boolean updateONNX = false, updateCamera = false, updateBuffer = false, updateDebug = false, updateLogColors = false;
+        boolean updateONNX = false, updateCamera = false, updateBuffer = false, updateDebug = false, updateLogColors = false, updateAspectRatio = false;
 
         for (String key : newSettings.keySet()) {
             setSettings(key, newSettings.get(key));
@@ -121,6 +121,9 @@ public class ProgramSettings {
             if (key.equals("logAddedColor") || key.equals("logRemovedColor")) {
                 updateLogColors = true;
             }
+            if (key.equals("aspectRatio")) {
+                updateAspectRatio = true;
+            }
         }
         if (updateONNX) {
             App.getOnnxRunner().updateInferenceSession(modelPath, labelPath);
@@ -137,6 +140,9 @@ public class ProgramSettings {
         if (updateLogColors) {
             InferenceLogEnum.LOG_ADDED.updateColor(logAddedColor);
             InferenceLogEnum.LOG_REMOVED.updateColor(logRemovedColor);
+        }
+        if (updateAspectRatio) {
+            App.getInstance().getCameraPanel().updateAspectRatio();
         }
 
         SettingsLoader.saveSettings(this);
