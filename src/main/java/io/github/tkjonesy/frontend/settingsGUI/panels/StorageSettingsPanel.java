@@ -7,9 +7,13 @@ import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
+
+import static io.github.tkjonesy.utils.Paths.AIMS_DIRECTORY;
 
 import static io.github.tkjonesy.frontend.settingsGUI.SettingsWindow.addSettingChangeListener;
 
@@ -23,9 +27,9 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
     private final JLabel saveLogsTextLabel;
     private final JLabel saveLogsCSVLabel;
 
+    private final JButton directoryButton;
     private final JButton folderSelectorButton;
     private final JLabel selectedFolderLabel;
-    private final File[] selectedFolder;
     private final JRadioButtonMenuItem defaultSaveOption;
     private final JRadioButtonMenuItem customSaveOption;
     private final JCheckBox saveVideoCheckbox;
@@ -40,6 +44,8 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
         this.saveLogsCSVLabel = new JLabel("Save Logs as CSV");
 
         ButtonGroup storageSelectorGroup = new ButtonGroup();
+
+        this.directoryButton = new JButton("Open Directory");
 
         this.defaultSaveOption = new JRadioButtonMenuItem("Default");
         defaultSaveOption.setToolTipText("Save to default location: " + Paths.DEFAULT_AIMS_SESSIONS_DIRECTORY);
@@ -59,7 +65,6 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
         else
             customSaveOption.setSelected(true);
 
-        selectedFolder = new File[1]; // This is so jank, I don't want to talk about it holy cow. This is the work-around for keeping this final to make the linter stfu but still make the value re-assignable
         this.folderSelectorButton = new JButton("Choose Folder...");
         this.folderSelectorButton.setToolTipText("Select a folder to save files to");
         this.selectedFolderLabel = new JLabel(settingsFileDirectory);
@@ -92,7 +97,6 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
                         settingsUpdates.remove("fileDirectory");
                 }
         );
-
         addSettingChangeListener(defaultSaveOption, (ActionListener)
                 e -> {
                     folderSelectorButton.setEnabled(false);
@@ -102,7 +106,27 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
                         settingsUpdates.remove("fileDirectory");
                 }
         );
+        directoryButton.addActionListener(e -> {
+            String selectedPath = AIMS_DIRECTORY;
+            File directory = new File(selectedPath);
 
+            AIMsLogger.TRACE("Attempting to open: " + directory.getAbsolutePath());
+
+            if (!directory.exists() || !directory.isDirectory()) {
+                JOptionPane.showMessageDialog(null,
+                        "Error: The session folder does not exist: " + directory.getAbsolutePath(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                Desktop.getDesktop().open(directory);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null,
+                        "Error: Failed to open the session folder: " + directory.getAbsolutePath(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
         addSettingChangeListener(folderSelectorButton, (ActionListener)
                 e -> {
                     JFileChooser folderChooser = new JFileChooser();
@@ -111,13 +135,16 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
 
                     int returnVal = folderChooser.showOpenDialog(StorageSettingsPanel.this);
                     if (returnVal == JFileChooser.APPROVE_OPTION) {
-                        selectedFolder[0] = folderChooser.getSelectedFile();
-                        selectedFolderLabel.setText(selectedFolder[0].getAbsolutePath());
-                        settingsUpdates.put("fileDirectory", selectedFolder[0].getAbsolutePath());
+                        File selected = folderChooser.getSelectedFile();
+                        String selectedPath = selected.getAbsolutePath();
+
+                        selectedFolderLabel.setText(selectedPath);
+                        settingsUpdates.put("fileDirectory", selectedPath);
+
+                        AIMsLogger.TRACE("User selected custom folder: " + selectedPath);
                     }
                 }
         );
-
         addSettingChangeListener(saveVideoCheckbox, (ActionListener)
                 e -> {
                     boolean value = saveVideoCheckbox.isSelected();
@@ -156,6 +183,10 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
                 layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                         .addGroup(
                                 layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                        .addGroup(
+                                                layout.createSequentialGroup()
+                                                        .addComponent(directoryButton, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                                        )
                                         .addComponent(storageSelectorLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                                         .addComponent(defaultSaveOption, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                                         .addComponent(customSaveOption, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
@@ -189,11 +220,16 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
 
         layout.setVerticalGroup(
                 layout.createSequentialGroup()
+                        .addGroup(
+                                layout.createSequentialGroup()
+                                        .addComponent(directoryButton, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        )
                         .addComponent(storageSelectorLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(defaultSaveOption, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(customSaveOption, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+
                         .addGroup(
                                 layout.createParallelGroup()
                                         .addComponent(folderSelectorButton, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
