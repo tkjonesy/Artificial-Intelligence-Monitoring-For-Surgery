@@ -35,10 +35,10 @@ const NavBar = () => {
             <NavLink className={({ isActive }) => isActive ? "link-special active" : "link-special"} to="/">Home</NavLink>
           </li>
           <li className="nav-item">
-            <NavLink className={({ isActive }) => isActive ? "link-special active" : "link-special"} to="/software">Software</NavLink>
+            <NavLink className={({ isActive }) => isActive ? "link-special active" : "link-special"} to="/highlights">The Highlights</NavLink>
           </li>
           <li className="nav-item">
-            <NavLink className={({ isActive }) => isActive ? "link-special active" : "link-special"} to="/model">AI Model</NavLink>
+            <NavLink className={({ isActive }) => isActive ? "link-special active" : "link-special"} to="/adoption">Adoption Efforts</NavLink>
           </li>
           <li className="nav-item">
             <NavLink className={({ isActive }) => isActive ? "link-special active" : "link-special"} to="/other">Other Applications</NavLink>

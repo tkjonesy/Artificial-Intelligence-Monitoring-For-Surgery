@@ -2,16 +2,16 @@ import React, { useState } from "react";
 import {Link} from "react-router-dom";
 import "../../index.css";
 
-function Other() {
+function Adoption() {
     return (
         <>
             <div className="title-container">
             <div className="title">
-                Other Applications
+                Adoption Efforts
             </div>
 
             <div className="subheading">
-                An adaptive concept to use the software in a versatile and expansive way.
+                Successful deployment of the software in a hospital setting.
             </div>
             </div>
             
@@ -22,4 +22,4 @@ function Other() {
     )
 }
 
-export default Other;
+export default Adoption;

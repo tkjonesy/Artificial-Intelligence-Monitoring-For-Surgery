@@ -2,16 +2,16 @@ import React, { useState } from "react";
 import {Link} from "react-router-dom";
 import "../../index.css";
 
-function Other() {
+function Highlights() {
     return (
         <>
             <div className="title-container">
             <div className="title">
-                Other Applications
+                The Highlights
             </div>
 
             <div className="subheading">
-                An adaptive concept to use the software in a versatile and expansive way.
+                A overarching look at what the program provides to the user as well as at a technical standpoint.
             </div>
             </div>
             
@@ -22,4 +22,4 @@ function Other() {
     )
 }
 
-export default Other;
+export default Highlights;

@@ -4,8 +4,8 @@ import { HashRouter, Routes, Route } from 'react-router-dom';
 import Home from "./pages/home/home";
 import About from "./pages/about/about";
 import NavBar from './components/navbar/navbar';
-import Software from './pages/software/software';
-import Model from './pages/model/model';
+import Highlights from './pages/highlights/highlights';
+import Adoption from './pages/adoption/adoption';
 import Other from './pages/other/other';
 import './App.css';
 import './index.css';
@@ -17,8 +17,8 @@ function App() {
       <NavBar />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="software" element={<Software />} />
-        <Route path="model" element={<Model />} />
+        <Route path="highlights" element={<Highlights />} />
+        <Route path="adoption" element={<Adoption />} />
         <Route path="other" element={<Other />} />
         <Route path="about" element={<About />} />
       </Routes>

@@ -6,6 +6,10 @@
   --darkpurple: #3d3782;
 }
 
+::-webkit-scrollbar {
+  width: 0px;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -34,12 +38,12 @@ body, html {
 .title-container {
   background-color: black;
   color: white;
-  padding: 50px 50px 0px 110px;
+  padding-top: 25px;
 }
 
 .wave {
   position: relative;
-  height: 100px; 
+  height: 80px; 
 }
 
 .wave svg {
@@ -60,13 +64,24 @@ body, html {
   padding-top: 10px;
   display: flex;
   justify-content: center;
-  font-size: 1.05vw;
+  font-size: 1.1vw;
   font-weight: 300;
 }
 
 .header {
   color: white;
-  margin: 40px 0px 0px 60px; /* T R B L */
+  margin: 20px 0px 10px 70px; /* T R B L */
+  padding: 0px 4px 0px 4px;
+  font-size: 1.8vw;
+  font-style: italic;
+  display: inline-block;
+  background-color: var(--logoblue);
+  font-weight: 500;
+}
+
+.headerc {
+  color: white;
+  margin: 0px 0px 10px 70px; /* T R B L */
   padding: 0px 4px 0px 4px;
   font-size: 1.8vw;
   font-style: italic;
@@ -77,23 +92,94 @@ body, html {
 
 .header2 {
   color: white;
-  font-size: 1.5vw;
+  margin: 40px 0px 0px 70px; /* T R B L */
+  padding: 0px 4px 0px 4px;
+  background-color: var(--logopurple);
+  display: inline-block;
+  font-style: italic;
+  font-size: 1.4vw;
   font-weight: 500;
 }
 
 .header3 {
   color: white;
+  margin: 0px 0px 0px 70px; /* T R B L */
+  padding: 0px 4px 0px 4px;
+  font-size: 1.2vw;
+  font-weight: 300;
+}
+
+.header4 {
+  color: white;
+  margin: 5px 0px 0px 70px; /* T R B L */
+  padding: 0px 4px 0px 4px;
   font-size: 1vw;
   font-weight: 300;
+}
+
+.headerc, .header3, .header4 {
+  text-align: center; 
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
 }
 
 .body {
   color: white;
   font-weight: 300;
-  font-size: 0.9vw;
-  margin: 20px 60px 0px 60px;
+  font-size: 0.95vw;
+  margin: 10px 70px 0px 70px;
 }
 
 .buffer {
   padding: 30px;
+}
+
+.person {
+  background-color: #282c34; 
+  padding: 30px;
+  border-radius: 10px;
+  width: 300px; 
+  text-align: center; 
+  display: flex;
+  flex-direction: column;
+}
+
+.person-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 50px;
+  text-align: center;
+  margin: 30px auto;
+}
+
+.home-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+  padding: 20px;
+}
+
+.textbox {
+  flex: 1;
+  max-width: 75%;
+  text-align: left;
+}
+
+.imgbox {
+  flex: 0 0 25%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 40px;
+}
+
+.image {
+  height: 90%;
+  width: 90%;
+  object-fit: contain;
 }
