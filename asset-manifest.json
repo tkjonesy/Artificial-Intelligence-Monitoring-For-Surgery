@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "/Artificial-Intelligence-Monitoring-For-Surgery/static/css/main.fe00d490.css",
-    "main.js": "/Artificial-Intelligence-Monitoring-For-Surgery/static/js/main.e1b0d764.js",
+    "main.css": "/Artificial-Intelligence-Monitoring-For-Surgery/static/css/main.b3387676.css",
+    "main.js": "/Artificial-Intelligence-Monitoring-For-Surgery/static/js/main.b4fd708e.js",
     "static/js/453.f87592ff.chunk.js": "/Artificial-Intelligence-Monitoring-For-Surgery/static/js/453.f87592ff.chunk.js",
-    "static/media/logo.png": "/Artificial-Intelligence-Monitoring-For-Surgery/static/media/logo.6cc313310e825dc2e9b8.png",
+    "static/media/logo.png": "/Artificial-Intelligence-Monitoring-For-Surgery/static/media/logo.ef21be47dda79c1c589a.png",
     "index.html": "/Artificial-Intelligence-Monitoring-For-Surgery/index.html",
-    "main.fe00d490.css.map": "/Artificial-Intelligence-Monitoring-For-Surgery/static/css/main.fe00d490.css.map",
-    "main.e1b0d764.js.map": "/Artificial-Intelligence-Monitoring-For-Surgery/static/js/main.e1b0d764.js.map",
+    "main.b3387676.css.map": "/Artificial-Intelligence-Monitoring-For-Surgery/static/css/main.b3387676.css.map",
+    "main.b4fd708e.js.map": "/Artificial-Intelligence-Monitoring-For-Surgery/static/js/main.b4fd708e.js.map",
     "453.f87592ff.chunk.js.map": "/Artificial-Intelligence-Monitoring-For-Surgery/static/js/453.f87592ff.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.fe00d490.css",
-    "static/js/main.e1b0d764.js"
+    "static/css/main.b3387676.css",
+    "static/js/main.b4fd708e.js"
   ]
 }
