@@ -18,12 +18,15 @@ import static org.bytedeco.opencv.global.opencv_core.BORDER_CONSTANT;
 
 import java.awt.*;
 import java.util.List;
+import java.util.Random;
 
 /**
  * The {@code ImageUtil} class provides utility functions for image processing tasks,
  * including resizing images with padding, reordering color channels, and drawing predictions on images.
  */
 public class ImageUtil {
+
+    public static boolean funMode = false;
 
     private static final ProgramSettings settings = ProgramSettings.getCurrentSettings();
 
@@ -112,7 +115,15 @@ public class ImageUtil {
                 boundingBoxColor = new int[]{255, 0, 0};
             }
 
-            Scalar color = new Scalar(boundingBoxColor[2], boundingBoxColor[1], boundingBoxColor[0], 0);
+            Scalar color;
+            if(funMode){
+                Random random = new Random();
+                color = new Scalar(random.nextInt(256), random.nextInt(256), random.nextInt(256), 0);
+            }else{
+                color = new Scalar(boundingBoxColor[2], boundingBoxColor[1], boundingBoxColor[0], 0);
+
+            }
+
             rectangle(img,                    // Matrix object of the image
                     new Point((int) bbox[0], (int) bbox[1]),      // Top-left point
                     new Point((int) bbox[2], (int) bbox[3]),      // Bottom-right point

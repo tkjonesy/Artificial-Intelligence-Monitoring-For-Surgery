@@ -1,9 +1,11 @@
 package io.github.tkjonesy.frontend.mainGUI;
 
+import io.github.tkjonesy.ONNX.ImageUtil;
 import io.github.tkjonesy.frontend.App;
 import io.github.tkjonesy.frontend.miscGUI.SessionInputDialog;
 import io.github.tkjonesy.frontend.utils.DebugConsoleManager;
 import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
+import io.github.tkjonesy.utils.models.LogHandler;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import lombok.Getter;
 
@@ -16,6 +18,7 @@ public class ButtonPanel extends JPanel {
     private JToggleButton sessionButton;
     private JButton settingsButton;
     private JButton debugButton;
+    private JButton funModeButton;
     private static final Color OCEAN = new Color(55, 90, 129);
     private static final Color SUNSET = new Color(255, 40, 79);
 
@@ -32,10 +35,16 @@ public class ButtonPanel extends JPanel {
         settingsButton = new JButton("Settings");
         String debugButtonText = DebugConsole.getInstance().isVisible() ? "Hide Debug" : "Debug Console";
         debugButton = new JButton(debugButtonText);
+
+        funModeButton = new JButton("Clear Logger");
         updateDebugButtonVisibility();
     }
 
     private void initializeListeners() {
+
+        funModeButton.addActionListener(e -> {
+            LogHandler.clearLogPane();
+        });
 
         sessionButton.addActionListener(
                 e -> {
@@ -66,6 +75,7 @@ public class ButtonPanel extends JPanel {
                                 sessionButton.setText("Stop Session");
                                 sessionButton.setBackground(SUNSET);
                                 settingsButton.setEnabled(false);
+                                App.getInstance().getLoggingPanel().getRunButton().setEnabled(false);
                             } else {
                                 JOptionPane.showMessageDialog(appInstance,
                                         "Failed to start session. Please check the console for more information.",
@@ -77,6 +87,8 @@ public class ButtonPanel extends JPanel {
                         sessionButton.setBackground(OCEAN);
                         settingsButton.setEnabled(true);
                         appInstance.getSessionHandler().endSession();
+                        App.getInstance().getLoggingPanel().getRunButton().setEnabled(true);
+
                     }
                 }
         );
@@ -105,6 +117,8 @@ public class ButtonPanel extends JPanel {
                         .addComponent(settingsButton)
                         .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(debugButton)
+//                        .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+//                        .addComponent(funModeButton)
         );
         layout.setVerticalGroup(
                 layout.createSequentialGroup()
@@ -113,6 +127,7 @@ public class ButtonPanel extends JPanel {
                                         .addComponent(sessionButton)
                                         .addComponent(settingsButton)
                                         .addComponent(debugButton)
+                                        //.addComponent(funModeButton)
                         )
         );
         setLayout(layout);

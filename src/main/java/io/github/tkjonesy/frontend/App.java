@@ -73,6 +73,7 @@ public class App extends JFrame {
     private Thread cameraFetcherThread;
     @Getter
     private CameraPanel cameraPanel;
+    @Getter
     private LoggingPanel loggingPanel;
 
     @Getter

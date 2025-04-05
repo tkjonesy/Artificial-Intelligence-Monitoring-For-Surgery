@@ -102,7 +102,7 @@ public class LogHandler {
     /**
      * Clears the log display when a session ends.
      */
-    public void clearLogPane() {
+    public static void clearLogPane() {
         logHtmlContent.setLength(0);
         fontSize = ProgramSettings.getCurrentSettings().getLogFontSize(); // Just in case font was changed
         logHtmlContent.append("<html><body style='color:white; font-size:")
