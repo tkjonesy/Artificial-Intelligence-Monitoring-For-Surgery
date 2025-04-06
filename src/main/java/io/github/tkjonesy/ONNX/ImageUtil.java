@@ -18,6 +18,7 @@ import static org.bytedeco.opencv.global.opencv_core.BORDER_CONSTANT;
 
 import java.awt.*;
 import java.util.List;
+import java.util.Random;
 
 /**
  * The {@code ImageUtil} class provides utility functions for image processing tasks,

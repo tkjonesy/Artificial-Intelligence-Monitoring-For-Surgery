@@ -222,7 +222,7 @@ public class FrameManager implements Runnable {
                             processedFrame,
                             sessionTime,
                             new Point(processedFrame.cols()-100, 30),
-                            FONT_HERSHEY_COMPLEX,
+                            FONT_HERSHEY_DUPLEX,
                             1.0,
                             redColor,
                             1,

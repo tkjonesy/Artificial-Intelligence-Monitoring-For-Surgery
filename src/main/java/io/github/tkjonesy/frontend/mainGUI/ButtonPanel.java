@@ -32,6 +32,7 @@ public class ButtonPanel extends JPanel {
         settingsButton = new JButton("Settings");
         String debugButtonText = DebugConsole.getInstance().isVisible() ? "Hide Debug" : "Debug Console";
         debugButton = new JButton(debugButtonText);
+
         updateDebugButtonVisibility();
     }
 
@@ -66,6 +67,7 @@ public class ButtonPanel extends JPanel {
                                 sessionButton.setText("Stop Session");
                                 sessionButton.setBackground(SUNSET);
                                 settingsButton.setEnabled(false);
+                                App.getInstance().getLoggingPanel().getClearLoggerButton().setEnabled(false);
                             } else {
                                 JOptionPane.showMessageDialog(appInstance,
                                         "Failed to start session. Please check the console for more information.",
@@ -77,6 +79,7 @@ public class ButtonPanel extends JPanel {
                         sessionButton.setBackground(OCEAN);
                         settingsButton.setEnabled(true);
                         appInstance.getSessionHandler().endSession();
+                        App.getInstance().getLoggingPanel().getClearLoggerButton().setEnabled(true);
                     }
                 }
         );
