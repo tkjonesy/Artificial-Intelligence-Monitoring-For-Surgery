@@ -1,5 +1,6 @@
 package io.github.tkjonesy.frontend.mainGUI;
 
+import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.models.LogHandler;
 import lombok.Getter;
 
@@ -17,7 +18,7 @@ public class LoggingPanel extends JPanel {
     private final JTextPane logTextPane;
 
     @Getter
-    private final JButton runButton;
+    private final JButton clearLoggerButton;
 
     public LoggingPanel() {
         this.setBorder(BorderFactory.createTitledBorder("Tracking Log"));
@@ -31,14 +32,15 @@ public class LoggingPanel extends JPanel {
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         // Create the run button
-        runButton = new JButton("Clear Logger");
-        runButton.setBackground(BUTTON_COLOR);
-        runButton.setForeground(BUTTON_TEXT_COLOR);
-        runButton.setFocusPainted(false);
-        runButton.setBorderPainted(false);
-        runButton.addActionListener(new ActionListener() {
+        clearLoggerButton = new JButton("Clear Logger");
+        clearLoggerButton.setBackground(BUTTON_COLOR);
+        clearLoggerButton.setForeground(BUTTON_TEXT_COLOR);
+        clearLoggerButton.setFocusPainted(false);
+        clearLoggerButton.setBorderPainted(false);
+        clearLoggerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                AIMsLogger.INFO("Logger cleared.");
                 LogHandler.clearLogPane();
             }
         });
@@ -50,7 +52,7 @@ public class LoggingPanel extends JPanel {
         layout.setHorizontalGroup(
                 layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                         .addComponent(scrollPane)
-                        .addComponent(runButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(clearLoggerButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
         // Update the vertical group to stack components
@@ -58,7 +60,7 @@ public class LoggingPanel extends JPanel {
                 layout.createSequentialGroup()
                         .addComponent(scrollPane)
                         .addGap(5)
-                        .addComponent(runButton, GroupLayout.PREFERRED_SIZE, 30, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(clearLoggerButton, GroupLayout.PREFERRED_SIZE, 30, GroupLayout.PREFERRED_SIZE)
         );
 
         this.setLayout(layout);
