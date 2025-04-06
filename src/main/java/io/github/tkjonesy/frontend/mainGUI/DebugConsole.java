@@ -1,5 +1,6 @@
 package io.github.tkjonesy.frontend.mainGUI;
 
+import io.github.tkjonesy.frontend.App;
 import io.github.tkjonesy.utils.DialogManager;
 import io.github.tkjonesy.utils.ErrorUtils;
 import lombok.Getter;
@@ -122,6 +123,7 @@ public class DebugConsole extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 setVisible(false);
+                App.getInstance().getButtonPanel().updateDebugButtonText();
             }
         });
     }

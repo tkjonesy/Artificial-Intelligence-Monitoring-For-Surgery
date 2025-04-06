@@ -26,24 +26,20 @@ public class AspectRatioCalculator {
         float currentRatio = Math.round((float) areaWidth / (float) areaHeight * 1000.0f) / 1000.0f;
         float targetRatio = Math.round((float) widthRatio / (float) heightRatio * 1000.0f) / 1000.0f;
 
-        AIMsLogger.DEBUG(String.format("Current ratio: %.2f\n\tTarget ratio: %.2f\n\tInput W:H: %d:%d", currentRatio, targetRatio, areaWidth, areaHeight));
 
         // Width is limiting factor, adjust height
         if (currentRatio < targetRatio) {
             int newHeight = Math.round((float) areaWidth / targetRatio);
-            AIMsLogger.DEBUG(String.format("Width is limiter, adjusting height, new dims are: %d:%d", areaWidth, newHeight));
             return new Dimension(areaWidth, newHeight);
         }
 
         // Height is limiting facter, adjust width
         if (currentRatio > targetRatio) {
             int newWidth = Math.round((float) areaHeight * targetRatio);
-            AIMsLogger.DEBUG(String.format("Height is limiter, adjusting height, new dims are: %d:%d", newWidth, areaHeight));
             return new Dimension(newWidth, areaHeight);
         }
 
         // Width and height match ideal ratio, return it
-        AIMsLogger.DEBUG("Current ratio is ideal, returning input dimensions");
         return new Dimension(areaWidth, areaHeight);
     }
 
