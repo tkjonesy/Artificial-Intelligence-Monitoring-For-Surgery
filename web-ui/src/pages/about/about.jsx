@@ -26,7 +26,7 @@ function About() {
             </div>
 
             <div className="header3">
-                Project Manager, Developer
+                Project Manager, Web Developer
             </div>
 
             <div className="header4">
@@ -54,7 +54,7 @@ function About() {
             </div>
 
             <div className="header3">
-                TBA
+                Scrum Master, Backend Developer​
             </div>
 
             <div className="header4">
