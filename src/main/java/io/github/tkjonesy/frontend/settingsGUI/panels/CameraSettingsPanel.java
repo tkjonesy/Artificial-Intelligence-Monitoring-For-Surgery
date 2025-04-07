@@ -145,10 +145,21 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
     public void initListeners() {
         // FPS Warning Label
         cameraFpsWarningLabel.setForeground(Color.RED);
-        cameraFpsSpinner.addChangeListener(
+
+        addSettingChangeListener(cameraFpsSpinner, (ChangeListener)
                 e -> {
-                    if((int) cameraFpsSpinner.getValue() > 30)
-                        DialogManager.displayWarningDialog("Values over 30 may not be supported by all cameras. Setting this value higher than 30 will not make the recording smoother if the camera does not have a refresh rate this high. Additionally, values over 60 may cause extreme performance issues.");
+                    int value = (int) cameraFpsSpinner.getValue();
+                    if(value > 30) {
+                        cameraFpsWarningLabel.setText("Warning: High FPS may not be supported by all cameras.");
+                    } else {
+                        cameraFpsWarningLabel.setText("");
+                    }
+
+                    AIMsLogger.TRACE("FPS selected: " + value);
+                    settingsUpdates.put("cameraFps", value);
+                    if(settings.getCameraFps() == value)
+                        settingsUpdates.remove("cameraFps");
+
                 }
         );
 
@@ -171,16 +182,6 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
                         App.getInstance().collectAvailableCameras();
                         SwingUtilities.invokeLater(this::stopRefreshAnimation);
                     }).start();
-                }
-        );
-
-        addSettingChangeListener(cameraFpsSpinner, (ChangeListener)
-                e -> {
-                    int value = (int) cameraFpsSpinner.getValue();
-                    AIMsLogger.TRACE("FPS selected: " + value);
-                    settingsUpdates.put("cameraFps", value);
-                    if(settings.getCameraFps() == value)
-                        settingsUpdates.remove("cameraFps");
                 }
         );
 

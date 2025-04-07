@@ -106,7 +106,7 @@ public class ProgramSettings {
     // -------------------------------------------------------------------------
 
     public void updateSettings(HashMap<String, Object> newSettings) {
-        boolean updateONNX = false, updateCamera = false, updateBuffer = false, updateDebug = false, updateLogColors = false, updateAspectRatio = false;
+        boolean updateONNX = false, updateCamera = false, updateFps = false, updateBuffer = false, updateDebug = false, updateLogColors = false, updateAspectRatio = false;
 
         for (String key : newSettings.keySet()) {
             setSettings(key, newSettings.get(key));
@@ -117,6 +117,9 @@ public class ProgramSettings {
             }
             if (key.equals("cameraDeviceId")) {
                 updateCamera = true;
+            }
+            if(key.equals("cameraFps")) {
+                updateFps = true;
             }
             if (key.equals("bufferThreshold")) {
                 updateBuffer = true;
@@ -139,6 +142,9 @@ public class ProgramSettings {
         }
         if (updateCamera) {
             App.getInstance().updateCamera((int) newSettings.get("cameraDeviceId"));
+        }
+        if( updateFps) {
+            App.getInstance().restartFrameManagerThread();
         }
         if (updateDebug) {
             AIMsLogger.initialize(this);
