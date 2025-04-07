@@ -139,7 +139,7 @@ body, html {
   background-color: #282c34; 
   padding: 30px;
   border-radius: 10px;
-  width: 300px; 
+  width: 20vw; 
   height: 120px;
   text-align: center; 
   display: flex;
@@ -235,4 +235,6 @@ body, html {
 
 .italic {
   font-style: italic;
+  display: inline-block;
+  padding: 0px 4px 0px 4px;
 }
