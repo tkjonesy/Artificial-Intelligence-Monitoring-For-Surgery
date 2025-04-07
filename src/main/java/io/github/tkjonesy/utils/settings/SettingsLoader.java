@@ -28,6 +28,7 @@ public class SettingsLoader {
         if(DEFAULT_SETTINGS != null){
             saveSettings(DEFAULT_SETTINGS);
             ProgramSettings.setCurrentSettings(DEFAULT_SETTINGS);
+            saveSettings(DEFAULT_SETTINGS);
             AIMsLogger.WARN("Reset settings to default.");
         }
     }

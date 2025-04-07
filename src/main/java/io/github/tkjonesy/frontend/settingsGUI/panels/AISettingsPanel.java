@@ -5,7 +5,6 @@ import io.github.tkjonesy.frontend.settingsGUI.SettingsWindow;
 import io.github.tkjonesy.ONNX.enums.colorChangeEnum;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
-import io.github.tkjonesy.ONNX.enums.colorChangeEnum;
 import io.github.tkjonesy.utils.settings.SettingsLoader;
 
 
@@ -30,15 +29,15 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
     private final JLabel modelLabel;
     private final JLabel labelLabel;
     private final JLabel colorLabel;
+    private final JLabel boundBoxCheckboxLabel;
+    private final JLabel showLabelsCheckboxLabel;
+    private final JLabel showConfidencesCheckboxLabel;
     private final JLabel processNthLabel;
     private final JLabel bufferThresholdLabel;
     private final JLabel confThresholdLabel;
     private final JLabel noticeLabel;
     private final JLabel logFontSizeLabel;
-    private final JTextPane logFontPreviewPane;
-    private final JButton openFolderButton;
-    private final JSpinner logFontSizeSpinner;
-    private final JScrollPane logFontPreviewScrollPane;
+
 
 
     private int[] boundingBoxColor = new int[3];
@@ -71,6 +70,10 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
     private final JSpinner bufferThresholdSpinner;
     private final JSlider confThresholdSlider;
     private final JTextField confThresholdTextField;
+    private final JTextPane logFontPreviewPane;
+    private final JButton openFolderButton;
+    private final JSpinner logFontSizeSpinner;
+    private final JScrollPane logFontPreviewScrollPane;
 
     private final List<AISettingsListener> listeners = new ArrayList<>();
 
@@ -162,9 +165,14 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         this.logRemovedColorPreviewButton = createColorPreviewButton(logRemovedR, logRemovedG, logRemovedB, this::openLogRemovedColorChooser);
 
 
-        this.boundingBoxCheckbox = new JCheckBox("Bounding Boxes:", settings.isShowBoundingBoxes());
-        this.showLabelsCheckbox = new JCheckBox("Show Labels:", settings.isShowLabels());
-        this.showConfidencesCheckbox = new JCheckBox("Show Confidences:", settings.isShowConfidences());
+        this.boundBoxCheckboxLabel = new JLabel("Show Bounding Boxes:");
+        this.boundingBoxCheckbox = new JCheckBox("", settings.isShowBoundingBoxes());
+
+        this.showLabelsCheckboxLabel = new JLabel("Show Labels:");
+        this.showLabelsCheckbox = new JCheckBox("", settings.isShowLabels());
+
+        this.showConfidencesCheckboxLabel = new JLabel("Show Confidences:");
+        this.showConfidencesCheckbox = new JCheckBox("", settings.isShowConfidences());
 
         this.processNthLabel = new JLabel("Process Every Nth Frame:");
         this.processEveryNthFrameSpinner = new JSpinner(new SpinnerNumberModel(settings.getProcessEveryNthFrame(), 15, 1000, 1));
@@ -192,7 +200,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         logFontPreviewPane.setText(generateLogPreviewHTML(settings.getLogFontSize()));
 
         this.logFontPreviewScrollPane = new JScrollPane(logFontPreviewPane);
-        logFontPreviewScrollPane.setPreferredSize(new Dimension(400, 80)); // Adjust to match your log view
+        logFontPreviewScrollPane.setPreferredSize(new Dimension(400, 80));
 
 
         setLayout();
@@ -227,6 +235,11 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
             } catch (NumberFormatException ex) {
                 confThresholdTextField.setText(String.format("%.2f", confThresholdSlider.getValue() / 100.0));
             }
+        });
+
+        confThresholdSlider.addChangeListener(e -> {
+            int value = confThresholdSlider.getValue();
+            confThresholdTextField.setText(String.format("%.2f", value / 100.0));
         });
 
         addSettingChangeListener(modelSelector, (ActionListener)
@@ -369,16 +382,19 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                                 .addComponent(logRemovedColorPreviewButton))
                         .addGroup(
                                 layout.createSequentialGroup()
+                                        .addComponent(boundBoxCheckboxLabel)
                                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(boundingBoxCheckbox)
                         )
                         .addGroup(
                                 layout.createSequentialGroup()
+                                        .addComponent(showLabelsCheckboxLabel)
                                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(showLabelsCheckbox)
                         )
                         .addGroup(
                                 layout.createSequentialGroup()
+                                        .addComponent(showConfidencesCheckboxLabel)
                                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(showConfidencesCheckbox)
                         )
@@ -450,16 +466,19 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                         .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(
                                 layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                        .addComponent(boundBoxCheckboxLabel)
                                         .addComponent(boundingBoxCheckbox)
                         )
                         .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(
                                 layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                        .addComponent(showLabelsCheckboxLabel)
                                         .addComponent(showLabelsCheckbox)
                         )
                         .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(
                                 layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                        .addComponent(showConfidencesCheckboxLabel)
                                         .addComponent(showConfidencesCheckbox)
                         )
                         .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)

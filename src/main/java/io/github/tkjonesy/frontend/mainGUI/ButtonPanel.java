@@ -87,7 +87,8 @@ public class ButtonPanel extends JPanel {
         settingsButton.addActionListener(e -> SwingUtilities.invokeLater(() -> new SettingsWindow(appInstance)));
 
         debugButton.addActionListener(e -> {
-            boolean isVisible = DebugConsoleManager.toggleConsole();
+            boolean toggle = DebugConsoleManager.toggleConsole();
+            boolean isVisible = DebugConsole.getInstance().isVisible();
             debugButton.setText(isVisible ? "Hide Debug" : "Debug Console");
         });
     }
@@ -95,6 +96,13 @@ public class ButtonPanel extends JPanel {
     public void updateDebugButtonVisibility(){
         if(debugButton!= null) {
             debugButton.setVisible(ProgramSettings.getCurrentSettings().isDebugMode());
+        }
+    }
+
+    public void updateDebugButtonText() {
+        if (debugButton != null) {
+            String debugButtonText = DebugConsole.getInstance().isVisible() ? "Hide Debug" : "Debug Console";
+            debugButton.setText(debugButtonText);
         }
     }
 

@@ -80,6 +80,7 @@ public class App extends JFrame {
     private SessionHandler sessionHandler;
     private ProgramSettings settings;
 
+    @Getter
     private FrameManager frameManager;
     @Getter
     @Setter
@@ -149,6 +150,15 @@ public class App extends JFrame {
         UpdateChecker.checkForUpdatesAsync();
     }
 
+    public void restartFrameManagerThread(){
+        if (cameraFetcherThread != null) {
+            frameManager.shutdown();
+            cameraFetcherThread.interrupt();
+        }
+        frameManager = new FrameManager(cameraPanel.getCameraFeed(), camera, onnxRunner, sessionHandler);
+        cameraFetcherThread = new Thread(frameManager);
+        cameraFetcherThread.start();
+    }
     public void collectAvailableCameras() {
         CameraGrabber grabber = CameraGrabber.createForPlatform();
         AVAILABLE_CAMERAS = grabber.getCameraNames();
