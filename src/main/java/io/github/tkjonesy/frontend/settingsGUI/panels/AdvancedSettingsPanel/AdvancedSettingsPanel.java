@@ -14,7 +14,10 @@ public class AdvancedSettingsPanel extends JPanel implements SettingsUI {
     private final JScrollPane scrollPane;
     private final JPanel contentPanel;
 
-
+    /**
+     * Constructs a new {@code AdvancedSettingsPanel}.
+     * This constructor initializes the panel components and organizes them into sections.
+     */
     public AdvancedSettingsPanel() {
         // Create content panel to hold all sections
         contentPanel = new JPanel();

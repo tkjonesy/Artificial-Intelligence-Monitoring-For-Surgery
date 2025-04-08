@@ -2,7 +2,6 @@ package io.github.tkjonesy.ONNX.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import io.github.tkjonesy.utils.settings.ProgramSettings;
 import java.awt.Color;
 
 /**
@@ -14,7 +13,7 @@ import java.awt.Color;
 public enum InferenceLogEnum {
     INFO(Color.YELLOW),
     LOG_ADDED(Color.GREEN),
-    LOG_REMOVED(Color.RED); // Defaults are now set in ProgramSettings
+    LOG_REMOVED(Color.RED);
 
     private Color color;
 

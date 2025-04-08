@@ -7,6 +7,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Responsible for managing a sessions creation, termination, and status tracking
+ */
 @Getter
 public class SessionHandler {
 
@@ -18,10 +21,21 @@ public class SessionHandler {
     private AtomicBoolean isActive = new AtomicBoolean(false);
     private Instant startTime;
 
+    /**
+     * Creates a new {@code SessionHandler} with specified {@link LogHandler}
+     * @param logHandler used for logging session events
+     */
     public SessionHandler(LogHandler logHandler) {
         this.logHandler = logHandler;
     }
 
+    /**
+     * Starts a new session
+     * @param title Title for session
+     * @param description Description of the session
+     * @param onnxRunner The managing machine learning inference within the session
+     * @return {@code true} if session starts successfully, {@code false} otherwise
+     */
     public boolean startNewSession(String title, String description, OnnxRunner onnxRunner) {
         this.sessionTitle = title;
         this.sessionDescription = description;
@@ -41,6 +55,9 @@ public class SessionHandler {
         return true;
     }
 
+    /**
+     * Ends the current active session and releases resources
+     */
     public void endSession() {
         isActive.set(false);
         fileSession.endSession();
@@ -50,10 +67,18 @@ public class SessionHandler {
         this.logHandler.setFileSession(null);
     }
 
+    /**
+     * Checks if a session is currently active
+     * @return {@code true} if a session is active, {@code false} otherwise
+     */
     public boolean isSessionActive() {
         return isActive.get();
     }
 
+    /**
+     * Calculates and returns the duration of the current session
+     * @return String representing the session duration in "MM:SS" format
+     */
     public String getSessionDuration() {
         if (startTime == null) return "00:00";
         Duration duration = Duration.between(startTime, Instant.now());

@@ -19,6 +19,10 @@ public class ButtonPanel extends JPanel {
     private static final Color OCEAN = new Color(55, 90, 129);
     private static final Color SUNSET = new Color(255, 40, 79);
 
+    /**
+     * Contructs a new {@link ButtonPanel} with a reference to the main application instance
+     * @param appInstance Main application instance
+     */
     public ButtonPanel(App appInstance) {
         this.appInstance = appInstance;
         initializeComponents();
@@ -26,15 +30,24 @@ public class ButtonPanel extends JPanel {
         setupLayout();
     }
 
+    /**
+     * Initializes UI components of the button panel
+     * Creates and configures the buttons displayed on the panel
+     */
     private void initializeComponents() {
         sessionButton = new JToggleButton("Start Session");
         sessionButton.setBackground(OCEAN);
         settingsButton = new JButton("Settings");
         String debugButtonText = DebugConsole.getInstance().isVisible() ? "Hide Debug" : "Debug Console";
         debugButton = new JButton(debugButtonText);
+
         updateDebugButtonVisibility();
     }
 
+    /**
+     * Sets up listeners for the buttons on the panel to handle user actions.
+     * This method connects the buttons to appropriate event-handling logic.
+     */
     private void initializeListeners() {
 
         sessionButton.addActionListener(
@@ -66,6 +79,7 @@ public class ButtonPanel extends JPanel {
                                 sessionButton.setText("Stop Session");
                                 sessionButton.setBackground(SUNSET);
                                 settingsButton.setEnabled(false);
+                                App.getInstance().getLoggingPanel().getClearLoggerButton().setEnabled(false);
                             } else {
                                 JOptionPane.showMessageDialog(appInstance,
                                         "Failed to start session. Please check the console for more information.",
@@ -77,6 +91,7 @@ public class ButtonPanel extends JPanel {
                         sessionButton.setBackground(OCEAN);
                         settingsButton.setEnabled(true);
                         appInstance.getSessionHandler().endSession();
+                        App.getInstance().getLoggingPanel().getClearLoggerButton().setEnabled(true);
                     }
                 }
         );
@@ -84,17 +99,34 @@ public class ButtonPanel extends JPanel {
         settingsButton.addActionListener(e -> SwingUtilities.invokeLater(() -> new SettingsWindow(appInstance)));
 
         debugButton.addActionListener(e -> {
-            boolean isVisible = DebugConsoleManager.toggleConsole();
+            boolean toggle = DebugConsoleManager.toggleConsole();
+            boolean isVisible = DebugConsole.getInstance().isVisible();
             debugButton.setText(isVisible ? "Hide Debug" : "Debug Console");
         });
     }
 
+    /**
+     * Updates visibility of debug console button
+     */
     public void updateDebugButtonVisibility(){
         if(debugButton!= null) {
             debugButton.setVisible(ProgramSettings.getCurrentSettings().isDebugMode());
         }
     }
 
+    /**
+     * Updates the text displayed on the debug button
+     */
+    public void updateDebugButtonText() {
+        if (debugButton != null) {
+            String debugButtonText = DebugConsole.getInstance().isVisible() ? "Hide Debug" : "Debug Console";
+            debugButton.setText(debugButtonText);
+        }
+    }
+
+    /**
+     * Configures the layout of the button panel
+     */
     private void setupLayout() {
         GroupLayout layout = new GroupLayout(this);
         layout.setAutoCreateContainerGaps(true);

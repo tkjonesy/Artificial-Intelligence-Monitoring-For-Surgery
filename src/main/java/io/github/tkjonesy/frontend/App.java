@@ -8,6 +8,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,15 +22,13 @@ import io.github.tkjonesy.frontend.mainGUI.LoggingPanel;
 import io.github.tkjonesy.frontend.utils.*;
 import io.github.tkjonesy.frontend.miscGUI.SplashScreen;
 import io.github.tkjonesy.frontend.utils.cameraGrabber.CameraGrabber;
-import io.github.tkjonesy.utils.AppVersion;
-import io.github.tkjonesy.utils.DialogManager;
-import io.github.tkjonesy.utils.ErrorUtils;
-import io.github.tkjonesy.utils.Paths;
+import io.github.tkjonesy.utils.*;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.models.LogHandler;
 import io.github.tkjonesy.utils.models.SessionHandler;
 import io.github.tkjonesy.utils.settings.ProgramSettings;
 import io.github.tkjonesy.utils.settings.SettingsLoader;
+import io.github.tkjonesy.ONNX.enums.InferenceLogEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -72,17 +71,23 @@ public class App extends JFrame {
     }
 
     private Thread cameraFetcherThread;
+    @Getter
     private CameraPanel cameraPanel;
+    @Getter
     private LoggingPanel loggingPanel;
 
     @Getter
     private SessionHandler sessionHandler;
     private ProgramSettings settings;
 
+    @Getter
     private FrameManager frameManager;
     @Getter
     @Setter
     private JTextPane logTextPane;
+
+    // Panel that contains camera and log panels
+    private JSplitPane splitPane;
 
     public App() {
         instance = this;
@@ -129,6 +134,9 @@ public class App extends JFrame {
     private void initializeSettingsAndLogger() {
         this.settings = SettingsLoader.loadSettings();
 
+        InferenceLogEnum.LOG_ADDED.updateColor(settings.getLogAddedColor());
+        InferenceLogEnum.LOG_REMOVED.updateColor(settings.getLogRemovedColor());
+
         if (settings == null) {
             AIMsLogger.ERROR("Failed to load settings from file. Exiting application.");
             DialogManager.displayErrorDialogFatal("Failed to load settings from file. Exiting application.");
@@ -138,16 +146,27 @@ public class App extends JFrame {
         AIMsLogger.initialize(ProgramSettings.getCurrentSettings());
 
         AIMsLogger.INFO("Settings: " + settings);
+
+        UpdateChecker.checkForUpdatesAsync();
     }
 
-    private void collectAvailableCameras() {
+    public void restartFrameManagerThread(){
+        if (cameraFetcherThread != null) {
+            frameManager.shutdown();
+            cameraFetcherThread.interrupt();
+        }
+        frameManager = new FrameManager(cameraPanel.getCameraFeed(), camera, onnxRunner, sessionHandler);
+        cameraFetcherThread = new Thread(frameManager);
+        cameraFetcherThread.start();
+    }
+    public void collectAvailableCameras() {
         CameraGrabber grabber = CameraGrabber.createForPlatform();
         AVAILABLE_CAMERAS = grabber.getCameraNames();
     }
 
     private void initComponents() {
         updateTitle();
-        this.setMinimumSize(new Dimension(746, 401));
+        this.setMinimumSize(new Dimension(800, 600));
         this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
         try (InputStream stream = getClass().getResourceAsStream(Paths.LOGO32_PATH)) {
@@ -156,34 +175,42 @@ public class App extends JFrame {
             this.setIconImage(appIcon.getImage());
         } catch (Exception ignored) {}
 
-        cameraPanel = new CameraPanel(new BorderLayout(), instance);
+        // Use BorderLayout for the main frame
+        this.setLayout(new BorderLayout());
+
+        // Create panels
+        cameraPanel = new CameraPanel(instance);
         loggingPanel = new LoggingPanel();
         buttonPanel = new ButtonPanel(instance);
 
-        this.setLayout(new GridBagLayout());
-        this.add(cameraPanel, createConstraints(0, 0, 0.5, 1));
-        this.add(loggingPanel, createConstraints(1, 0, 0.5, 0.5));
-        GridBagConstraints buttonPanelConstraints = createConstraints(0, 1, 1, 0.05);
-        buttonPanelConstraints.gridwidth = 2;
-        buttonPanelConstraints.fill = GridBagConstraints.VERTICAL;
-        this.add(buttonPanel, buttonPanelConstraints);
+        // Create a JSplitPane to maintain the exact 2/3 and 1/3 split
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, cameraPanel, loggingPanel);
+        splitPane.setResizeWeight(0.67); // This enforces the 2/3 to 1/3 ratio
+        splitPane.setContinuousLayout(true);
+        splitPane.setDividerSize(5);
+        splitPane.setOneTouchExpandable(true);
+
+        // Create a wrapper panel for the button panel with FlowLayout to center it
+        JPanel buttonPanelWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanelWrapper.add(buttonPanel);
+
+        // Add components to the frame
+        this.add(splitPane, BorderLayout.CENTER);
+        this.add(buttonPanelWrapper, BorderLayout.SOUTH);
+
         this.pack();
         this.setLocationRelativeTo(null);
+
+        // Set the divider location after the frame is visible to ensure proper ratio
+        SwingUtilities.invokeLater(() -> {
+            int totalWidth = splitPane.getWidth();
+            splitPane.setDividerLocation((int)(totalWidth * 0.67));
+        });
     }
 
     public void updateTitle() {
         String title = settings.isDebugMode() ? "AIMs - " + AppVersion.getCOMMIT_ID_ABBREV() : "AIMs";
         this.setTitle(title);
-    }
-
-    private GridBagConstraints createConstraints(int gridX, int gridY, double weightX, double weightY) {
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridx = gridX;
-        c.gridy = gridY;
-        c.weightx = weightX;
-        c.weighty = weightY;
-        c.fill = GridBagConstraints.BOTH;
-        return c;
     }
 
     private void initListeners() {
@@ -210,10 +237,33 @@ public class App extends JFrame {
             }
         });
 
+        // Add a component listener to maintain the split proportion on resize
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                loggingPanel.setPreferredSize(new Dimension(App.this.getWidth() / 3, loggingPanel.getHeight()));
+                int totalWidth = splitPane.getWidth();
+                splitPane.setDividerLocation((int)(totalWidth * 0.67));
+                // Force camera panel resize on component resize
+                if (cameraPanel != null) {
+                    cameraPanel.handleResize();
+                }
+            }
+        });
+
+        // Add window state listener to handle maximizing
+        this.addWindowStateListener(new WindowStateListener() {
+            @Override
+            public void windowStateChanged(WindowEvent e) {
+                // If window is maximized or restored from maximized state
+                if ((e.getNewState() & Frame.MAXIMIZED_BOTH) != 0 ||
+                        (e.getOldState() & Frame.MAXIMIZED_BOTH) != 0) {
+                    // Force a recalculation of camera panel size
+                    SwingUtilities.invokeLater(() -> {
+                        if (cameraPanel != null) {
+                            cameraPanel.handleResize();
+                        }
+                    });
+                }
             }
         });
     }

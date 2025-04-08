@@ -2,6 +2,7 @@ package io.github.tkjonesy.utils.models;
 
 import io.github.tkjonesy.ONNX.models.InferenceLog;
 import io.github.tkjonesy.ONNX.models.InferenceLogQueue;
+import io.github.tkjonesy.utils.settings.ProgramSettings;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,10 +22,18 @@ public class LogHandler {
     private Timer timer;
 
     // This StringBuilder accumulates the log messages in HTML format
-    private static final StringBuilder logHtmlContent = new StringBuilder("<html><body style='color:white;'>");
+    private static int fontSize;
+    private static StringBuilder logHtmlContent;
 
+    /**
+     * Constructs a LogHandler object for displaying log messages
+     * @param textPane Where the log messages will be displayed
+     */
     public LogHandler(JTextPane textPane) {
-        this.logTextPane = textPane;
+        logTextPane = textPane;
+
+        fontSize = ProgramSettings.getCurrentSettings().getLogFontSize();
+        logHtmlContent = new StringBuilder("<html><body style='color:white; font-size:" + fontSize + "pt;'>");
 
         startLogProcessing();
     }
@@ -39,6 +48,9 @@ public class LogHandler {
         saveLogToFile(inferenceLog);
     }
 
+    /**
+     * Forces the processing of the next log entry
+     */
     public static void forceProcessNextLog(){
         InferenceLog nextInferenceLog = INFERENCE_LOG_QUEUE.getNextLog();
         if(nextInferenceLog != null){
@@ -56,8 +68,10 @@ public class LogHandler {
         String colorHex = "#" + Integer.toHexString(inferenceLog.getLogType().getColor().getRGB()).substring(2);
 
         // Format the log entry as an HTML line with timestamp and message
-        String logMessage = String.format("<span style='color:%s'>%s - %s</span><br>",
-                colorHex, inferenceLog.getTimeStamp(), inferenceLog.getMessage());
+        String logMessage = String.format(
+                "<span style='color:%s; font-size:%dpt;'>%s - %s</span><br>",
+                colorHex, fontSize, inferenceLog.getTimeStamp(), inferenceLog.getMessage()
+        );
 
         // Append the log message to the accumulated HTML content
         logHtmlContent.append(logMessage);
@@ -95,11 +109,12 @@ public class LogHandler {
     /**
      * Clears the log display when a session ends.
      */
-    public void clearLogPane() {
-        logHtmlContent.setLength(0); // Reset log HTML content
-        logHtmlContent.append("<html><body style='color:white;'>"); // Keep formatting
+    public static void clearLogPane() {
+        logHtmlContent.setLength(0);
+        fontSize = ProgramSettings.getCurrentSettings().getLogFontSize(); // Just in case font was changed
+        logHtmlContent.append("<html><body style='color:white; font-size:")
+                .append(fontSize)
+                .append("pt;'>");
         logTextPane.setText(logHtmlContent + "</body></html>");
-
-        //logQueue.flushLogs();
     }
 }
