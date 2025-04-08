@@ -27,6 +27,11 @@ public class DebuggingSection extends JPanel implements SettingsUI {
     private final JCheckBox continuousLoggingCheckbox;
     private final JCheckBox showInferenceTimeCheckbox;
 
+    /**
+     * Constructs the Debugging Section panel
+     * Initializes debug-related labels and checkboxes
+     * Sets up the display of the debugging options in the GUI
+     */
     public DebuggingSection() {
         // Debug Section
         this.debugSectionLabel = new JLabel("<html><b>Debug Settings</b></html>");

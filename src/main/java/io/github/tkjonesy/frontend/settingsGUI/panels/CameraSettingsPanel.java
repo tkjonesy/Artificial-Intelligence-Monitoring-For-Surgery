@@ -47,6 +47,10 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
     private int rotation = 0;
     private boolean isRefreshing = false;
 
+    /**
+     * Constructs a new {@code CameraSettings Panel} that initializes UI components for camera settings
+     * @param settings The {@link ProgramSettings} object containing current settings
+     */
     public CameraSettingsPanel(ProgramSettings settings) {
         // Components
         this.cameraSelectorLabel = new JLabel("Camera Selection");
@@ -129,6 +133,9 @@ public class CameraSettingsPanel extends JPanel implements SettingsUI {
         initListeners();
     }
 
+    /**
+     * Populates camera selector dropdown with currently available cameras
+     */
     private void populateCameraSelector(){
         int itemIndex = 0;
         HashMap<String, Integer> availableCameras = AVAILABLE_CAMERAS;

@@ -47,6 +47,10 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
     private final JSpinner inputSizeSpinner;
     private final JTextField inputShapeTextField;
 
+    /**
+     * Constructs the {@code AdvancedAISection} panel and initializes all UI components, layout,
+     * and settings for the advanced AI configuration interface.
+     */
     public AdvancedAISection() {
         // AI Section
         this.aiSectionLabel = new JLabel("<html><b>Advanced AI Settings</b></html>");
@@ -138,7 +142,10 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
         initListeners();
     }
 
-    // Detect available GPUs using nvidia-smi
+    /**
+     * Detects available GPU devices using nvidia-smi command
+     * @return A list of available GPUs
+     */
     private List<String> detectAvailableGPUs() {
         List<String> gpuList = new ArrayList<>();
 

@@ -51,6 +51,9 @@ public class DebugConsole extends JFrame {
         return instance;
     }
 
+    /**
+     * Initializes the components of the debug console, including the text pane and styles
+     */
     private DebugConsole() {
         super("AIMs DEBUG");
 

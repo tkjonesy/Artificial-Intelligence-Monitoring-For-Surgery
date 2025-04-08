@@ -1,5 +1,6 @@
 name: Release on PR Merge
 
+#When a Pull Request is opened, synchronized, or closed on the main branch it will run this workflow
 on:
   pull_request:
     branches:
@@ -9,11 +10,13 @@ on:
       - synchronize
       - closed
 
+#Gives permissions to read pull request data and write to the repository
 permissions:
   contents: write
   pull-requests: read
 
 jobs:
+  #Creates .jar for linux
   package-linux:
     name: Build JAR on Linux
     runs-on: ubuntu-latest
@@ -37,6 +40,7 @@ jobs:
           name: linux-jar
           path: target/*.jar
 
+  #Creates jar and then uses jpackage to make installer for windows
   build-windows-installer:
     name: Build Installer on Windows
     runs-on: windows-latest
@@ -75,6 +79,7 @@ jobs:
           name: windows-installer
           path: target/AIMs-*.exe
 
+  #Creates jar and then uses jpackage to make installer for macOS
   build-macos-installer:
     name: Build Installer on macOS
     runs-on: macos-latest
@@ -132,7 +137,9 @@ jobs:
           name: macos-installer
           path: target/AIMs.dmg
 
+  #publishes linux jar and windows/macOS installers to GitHub releases
   release:
+    #if pull request is closed and it was merged on main, runs release job
     if: github.event.action == 'closed' && github.event.pull_request.merged == true
     needs: [package-linux, build-windows-installer, build-macos-installer]
     runs-on: ubuntu-latest
