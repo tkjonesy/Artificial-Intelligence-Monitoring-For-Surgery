@@ -35,9 +35,9 @@ java -jar [FILE_NAME]
 If you would like use this code for your own project, please reference the [developer instructions](DeveloperInstructions.md).
 
 ## Team Members
-Rachel Leiner, rachel.leiner@ucf.edu<br>
-Nicholas Aristizabal, nicholas.aristizabal@ucf.edu<br>
-Jacob Mckiernan, ja543222@ucf.edu<br>
-Hunter Herbst, hu315203@ucf.edu<br>
-Gabriel Rechdan, ga338282@ucf.edu<br>
-Trever Jones, tr755969@ucf.edu<br>
+Rachel Leiner, rachelleiner02@gmail.com<br>
+Nicholas Aristizabal, nicholas.aristizabal@gmail.com<br>
+Jacob Mckiernan, jacob.b.mckiernan@gmail.com<br>
+Hunter Herbst, hunter.d.herbst2k@gmail.com<br>
+Gabriel Rechdan, Grechdan4453@gmail.com<br>
+Trever Jones, tkjones123456@gmail.com<br>
