@@ -1,9 +1,8 @@
 {
   "files": {
-    "main.css": "/Artificial-Intelligence-Monitoring-For-Surgery/static/css/main.ff73b1fb.css",
-    "main.js": "/Artificial-Intelligence-Monitoring-For-Surgery/static/js/main.fd8caf66.js",
+    "main.css": "/Artificial-Intelligence-Monitoring-For-Surgery/static/css/main.96eec651.css",
+    "main.js": "/Artificial-Intelligence-Monitoring-For-Surgery/static/js/main.106ef335.js",
     "static/js/453.f87592ff.chunk.js": "/Artificial-Intelligence-Monitoring-For-Surgery/static/js/453.f87592ff.chunk.js",
-    "static/media/surgery.jpg": "/Artificial-Intelligence-Monitoring-For-Surgery/static/media/surgery.a2986eca0d683bf542da.jpg",
     "static/media/demo2.jpg": "/Artificial-Intelligence-Monitoring-For-Surgery/static/media/demo2.1e6a561011827627f95e.jpg",
     "static/media/demo_fig.gif": "/Artificial-Intelligence-Monitoring-For-Surgery/static/media/demo_fig.7f82650e7381a89b5ec9.gif",
     "static/media/demo1_3.jpg": "/Artificial-Intelligence-Monitoring-For-Surgery/static/media/demo1_3.eef8709a179d7ce42a1f.jpg",
@@ -14,14 +13,17 @@
     "static/media/demo2_2.jpg": "/Artificial-Intelligence-Monitoring-For-Surgery/static/media/demo2_2.a1720ef748dbfe24ca1b.jpg",
     "static/media/demo1_6.jpg": "/Artificial-Intelligence-Monitoring-For-Surgery/static/media/demo1_6.eee7abc88d87d8d71e64.jpg",
     "static/media/demo1_5.jpg": "/Artificial-Intelligence-Monitoring-For-Surgery/static/media/demo1_5.0b57783b557309a20e61.jpg",
+    "static/media/surgery.jpg": "/Artificial-Intelligence-Monitoring-For-Surgery/static/media/surgery.fe10c087f8f32ee5fc51.jpg",
     "static/media/logo.png": "/Artificial-Intelligence-Monitoring-For-Surgery/static/media/logo.ef21be47dda79c1c589a.png",
+    "static/media/aimlogo.png": "/Artificial-Intelligence-Monitoring-For-Surgery/static/media/aimlogo.153a75d74d4e1372bb4c.png",
+    "static/media/github_logo.png": "/Artificial-Intelligence-Monitoring-For-Surgery/static/media/github_logo.4432f0428363b4e194bf.png",
     "index.html": "/Artificial-Intelligence-Monitoring-For-Surgery/index.html",
-    "main.ff73b1fb.css.map": "/Artificial-Intelligence-Monitoring-For-Surgery/static/css/main.ff73b1fb.css.map",
-    "main.fd8caf66.js.map": "/Artificial-Intelligence-Monitoring-For-Surgery/static/js/main.fd8caf66.js.map",
+    "main.96eec651.css.map": "/Artificial-Intelligence-Monitoring-For-Surgery/static/css/main.96eec651.css.map",
+    "main.106ef335.js.map": "/Artificial-Intelligence-Monitoring-For-Surgery/static/js/main.106ef335.js.map",
     "453.f87592ff.chunk.js.map": "/Artificial-Intelligence-Monitoring-For-Surgery/static/js/453.f87592ff.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.ff73b1fb.css",
-    "static/js/main.fd8caf66.js"
+    "static/css/main.96eec651.css",
+    "static/js/main.106ef335.js"
   ]
 }
