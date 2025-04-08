@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-import static io.github.tkjonesy.frontend.App.AVAILABLE_CAMERAS;
-
 public class SettingsWindow extends JDialog implements SettingsUI {
 
     private final ProgramSettings settings = ProgramSettings.getCurrentSettings();
@@ -43,6 +41,10 @@ public class SettingsWindow extends JDialog implements SettingsUI {
 
     private static final Color OCEAN = new Color(55, 90, 129);
 
+    /**
+     * Constructs a new {@code SettingsWindow} with specified parent frame
+     * @param parent The parent frame in which the settings window is to be displayed
+     */
     public SettingsWindow(JFrame parent) {
         super(parent, "AIM Settings", true);
         initComponents();
@@ -51,6 +53,10 @@ public class SettingsWindow extends JDialog implements SettingsUI {
         this.setVisible(true);
     }
 
+    /**
+     * Initializes the components of the settings window
+     * Includes the layout, buttons, and tabs
+     */
     private void initComponents() {
         // Sizing, and exit actions
         this.setMinimumSize(new Dimension(640, 720));
@@ -63,7 +69,7 @@ public class SettingsWindow extends JDialog implements SettingsUI {
             this.setIconImage(appIcon.getImage());
         } catch (Exception ignored) {}
 
-        CameraSettingsPanel cameraPanel = new CameraSettingsPanel(settings, AVAILABLE_CAMERAS);
+        CameraSettingsPanel cameraPanel = new CameraSettingsPanel(settings);
         StorageSettingsPanel storagePanel = new StorageSettingsPanel();
         AISettingsPanel modelPanel = new AISettingsPanel();
         AdvancedSettingsPanel advancedPanel = new AdvancedSettingsPanel();
@@ -87,11 +93,16 @@ public class SettingsWindow extends JDialog implements SettingsUI {
         versionLabel.setToolTipText("Click to copy version to clipboard");
     }
 
-    // Method to enable/disable the Apply button
+    /**
+     * Method to enable/disable the Apply button
+     */
     public static void updateApplyButtonState() {
         applyButton.setEnabled(!settingsUpdates.isEmpty());
     }
 
+    /**
+     * Initializes listeners for various components in the settings window
+     */
     public void initListeners() {
         confirmButton.addActionListener(e -> {handleCloseAttempt();});
 
@@ -171,6 +182,12 @@ public class SettingsWindow extends JDialog implements SettingsUI {
         buttonPanel.setLayout(buttonPanelLayout);
     }
 
+    /**
+     * Adds a change listener to a specified component
+     * @param component The component which the listener will be added to
+     * @param listener The change listener to be attached to the component
+     * @param <T> Type of listener
+     */
     public static <T extends EventListener> void addSettingChangeListener(JComponent component, T listener) {
         if (component instanceof AbstractButton button && listener instanceof ActionListener actionListener) {
             button.addActionListener(e -> {
@@ -207,7 +224,10 @@ public class SettingsWindow extends JDialog implements SettingsUI {
         }
     }
 
-    // Show popup when closing window or confirm button with unsaved changes
+    /**
+     * Handles an attempt to close settings when there are unsaved changes
+     * Shows a popup when closing window to confirm the action
+     */
     private void handleCloseAttempt() {
         if (!settingsUpdates.isEmpty()) {
             int choice = JOptionPane.showConfirmDialog(
@@ -231,7 +251,10 @@ public class SettingsWindow extends JDialog implements SettingsUI {
         }
     }
 
-    // Show popup when pressing cancel button with unsaved changes
+    /**
+     * Handles attempt to cancel changes and close settings when there are unsaved changes
+     * Shows popup to confirm the action
+     */
     private void handleCancelAttempt() {
         if (!settingsUpdates.isEmpty()) {
             int choice = JOptionPane.showConfirmDialog(
@@ -251,12 +274,19 @@ public class SettingsWindow extends JDialog implements SettingsUI {
         }
     }
 
+    /**
+     * Applies the settings changes made in the window
+     */
     private void applyChanges() {
         AIMsLogger.INFO("Applying settings...");
         settings.updateSettings(settingsUpdates);
         settingsUpdates.clear();
         updateApplyButtonState();
     }
+
+    /**
+     * Cancels any pending changes made in the settings window
+     */
     private void cancelChanges() {
         settingsUpdates.clear();
     }

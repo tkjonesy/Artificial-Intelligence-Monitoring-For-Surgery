@@ -6,7 +6,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>AIMs</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>${git.commit.id.abbrev}</version>
 
     <build>
         <plugins>
@@ -130,12 +130,13 @@
         <maven.compiler.source>18</maven.compiler.source>
         <maven.compiler.target>18</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <bytedeco.version>1.5.10</bytedeco.version>
     </properties>
 
 
 
     <profiles>
-        <!-- Windows Profile: Use GPU version -->
+        <!-- Windows Profile -->
         <profile>
             <id>windows</id>
             <activation>
@@ -144,44 +145,167 @@
                 </os>
             </activation>
             <dependencies>
+                <!-- ONNX Runtime -->
                 <dependency>
                     <groupId>com.microsoft.onnxruntime</groupId>
                     <artifactId>onnxruntime_gpu</artifactId>
                     <version>1.20.0</version>
                 </dependency>
+
+                <!-- OpenBLAS -->
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>openblas</artifactId>
+                    <version>0.3.26-${bytedeco.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>openblas</artifactId>
+                    <version>0.3.26-${bytedeco.version}</version>
+                    <classifier>windows-x86_64</classifier>
+                </dependency>
+
+                <!-- OpenCV -->
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>opencv</artifactId>
+                    <version>4.9.0-${bytedeco.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>opencv</artifactId>
+                    <version>4.9.0-${bytedeco.version}</version>
+                    <classifier>windows-x86_64</classifier>
+                </dependency>
+
+                <!-- JavaCV -->
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>javacv</artifactId>
+                    <version>${bytedeco.version}</version>
+                </dependency>
             </dependencies>
         </profile>
 
-        <!-- MacOS Profile: Use CPU version -->
+
+
+        <!-- macOS Profile -->
         <profile>
-            <id>unix</id>
+            <id>macos</id>
             <activation>
                 <os>
-                    <family>unix</family>
+                    <family>mac</family>
                 </os>
             </activation>
             <dependencies>
+                <!-- ONNX Runtime -->
                 <dependency>
                     <groupId>com.microsoft.onnxruntime</groupId>
                     <artifactId>onnxruntime</artifactId>
                     <version>1.20.0</version>
                 </dependency>
+
+                <!-- OpenBLAS -->
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>openblas</artifactId>
+                    <version>0.3.26-${bytedeco.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>openblas</artifactId>
+                    <version>0.3.26-${bytedeco.version}</version>
+                    <classifier>macosx-x86_64</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>openblas</artifactId>
+                    <version>0.3.26-${bytedeco.version}</version>
+                    <classifier>macosx-arm64</classifier>
+                </dependency>
+
+                <!-- OpenCV -->
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>opencv</artifactId>
+                    <version>4.9.0-${bytedeco.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>opencv</artifactId>
+                    <version>4.9.0-${bytedeco.version}</version>
+                    <classifier>macosx-x86_64</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>opencv</artifactId>
+                    <version>4.9.0-${bytedeco.version}</version>
+                    <classifier>macosx-arm64</classifier>
+                </dependency>
+
+                <!-- JavaCV -->
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>javacv</artifactId>
+                    <version>${bytedeco.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <!-- Linux Profile -->
+        <profile>
+            <id>linux</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>Linux</name>
+                </os>
+            </activation>
+            <dependencies>
+                <!-- ONNX Runtime -->
+                <dependency>
+                    <groupId>com.microsoft.onnxruntime</groupId>
+                    <artifactId>onnxruntime</artifactId>
+                    <version>1.20.0</version>
+                </dependency>
+
+                <!-- OpenBLAS -->
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>openblas</artifactId>
+                    <version>0.3.26-${bytedeco.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>openblas</artifactId>
+                    <version>0.3.26-${bytedeco.version}</version>
+                    <classifier>linux-x86_64</classifier>
+                </dependency>
+
+                <!-- OpenCV -->
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>opencv</artifactId>
+                    <version>4.9.0-${bytedeco.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>opencv</artifactId>
+                    <version>4.9.0-${bytedeco.version}</version>
+                    <classifier>linux-x86_64</classifier>
+                </dependency>
+
+                <!-- JavaCV -->
+                <dependency>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>javacv</artifactId>
+                    <version>${bytedeco.version}</version>
+                </dependency>
             </dependencies>
         </profile>
     </profiles>
 
-
     <dependencies>
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>opencv</artifactId>
-            <version>4.9.0-1.5.10</version>
-        </dependency>
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>opencv-platform</artifactId>
-            <version>4.9.0-1.5.10</version>
-        </dependency>
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
@@ -197,11 +321,6 @@
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf-intellij-themes</artifactId>
             <version>3.5.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>javacv-platform</artifactId>
-            <version>1.5.5</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -221,13 +340,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>3.27.3</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
 </project>

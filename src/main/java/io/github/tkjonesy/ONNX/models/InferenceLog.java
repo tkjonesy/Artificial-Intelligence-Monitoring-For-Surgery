@@ -3,6 +3,8 @@ package io.github.tkjonesy.ONNX.models;
 import io.github.tkjonesy.ONNX.enums.InferenceLogEnum;
 import lombok.Getter;
 
+import java.time.temporal.ChronoUnit;
+
 /**
  * The {@code Log} class represents a log entry with a log type, message, and timestamp.
  * It provides methods for generating logs with a timestamp and displaying them in a UI component.
@@ -37,6 +39,6 @@ public class InferenceLog {
      * @return The formatted current timestamp.
      */
     private String getCurrentTimestamp(){
-        return "[" + java.time.LocalTime.now() + "]";
+        return "[" + java.time.LocalTime.now().truncatedTo(ChronoUnit.SECONDS) + "]";
     }
 }

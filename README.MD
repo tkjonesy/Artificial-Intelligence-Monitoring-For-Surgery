@@ -17,15 +17,27 @@ The goal of AIM(s) is to help combat surgical waste and excess costs within the 
 AIM(s) is a full system solution that can be integrated into the operating room, utilizing AI to track in real time the number of loads that are used throughout a surgery. The results of such are logged throughout the operation and output to a report for further analysis and post-processing. At approximately $250 per load with 1200 surgeries annually, this tool can quickly save thousands of dollars for the hospital and reduce unnecessary waste in surgery.
 
 ## Installing the Software
-TBD
+Please navigate to the releases page to find the appropriate software installation.
+
+### Universal Installation
+1. Download the .jar file. Then, run the following command:
+```bash
+java -jar [FILE_NAME]
+```
+
+### For Windows
+1. Download the .exe file and run.
+
+### For Mac
+1. Download the .dmg and run.
 
 ## Developer Instructions
 If you would like use this code for your own project, please reference the [developer instructions](DeveloperInstructions.md).
 
 ## Team Members
-Rachel Leiner, rachel.leiner@ucf.edu<br>
-Nicholas Aristizabal, nicholas.aristizabal@ucf.edu<br>
-Jacob Mckiernan, ja543222@ucf.edu<br>
-Hunter Herbst, hu315203@ucf.edu<br>
-Gabriel Rechdan, ga338282@ucf.edu<br>
-Trever Jones, tr755969@ucf.edu<br>
+Rachel Leiner, rachelleiner02@gmail.com<br>
+Nicholas Aristizabal, nicholas.aristizabal@gmail.com<br>
+Jacob Mckiernan, jacob.b.mckiernan@gmail.com<br>
+Hunter Herbst, hunter.d.herbst2k@gmail.com<br>
+Gabriel Rechdan, Grechdan4453@gmail.com<br>
+Trever Jones, tkjones123456@gmail.com<br>

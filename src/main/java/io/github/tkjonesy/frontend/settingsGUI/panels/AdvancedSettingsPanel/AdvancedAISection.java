@@ -33,6 +33,7 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
     private final JLabel useGPULabel;
     private final JLabel nmsThresholdLabel;
     private final JLabel optimizationLabel;
+    private final JLabel numOnnxThreadsLabel;
     private final JLabel inputSizeLabel;
     private final JLabel inputShapeLabel;
 
@@ -42,9 +43,14 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
     private final JSlider nmsThresholdSlider;
     private final JTextField nmsThresholdTextField;
     private final JComboBox<String> optimizationLevelComboBox;
+    private final JSpinner numOnnxThreadsSpinner;
     private final JSpinner inputSizeSpinner;
     private final JTextField inputShapeTextField;
 
+    /**
+     * Constructs the {@code AdvancedAISection} panel and initializes all UI components, layout,
+     * and settings for the advanced AI configuration interface.
+     */
     public AdvancedAISection() {
         // AI Section
         this.aiSectionLabel = new JLabel("<html><b>Advanced AI Settings</b></html>");
@@ -110,17 +116,25 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
         optimizationLevelComboBox = new JComboBox<>(new String[]{"ALL_OPT", "EXTENDED_OPT", "BASIC_OPT", "NO_OPT"});
         optimizationLevelComboBox.setSelectedItem(settings.getOptimizationLevel().name());
         optimizationLevelComboBox.setToolTipText("Choose the level of ONNX Runtime optimizations.");
+        optimizationLevelComboBox.setPreferredSize(new Dimension(100, optimizationLevelComboBox.getPreferredSize().height));
+
+        // Number of ONNX Threads (Spinner)
+        this.numOnnxThreadsLabel = new JLabel("Number of ONNX Threads:");
+        numOnnxThreadsSpinner = new JSpinner(new SpinnerNumberModel(settings.getNumOnnxThreads(), 1, Integer.MAX_VALUE, 1));
+        numOnnxThreadsSpinner.setToolTipText("Number of threads to use for ONNX Runtime. Increase if your device takes longer to process inferences.");
+        numOnnxThreadsSpinner.setPreferredSize(new Dimension(60, numOnnxThreadsSpinner.getPreferredSize().height));
 
         // Input Size (Spinner)
         this.inputSizeLabel = new JLabel("Input Size:");
         inputSizeSpinner = new JSpinner(new SpinnerNumberModel(settings.getInputSize(), 1, Integer.MAX_VALUE, 1));
         inputSizeSpinner.setToolTipText("The input image size (e.g., 640 for YOLO).");
+        inputSizeSpinner.setPreferredSize(new Dimension(70, inputSizeSpinner.getPreferredSize().height));
 
         // Input Shape (TextField)
         this.inputShapeLabel = new JLabel("Input Shape:");
         inputShapeTextField = new JTextField(
                 Arrays.stream(settings.getInputShape()).mapToObj(String::valueOf).collect(Collectors.joining(", ")),
-                20
+                10
         );
         inputShapeTextField.setToolTipText("Comma-separated input shape (e.g., 1,3,640,640)");
 
@@ -128,7 +142,10 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
         initListeners();
     }
 
-    // Detect available GPUs using nvidia-smi
+    /**
+     * Detects available GPU devices using nvidia-smi command
+     * @return A list of available GPUs
+     */
     private List<String> detectAvailableGPUs() {
         List<String> gpuList = new ArrayList<>();
 
@@ -201,6 +218,16 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
                     settingsUpdates.put("optimizationLevel", OrtSession.SessionOptions.OptLevel.valueOf(value));
                     if(settings.getOptimizationLevel().toString().equals(value))
                         settingsUpdates.remove("optimizationLevel");
+                }
+        );
+
+        addSettingChangeListener(numOnnxThreadsSpinner, (ChangeListener)
+                e -> {
+                    int value = (int) numOnnxThreadsSpinner.getValue();
+                    AIMsLogger.TRACE("Number of ONNX Threads: " + value);
+                    settingsUpdates.put("numOnnxThreads", value);
+                    if(settings.getNumOnnxThreads() == value)
+                        settingsUpdates.remove("numOnnxThreads");
                 }
         );
 
@@ -277,6 +304,10 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
                                 .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(optimizationLevelComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
                         .addGroup(layout.createSequentialGroup()
+                                .addComponent(numOnnxThreadsLabel)
+                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(numOnnxThreadsSpinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                        .addGroup(layout.createSequentialGroup()
                                 .addComponent(inputSizeLabel)
                                 .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(inputSizeSpinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
@@ -306,6 +337,10 @@ public class AdvancedAISection extends JPanel implements SettingsUI {
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(optimizationLabel)
                                 .addComponent(optimizationLevelComboBox))
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(numOnnxThreadsLabel)
+                                .addComponent(numOnnxThreadsSpinner))
                         .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(inputSizeLabel)

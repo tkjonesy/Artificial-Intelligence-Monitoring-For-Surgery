@@ -1,5 +1,6 @@
 name: Release on PR Merge
 
+#When a Pull Request is opened, synchronized, or closed on the main branch it will run this workflow
 on:
   pull_request:
     branches:
@@ -8,11 +9,14 @@ on:
       - opened
       - synchronize
       - closed
+
+#Gives permissions to read pull request data and write to the repository
 permissions:
   contents: write
   pull-requests: read
 
 jobs:
+  #Creates .jar for linux
   package-linux:
     name: Build JAR on Linux
     runs-on: ubuntu-latest
@@ -36,6 +40,7 @@ jobs:
           name: linux-jar
           path: target/*.jar
 
+  #Creates jar and then uses jpackage to make installer for windows
   build-windows-installer:
     name: Build Installer on Windows
     runs-on: windows-latest
@@ -49,16 +54,17 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'maven'
 
       - name: Build JAR
-        run: mvn clean package
+        run: mvn clean -B package
 
       - name: Build Installer
         run: |
           jpackage --name "AIMs" `
           --input target/ `
           --dest target/ `
-          --main-jar AIMs-1.0-SNAPSHOT.jar `
+          --main-jar "$JAR_FILE" `
           --main-class io.github.tkjonesy.frontend.App `
           --icon "src/main/resources/images/logo.ico" `
           --type exe `
@@ -73,6 +79,7 @@ jobs:
           name: windows-installer
           path: target/AIMs-*.exe
 
+  #Creates jar and then uses jpackage to make installer for macOS
   build-macos-installer:
     name: Build Installer on macOS
     runs-on: macos-latest
@@ -86,9 +93,10 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'maven'
 
       - name: Build JAR
-        run: mvn clean package
+        run: mvn clean -B package
 
       - name: Build .dmg via jPackage
         run: |
@@ -96,7 +104,7 @@ jobs:
             --input target/ \
             --dest target/ \
             --name "AIMs" \
-            --main-jar AIMs-1.0-SNAPSHOT.jar \
+            --main-jar "$JAR_FILE" \
             --main-class io.github.tkjonesy.frontend.App \
             --icon "src/main/resources/images/aims_logo.icns" \
             --type dmg \
@@ -129,7 +137,9 @@ jobs:
           name: macos-installer
           path: target/AIMs.dmg
 
+  #publishes linux jar and windows/macOS installers to GitHub releases
   release:
+    #if pull request is closed and it was merged on main, runs release job
     if: github.event.action == 'closed' && github.event.pull_request.merged == true
     needs: [package-linux, build-windows-installer, build-macos-installer]
     runs-on: ubuntu-latest
@@ -158,13 +168,17 @@ jobs:
           name: macos-installer
           path: artifacts/macos
 
+      - name: Set short SHA
+        id: vars
+        run: echo "SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
+
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             artifacts/linux/AIMs*.jar
             artifacts/windows/AIMs*.exe
             artifacts/macos/AIMs*.dmg
-          name: ${{ github.event.pull_request.title }} - v1.0.${{ github.run_number }}
+          name: ${{ github.event.pull_request.title }} - ${{ env.SHORT_SHA }}
           tag_name: v1.0.${{ github.run_number }}
           body: ${{ github.event.pull_request.body }}

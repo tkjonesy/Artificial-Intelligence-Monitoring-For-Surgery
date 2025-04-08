@@ -74,6 +74,11 @@ public class FrameManager implements Runnable {
         this.onnxRunner = onnxRunner;
         this.sessionHandler = sessionHandler;
 
+        startFrameProcessing();
+    }
+
+    public void startFrameProcessing() {
+        isRunning = true;
         startFrameProcessingThread();
         startDisplayThread();
         startRecordingThread();
@@ -222,7 +227,7 @@ public class FrameManager implements Runnable {
                             processedFrame,
                             sessionTime,
                             new Point(processedFrame.cols()-100, 30),
-                            FONT_HERSHEY_COMPLEX,
+                            FONT_HERSHEY_DUPLEX,
                             1.0,
                             redColor,
                             1,
@@ -241,8 +246,13 @@ public class FrameManager implements Runnable {
                     }
 
                 } catch (InterruptedException e) {
-                    AIMsLogger.FATAL("Frame processing thread interrupted: " + e.getMessage());
-                    DialogManager.displayErrorDialog("Frame processing thread interrupted: " + e.getMessage());
+                    if(e.getMessage() != null) {
+                        AIMsLogger.ERROR("Error in frame processing thread: " + e.getMessage());
+                        DialogManager.displayErrorDialog("Error in frame processing thread: " + e.getMessage());
+                    }
+                    else {
+                        AIMsLogger.ERROR("Error in frame processing thread: " + e);
+                    }
                 }
             }
         });
@@ -269,8 +279,13 @@ public class FrameManager implements Runnable {
 
                     displayFrame.release();
                 } catch (Exception e) {
-                    AIMsLogger.ERROR("Error displaying frame: " + e.getMessage());
-                    DialogManager.displayErrorDialog("Error displaying frame: " + e.getMessage());
+                    if(e.getMessage() != null) {
+                        AIMsLogger.ERROR("Error in display thread: " + e.getMessage());
+                        DialogManager.displayErrorDialog("Error in display thread: " + e.getMessage());
+                    }
+                    else {
+                        AIMsLogger.ERROR("Error in display thread: " + e);
+                    }
                 }
             }
         });
@@ -306,8 +321,13 @@ public class FrameManager implements Runnable {
                         }
                     }
                 }catch (Exception e) {
-                    AIMsLogger.FATAL("Error in recording thread: " + e.getMessage());
-                    DialogManager.displayErrorDialog("Error in recording thread: " + e.getMessage());
+                    if(e.getMessage() != null) {
+                        AIMsLogger.ERROR("Error in recording thread: " + e.getMessage());
+                        DialogManager.displayErrorDialog("Error in recording thread: " + e.getMessage());
+                    }
+                    else {
+                        AIMsLogger.ERROR("Error in recording thread: " + e);
+                    }
                 }
             }
         });

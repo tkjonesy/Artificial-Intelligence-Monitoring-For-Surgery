@@ -8,6 +8,8 @@ import io.github.tkjonesy.utils.settings.ProgramSettings;
 import io.github.tkjonesy.frontend.miscGUI.EndSessionPopUp;
 import lombok.Getter;
 
+import org.bytedeco.javacv.FrameGrabber;
+import org.bytedeco.javacv.OpenCVFrameGrabber;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.Size;
 import org.bytedeco.opencv.opencv_videoio.VideoWriter;
@@ -48,6 +50,13 @@ public class FileSession {
     private Size videoFrameSize;
     private final double targetFps;
 
+    /**
+     * Constructs a new {@code FileSession}
+     * @param onnxRunner the instance used for inference
+     * @param title The title of the session
+     * @param description A description of the session
+     * @param logHandler Instance for managing logs
+     */
     public FileSession(OnnxRunner onnxRunner, String title, String description, LogHandler logHandler)  {
         this.onnxRunner = onnxRunner;
         this.title = title;
@@ -126,13 +135,24 @@ public class FileSession {
                 "FPS: " + targetFps);
     }
 
+    /**
+     * Releases the videoWriter
+     */
     public void destroyVideoWriter(){
-        if(videoWriter != null){
-            videoWriter.release();
-            videoWriter = null;
 
-            AIMsLogger.INFO("Video recording ended. Video saved to: " + sessionDirectory + "/recording.mp4");
+        try {
+            if(videoWriter != null){
+                videoWriter.release();
+                videoWriter = null;
+
+                AIMsLogger.INFO("Video recording ended. Video saved to: " + sessionDirectory + "/recording.mp4");
+            }
+        } catch(Exception e){
+            AIMsLogger.ERROR("Error releasing video writer: " + e.getMessage());
+            DialogManager.displayErrorDialog("Error releasing video writer: " + e.getMessage());
         }
+
+
     }
 
     /**
@@ -182,6 +202,11 @@ public class FileSession {
         }
     }
 
+    /**
+     * Parses a log message into components
+     * @param message The log message
+     * @return An array of strings containing parsed components of the log message
+     */
     private String[] parseLogMessage(String message){
         String logNumber = "";
         String object = "";
@@ -224,6 +249,11 @@ public class FileSession {
         onnxRunner.endSession();
     }
 
+    /**
+     * Formats a {@link Duration} into a readable string
+     * @param duration Duration to format
+     * @return Formatted string representation of the duration
+     */
     private String formatDuration(Duration duration) {
         long hours = duration.toHours();
         long minutes = duration.toMinutes() % 60;
@@ -240,6 +270,11 @@ public class FileSession {
         return formattedDuration.toString().trim();
     }
 
+    /**
+     * Displays a formatted session description
+     * @param description The description to format
+     * @return Readable version of the session description
+     */
     private String displayDescription(String description){
         if (description == null || description.trim().isEmpty()) {
             description = "No description provided";
@@ -247,6 +282,10 @@ public class FileSession {
         return description;
     }
 
+    /**
+     * Generates an AAR (After Action Report) based on the session
+     * @param recordDuration The duration of the session
+     */
     private void generateAAR(Duration recordDuration) {
         int peakObjects = onnxRunner.getPeakObjectsSeen();
 
@@ -380,11 +419,15 @@ public class FileSession {
             }
         } catch (IOException e) {
             AIMsLogger.FATAL("Failed to close log writer: " + e.getMessage());
+            DialogManager.displayErrorDialog("Failed to close log writer: " + e.getMessage());
         } finally {
             logBufferedWriter = null;
         }
     }
 
+    /**
+     * Closes the BufferedWriter used for saving csv files
+     */
     private void closeCsvWriter() {
         try {
             if (csvBufferedWriter != null) {
@@ -393,6 +436,7 @@ public class FileSession {
             }
         } catch (IOException e) {
             AIMsLogger.FATAL("Failed to close csv writer: " + e.getMessage());
+            DialogManager.displayErrorDialog("Failed to close csv writer: " + e.getMessage());
         } finally {
             csvBufferedWriter = null;
         }

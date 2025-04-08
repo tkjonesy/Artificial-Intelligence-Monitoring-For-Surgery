@@ -2,6 +2,7 @@ package io.github.tkjonesy.utils.settings;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
+import lombok.Getter;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,25 +16,30 @@ import java.util.HashMap;
 
 import static io.github.tkjonesy.utils.Paths.*;
 
+/**
+ * Class responsible for loading and saving the settings
+ */
 public class SettingsLoader {
 
     // Default model to use if none is specified
     private static final String DEFAULT_MODEL = "yolo11m";
+    @Getter
+    private static final ProgramSettings DEFAULT_SETTINGS = loadSettingsFromResource(new ObjectMapper());
 
     public static void resetToDefaultSettings(){
-        // Load default settings from resources
-        ObjectMapper objectMapper = new ObjectMapper();
-        ProgramSettings defaultSettings = loadSettingsFromResource(objectMapper);
-
         // Save the default settings to the file
-        if(defaultSettings != null){
-            saveSettings(defaultSettings);
-            ProgramSettings.setCurrentSettings(defaultSettings);
+        if(DEFAULT_SETTINGS != null){
+            saveSettings(DEFAULT_SETTINGS);
+            ProgramSettings.setCurrentSettings(DEFAULT_SETTINGS);
+            saveSettings(DEFAULT_SETTINGS);
             AIMsLogger.WARN("Reset settings to default.");
         }
     }
 
-    // Method to load the settings
+    /**
+     * Loads program settings
+     * @return A valid {@link ProgramSettings} object.
+     */
     public static ProgramSettings loadSettings(){
         // Load settings from the Settings file
         ObjectMapper objectMapper = new ObjectMapper();
@@ -51,10 +57,9 @@ public class SettingsLoader {
 
             // Ensure all the values in the current settings are set. Compare to default settings.
             // If not set, assign default values.
-            ProgramSettings defaultSettings = loadSettingsFromResource(objectMapper);
-            if (defaultSettings != null) {
-                syncMissingFields(settings, defaultSettings);
-            }
+//            if (DEFAULT_SETTINGS != null) {
+//                sanitizeBrokenFields(settings);
+//            }
 
             if(settings.getFileDirectory() == null){
                 settings.setFileDirectory(DEFAULT_AIMS_SESSIONS_DIRECTORY);
@@ -67,40 +72,9 @@ public class SettingsLoader {
         return settings;
     }
 
-    private static void syncMissingFields(ProgramSettings userSettings, ProgramSettings defaultSettings) {
-        try {
-            // Get all fields from the ProgramSettings class
-            Field[] fields = ProgramSettings.class.getDeclaredFields();
-
-            // Add missing fields from default settings
-            for (Field field : fields) {
-                field.setAccessible(true);
-                Object defaultValue = field.get(defaultSettings);
-                Object userValue = field.get(userSettings);
-
-                // If the user's value is null but the default has a value, copy it over
-                if (userValue == null && defaultValue != null) {
-                    field.set(userSettings, defaultValue);
-                }
-            }
-
-            // Remove extra fields not defined in ProgramSettings
-            ObjectMapper mapper = new ObjectMapper();
-            String json = mapper.writeValueAsString(userSettings);
-            ProgramSettings cleanSettings = mapper.readValue(json, ProgramSettings.class);
-
-            // Copy all values from cleanSettings back to userSettings
-            for (Field field : fields) {
-                field.setAccessible(true);
-                Object cleanValue = field.get(cleanSettings);
-                field.set(userSettings, cleanValue);
-            }
-
-        } catch (IllegalAccessException | IOException e) {
-            AIMsLogger.ERROR("Failed to sync settings fields: " + e.getMessage());
-        }
-    }
-
+    /**
+     * Creates AIMs directory if it does not exist
+     */
     public static void initializeAIMsDirectories() {
         try {
             Path parentDirectory = Paths.get(AIMS_DIRECTORY);
@@ -123,16 +97,16 @@ public class SettingsLoader {
         }
     }
 
+    /**
+     * Loads settings from settings file
+     * @param objectMapper The {@link ObjectMapper} instance used to parse the settings file
+     * @return {@link ProgramSettings} object containing the loaded settings, or null if an error occurs
+     */
     private static ProgramSettings loadSettingsFromFile(ObjectMapper objectMapper) {
         File settingsFile = new File(AIMS_SETTINGS_FILE_PATH);
         if (settingsFile.exists()) {
             try {
-                ProgramSettings settings = objectMapper.readValue(settingsFile, ProgramSettings.class);
-                if(settings.getNotZeroNum() == 0){
-                    return null;
-                }else{
-                    return settings;
-                }
+                return objectMapper.readValue(settingsFile, ProgramSettings.class);
             } catch (IOException e) {
                 AIMsLogger.ERROR("Failed to load settings from file: " + e.getMessage());
             }
@@ -140,6 +114,11 @@ public class SettingsLoader {
         return null;
     }
 
+    /**
+     * Loads settings from resource file
+     * @param objectMapper The {@link ObjectMapper} instance used to parse the resource
+     * @return {@link ProgramSettings} object containing the loaded settings, or null if an error occurs
+     */
     private static ProgramSettings loadSettingsFromResource(ObjectMapper objectMapper) {
         try (InputStream inputStream = SettingsLoader.class.getResourceAsStream(RESOURCE_DEFAULT_SETTINGS_PATH)) {
             if (inputStream != null) {
@@ -153,6 +132,10 @@ public class SettingsLoader {
         return null;
     }
 
+    /**
+     * Saves the program settings to the settings file
+     * @param settings The {@link ProgramSettings} object to be saved.
+     */
     public static void saveSettings(ProgramSettings settings){
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -162,7 +145,11 @@ public class SettingsLoader {
         }
     }
 
-    // Verify that the model and label files exist, extracting them from resources if they don't
+    /**
+     * Verifies if the model and label files specified in the settings exist
+     * If they do not exist, extracts from the bundled resource
+     * @param settings The {@link ProgramSettings} object containing the paths to the model and label files
+     */
     private static void verifyModelAndLabels(ProgramSettings settings) {
         String modelPath = settings.getModelPath();
         String labelPath = settings.getLabelPath();
@@ -182,6 +169,12 @@ public class SettingsLoader {
         }
     }
 
+    /**
+     * Extracts resource file to target path if it doesnt exist
+     * @param resourcePath Path to the resource file
+     * @param targetPath Path where the resource should be extracted
+     * @return Path to extracted resource file
+     */
     private static String extractResourceIfMissing(String resourcePath, String targetPath) {
         File targetFile = new File(targetPath);
 
