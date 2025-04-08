@@ -136,23 +136,23 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
 
         // Initialize Log Added Color
         int[] logAddedColor = settings.getLogAddedColor();
-        int r1;
-        int g1;
-        int b1;
+        int rlogAddedColor;
+        int glogAddedColor;
+        int blogAddedColor;
         try{
-            r1 = logAddedColor[0];
-            g1 = logAddedColor[1];
-            b1 = logAddedColor[2];
+            rlogAddedColor = logAddedColor[0];
+            glogAddedColor = logAddedColor[1];
+            blogAddedColor = logAddedColor[2];
         } catch (ArrayIndexOutOfBoundsException e) {
             int[] defaultColor = SettingsLoader.getDEFAULT_SETTINGS().getLogAddedColor();
-            r1 = defaultColor[0];
-            g1 = defaultColor[1];
-            b1 = defaultColor[2];
+            rlogAddedColor = defaultColor[0];
+            glogAddedColor = defaultColor[1];
+            blogAddedColor = defaultColor[2];
         }
 
-        this.logAddedRInputTextField = new JTextField(String.valueOf(r1), 3);
-        this.logAddedGInputTextField = new JTextField(String.valueOf(g1), 3);
-        this.logAddedBInputTextField = new JTextField(String.valueOf(b1), 3);
+        this.logAddedRInputTextField = new JTextField(String.valueOf(rlogAddedColor), 3);
+        this.logAddedGInputTextField = new JTextField(String.valueOf(glogAddedColor), 3);
+        this.logAddedBInputTextField = new JTextField(String.valueOf(blogAddedColor), 3);
 
         logAddedRInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGADDED.getCode()));
         logAddedGInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGADDED.getCode()));
@@ -164,7 +164,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                 return new Dimension(30, 30);
             }
         };
-        logAddedColorPreviewButton.setBackground(new Color(r1, g1, b1));
+        logAddedColorPreviewButton.setBackground(new Color(rlogAddedColor, glogAddedColor, blogAddedColor));
         logAddedColorPreviewButton.setMinimumSize(new Dimension(30, 30));
         logAddedColorPreviewButton.setMaximumSize(new Dimension(30, 30));
         logAddedColorPreviewButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -173,23 +173,23 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
 
         // Initialize Log Removed Color
         int[] logRemovedColor = settings.getLogRemovedColor();
-        int r2;
-        int g2;
-        int b2;
+        int rlogRemovedColor;
+        int glogRemovedColor;
+        int blogRemovedColor;
         try{
-            r2 = logRemovedColor[0];
-            g2 = logRemovedColor[1];
-            b2 = logRemovedColor[2];
+            rlogRemovedColor = logRemovedColor[0];
+            glogRemovedColor = logRemovedColor[1];
+            blogRemovedColor = logRemovedColor[2];
         } catch (ArrayIndexOutOfBoundsException e) {
             int[] defaultColor = SettingsLoader.getDEFAULT_SETTINGS().getLogRemovedColor();
-            r2 = defaultColor[0];
-            g2 = defaultColor[1];
-            b2 = defaultColor[2];
+            rlogRemovedColor = defaultColor[0];
+            glogRemovedColor = defaultColor[1];
+            blogRemovedColor = defaultColor[2];
         }
 
-        this.logRemovedRInputTextField = new JTextField(String.valueOf(r2), 3);
-        this.logRemovedGInputTextField = new JTextField(String.valueOf(g2), 3);
-        this.logRemovedBInputTextField = new JTextField(String.valueOf(b2), 3);
+        this.logRemovedRInputTextField = new JTextField(String.valueOf(rlogRemovedColor), 3);
+        this.logRemovedGInputTextField = new JTextField(String.valueOf(glogRemovedColor), 3);
+        this.logRemovedBInputTextField = new JTextField(String.valueOf(blogRemovedColor), 3);
 
         logRemovedRInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGREMOVED.getCode()));
         logRemovedGInputTextField.addActionListener(e -> updateColor(colorChangeEnum.LOGREMOVED.getCode()));
@@ -201,7 +201,7 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                 return new Dimension(30, 30);
             }
         };
-        logRemovedColorPreviewButton.setBackground(new Color(r2, g2, b2));
+        logRemovedColorPreviewButton.setBackground(new Color(rlogRemovedColor, glogRemovedColor, blogRemovedColor));
         logRemovedColorPreviewButton.setMinimumSize(new Dimension(30, 30));
         logRemovedColorPreviewButton.setMaximumSize(new Dimension(30, 30));
         logRemovedColorPreviewButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
