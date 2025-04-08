@@ -8,6 +8,8 @@ import io.github.tkjonesy.utils.settings.ProgramSettings;
 import io.github.tkjonesy.frontend.miscGUI.EndSessionPopUp;
 import lombok.Getter;
 
+import org.bytedeco.javacv.FrameGrabber;
+import org.bytedeco.javacv.OpenCVFrameGrabber;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.Size;
 import org.bytedeco.opencv.opencv_videoio.VideoWriter;
@@ -137,12 +139,20 @@ public class FileSession {
      * Releases the videoWriter
      */
     public void destroyVideoWriter(){
-        if(videoWriter != null){
-            videoWriter.release();
-            videoWriter = null;
 
-            AIMsLogger.INFO("Video recording ended. Video saved to: " + sessionDirectory + "/recording.mp4");
+        try {
+            if(videoWriter != null){
+                videoWriter.release();
+                videoWriter = null;
+
+                AIMsLogger.INFO("Video recording ended. Video saved to: " + sessionDirectory + "/recording.mp4");
+            }
+        } catch(Exception e){
+            AIMsLogger.ERROR("Error releasing video writer: " + e.getMessage());
+            DialogManager.displayErrorDialog("Error releasing video writer: " + e.getMessage());
         }
+
+
     }
 
     /**
@@ -409,6 +419,7 @@ public class FileSession {
             }
         } catch (IOException e) {
             AIMsLogger.FATAL("Failed to close log writer: " + e.getMessage());
+            DialogManager.displayErrorDialog("Failed to close log writer: " + e.getMessage());
         } finally {
             logBufferedWriter = null;
         }
@@ -425,6 +436,7 @@ public class FileSession {
             }
         } catch (IOException e) {
             AIMsLogger.FATAL("Failed to close csv writer: " + e.getMessage());
+            DialogManager.displayErrorDialog("Failed to close csv writer: " + e.getMessage());
         } finally {
             csvBufferedWriter = null;
         }
