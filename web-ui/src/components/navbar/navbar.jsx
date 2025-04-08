@@ -3,6 +3,7 @@ import { useState } from "react";
 import './navbar.css';
 import external from '../../assets/external.png'
 import logo from '../../assets/logo.png'
+import github from '../../assets/github_logo.png'
 import '../../index.css'
 
 const NavBar = () => {
@@ -28,7 +29,7 @@ const NavBar = () => {
     <>
       <nav className="nav-container">
         {/* logo */}
-        <img className="logo" src={logo} alt="logo" />;
+        <img className="logo" src={logo} alt="logo" />
 
         <ul className="nav-list">
           <li className="nav-item">
@@ -50,7 +51,7 @@ const NavBar = () => {
 
         <button className="button" onClick={handleClick}>
           View on GitHub
-          <img className="external" src={external} alt="external" />
+          <img className="external" src={github} alt="external" />
         </button>
       </nav>
 

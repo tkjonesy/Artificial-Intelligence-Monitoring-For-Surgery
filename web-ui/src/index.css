@@ -26,7 +26,15 @@ code {
 
 body, html {
   font-family: 'Poppins',z sans-serif;
-  background-color: #1f1f1f;
+  background-color: #0f0f0f;
+  background-image:
+    radial-gradient(circle at 25% 30%, rgba(66, 143, 194, 0.35) 0%, transparent 60%),
+    radial-gradient(circle at 75% 25%, rgba(93, 86, 165, 0.3) 0%, transparent 65%),
+    radial-gradient(circle at 40% 70%, rgba(66, 143, 194, 0.25) 0%, transparent 70%),
+    radial-gradient(circle at 80% 80%, rgba(93, 86, 165, 0.2) 0%, transparent 65%);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
 }
 
 .button{
@@ -70,50 +78,40 @@ body, html {
 
 .header {
   color: white;
-  margin: 20px 0px 10px 70px; /* T R B L */
-  padding: 0px 4px 0px 4px;
-  font-size: 1.8vw;
-  font-style: italic;
+  margin: 20px 0px 0px 70px; /* T R B L */
+  font-size: 2.2vw;
   display: inline-block;
-  background-color: var(--logoblue);
   font-weight: 500;
 }
 
 .headerc {
   color: white;
   margin: 0px 0px 10px 70px; /* T R B L */
-  padding: 0px 4px 0px 4px;
-  font-size: 1.8vw;
-  font-style: italic;
+  font-size: 2vw;
   display: inline-block;
-  background-color: var(--logoblue);
   font-weight: 500;
 }
 
 .header2 {
   color: white;
   margin: 10px 0px 0px 70px; /* T R B L */
-  padding: 0px 4px 0px 4px;
-  background-color: var(--logopurple);
   display: inline-block;
   font-style: italic;
-  font-size: 1.4vw;
+  font-size: 1.8vw;
   font-weight: 500;
 }
 
 .header3 {
   color: white;
   margin: 0px 0px 0px 70px; /* T R B L */
-  padding: 0px 4px 0px 4px;
-  font-size: 1.2vw;
+  font-size: 1.4vw;
   font-weight: 300;
 }
 
 .header4 {
   color: white;
   margin: 5px 0px 0px 70px; /* T R B L */
-  padding: 0px 4px 0px 4px;
-  font-size: 1vw;
+  font-size: 1.2vw;
   font-weight: 300;
 }
 
@@ -124,10 +122,19 @@ body, html {
   display: block;
 }
 
+.header5 {
+  color: white;
+  margin: 20px 0px 0px 70px; /* T R B L */
+  font-size: 1.4vw;
+  display: inline-block;
+  font-style: italic;
+  font-weight: 500;
+}
+
 .body {
   color: white;
   font-weight: 300;
-  font-size: 0.95vw;
+  font-size: 1vw;
   margin: 10px 70px 0px 70px;
 }
 
@@ -136,7 +143,8 @@ body, html {
 }
 
 .person {
-  background-color: #282c34; 
+  background-color: #000000; 
+  opacity: 0.7;
   padding: 30px;
   border-radius: 10px;
   width: 20vw; 
@@ -144,6 +152,7 @@ body, html {
   text-align: center; 
   display: flex;
   flex-direction: column;
+  padding-bottom: 50px;
 }
 
 .person-container {
@@ -166,7 +175,7 @@ body, html {
 
 .textbox {
   flex: 1;
-  max-width: 75%;
+  max-width: 65%;
   text-align: left;
 }
 
@@ -180,8 +189,8 @@ body, html {
 }
 
 .image {
-  height: 100%;
-  width: 100%;
+  height: 110%;
+  width: 110%;
   object-fit: contain;
 }
 
@@ -219,8 +228,7 @@ body, html {
 .ty-header {
   color: white;
   font-weight: 500;
-  font-style: italic;
-  font-size: 1.3vw;
+  font-size: 1.6vw;
   padding-bottom: 5px;
 }
 
@@ -236,5 +244,12 @@ body, html {
 .italic {
   font-style: italic;
   display: inline-block;
-  padding: 0px 4px 0px 4px;
+}
+
+.other-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 20px;
 }
