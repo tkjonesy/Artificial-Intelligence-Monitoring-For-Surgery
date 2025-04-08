@@ -16,6 +16,10 @@ public class SessionInputDialog extends JDialog {
 
     private static final Color OCEAN = new Color(55, 90, 129);
 
+    /**
+     * Constructs a new {@code SessionInputDialog}
+     * @param parent The parent frame that will be blocked while the dialog is displayed
+     */
     public SessionInputDialog(Frame parent) {
         super(parent, "New Session", true);
         setSize(400, 300);
@@ -81,6 +85,10 @@ public class SessionInputDialog extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
+    /**
+     * Gets the session title entered in the text field
+     * @return Session title entered by user, or empty string if no input
+     */
     public String getSessionTitle() {
         if(titleField.getForeground().equals(Color.GRAY)){
             return "";
@@ -88,6 +96,10 @@ public class SessionInputDialog extends JDialog {
         return titleField.getText().trim();
     }
 
+    /**
+     * Gets the session description entered in the text field
+     * @return Session description entered by user or default message if no input
+     */
     public String getSessionDescription() {
         if(descriptionArea.getForeground().equals(Color.GRAY)){
             return "";
@@ -96,6 +108,12 @@ public class SessionInputDialog extends JDialog {
         return !desc.isEmpty() ? desc : "No description provided.";
     }
 
+    /**
+     * Sets placeholder text for specified text component
+     * Displayed when component is empty and unfocused
+     * @param component The component which the placeholder will be applied
+     * @param placeholder The text to display
+     */
     private void setPlaceholder(JTextComponent component, String placeholder) {
         component.setForeground(Color.GRAY);
         component.setText(placeholder);

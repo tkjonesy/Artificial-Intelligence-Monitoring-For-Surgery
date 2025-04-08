@@ -36,6 +36,10 @@ public class StorageSettingsPanel extends JPanel implements SettingsUI {
     private final JCheckBox saveLogsTextCheckbox;
     private final JCheckBox saveLogsCSVCheckbox;
 
+    /**
+     * Constructs a new StorageSettingsPanel
+     * Initializes all components and prepares the settings GUI for user interaction
+     */
     public StorageSettingsPanel() {
 
         this.storageSelectorLabel = new JLabel("File Save Location");

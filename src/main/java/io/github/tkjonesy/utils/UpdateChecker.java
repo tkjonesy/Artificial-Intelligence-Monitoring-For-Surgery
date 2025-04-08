@@ -139,6 +139,12 @@ public class UpdateChecker {
         }
     }
 
+    /**
+     * Checks if the current commit is behind the latest release on GitHub
+     * @param currentCommitHash The SHA of the currently running application's commit
+     * @param releaseCommitHash The SHA of the latest release commit from GitHub
+     * @return {@code true} if the current commit is behind the latest release; {@code false} otherwise
+     */
     private static boolean isCurrentCommitBehind(String currentCommitHash, String releaseCommitHash) throws IOException {
         // Use GitHub's compare API to determine which commit is ahead
         String compareUrl = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME +

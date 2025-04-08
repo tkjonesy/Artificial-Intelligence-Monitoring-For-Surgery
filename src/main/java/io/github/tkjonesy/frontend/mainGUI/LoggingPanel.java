@@ -20,6 +20,9 @@ public class LoggingPanel extends JPanel {
     @Getter
     private final JButton clearLoggerButton;
 
+    /**
+     * Creates an instance of {@code LoggingPannel}, initializing the log display area
+     */
     public LoggingPanel() {
         this.setBorder(BorderFactory.createTitledBorder("Tracking Log"));
         this.logTextPane = new JTextPane();

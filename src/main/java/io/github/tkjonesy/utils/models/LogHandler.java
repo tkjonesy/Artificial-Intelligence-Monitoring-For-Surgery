@@ -25,6 +25,10 @@ public class LogHandler {
     private static int fontSize;
     private static StringBuilder logHtmlContent;
 
+    /**
+     * Constructs a LogHandler object for displaying log messages
+     * @param textPane Where the log messages will be displayed
+     */
     public LogHandler(JTextPane textPane) {
         logTextPane = textPane;
 
@@ -44,6 +48,9 @@ public class LogHandler {
         saveLogToFile(inferenceLog);
     }
 
+    /**
+     * Forces the processing of the next log entry
+     */
     public static void forceProcessNextLog(){
         InferenceLog nextInferenceLog = INFERENCE_LOG_QUEUE.getNextLog();
         if(nextInferenceLog != null){

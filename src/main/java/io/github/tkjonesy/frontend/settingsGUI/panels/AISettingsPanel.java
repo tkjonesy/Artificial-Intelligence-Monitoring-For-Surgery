@@ -78,9 +78,17 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
     private final List<AISettingsListener> listeners = new ArrayList<>();
 
     public interface AISettingsListener {
+        /**
+         * Called when a color configuration is changed
+         * @param settingKey Key of the setting being updated
+         * @param newColor New RGB color values
+         */
         void onColorChanged(String settingKey, int[] newColor);
     }
 
+    /**
+     * Constructs a new AISettingsPanel and initializes its layout and components
+     */
     public AISettingsPanel() {
         this.noticeLabel = new JLabel("<html><b>Only YOLOv8+ models in .onnx format are supported.</b></html>");
         this.noticeLabel.setForeground(Color.GRAY);
@@ -552,6 +560,14 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         );
     }
 
+    /**
+     * Creates a button for color preview with specified RGB values
+     * @param r red component
+     * @param g green component
+     * @param b blue component
+     * @param action Action to be executed when button is clicked
+     * @return Configured {@link  JButton} color preview
+     */
     private JButton createColorPreviewButton(int r, int g, int b, Runnable action) {
         JButton button = new JButton() {
             @Override
@@ -567,6 +583,11 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         return button;
     }
 
+    /**
+     * Gets all files in a directory with specified file extension
+     * @param extension Extension to filter by
+     * @return Array of file names matching given extension
+     */
     private String[] getFilesWithExtension(String extension) {
         File dir = new File(AIMS_MODELS_DIRECTORY);
         if (!dir.exists() || !dir.isDirectory()) return new String[]{};
@@ -579,6 +600,9 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         return files.toArray(new String[0]);
     }
 
+    /**
+     * Opens directory containing AI models
+     */
     private void openAIDirectory() {
         File dir = new File(AIMS_MODELS_DIRECTORY);
         if (!dir.exists()) {
@@ -593,7 +617,9 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         }
     }
 
-    // Open Color Chooser Dialog
+    /**
+     * Opens color chooser dialog
+     */
     private void openColorChooser() {
         JColorChooser colorChooser = new JColorChooser(colorPreviewButton.getBackground());
 
@@ -622,7 +648,9 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         colorDialog.setVisible(true);
     }
 
-    // Open color chooser for Log Added Color
+    /**
+     * Opens color chooser dialog for selecting log added color
+     */
     private void openLogAddedColorChooser() {
         JColorChooser colorChooser = new JColorChooser(logAddedColorPreviewButton.getBackground());
         removeUnwantedTabs(colorChooser);
@@ -656,7 +684,9 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         colorDialog.setVisible(true);
     }
 
-    // Open color chooser for Log Removed Color
+    /**
+     * Opens color chooser dialog for selecting log removed color
+     */
     private void openLogRemovedColorChooser() {
         JColorChooser colorChooser = new JColorChooser(logRemovedColorPreviewButton.getBackground());
         removeUnwantedTabs(colorChooser);
@@ -690,7 +720,13 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         colorDialog.setVisible(true);
     }
 
-    // Ensure only the "Swatches" and "RGB" tabs are visible
+
+
+    /**
+     * Removes unwanted tabs from the {@link JColorChooser}
+     * Ensure only the "Swatches" and "RGB" tabs are visible
+     * @param colorChooser instance to be modified
+     */
     private void removeUnwantedTabs(JColorChooser colorChooser) {
         for (Component comp : colorChooser.getComponents()) {
             if (comp instanceof JTabbedPane tabbedPane) {
@@ -704,6 +740,10 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         }
     }
 
+    /**
+     * Updates color corresponding to given key based on user input from text field
+     * @param key identifying the type of color to update
+     */
     private void updateColor(int key) {
         try {
             int[] colorValues = new int[3];
@@ -753,6 +793,11 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
     }
 
 
+    /**
+     * Adds a listener to be notified of AI settings changes.
+     *
+     * @param listener An implementation of {@link AISettingsListener} to be added.
+     */
     public void addAISettingsListener(AISettingsListener listener) {
         listeners.add(listener);
     }
@@ -767,6 +812,12 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         updateLogPreview();
     }
 
+    /**
+     * Handles updates to the color setting
+     * @param key Key of modified setting
+     * @param newColor New RGB color values
+     * @param originalColor Original RGB color values
+     */
     private void handleColorChange(String key, int[] newColor, int[] originalColor) {
         settingsUpdates.put(key, newColor);
         AIMsLogger.TRACE(key + " changed to: " + Arrays.toString(newColor));
@@ -778,6 +829,11 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
         updateApplyButtonState();
     }
 
+    /**
+     * Generates a preview log entry to show setting changes
+     * @param fontSize desired font size for preview
+     * @return String containing the HTML for the log preview
+     */
     private String generateLogPreviewHTML(int fontSize) {
         // Read colors directly from the input fields/buttons instead of ProgramSettings
         int logAddedR = Integer.parseInt(logAddedRInputTextField.getText());
@@ -800,6 +856,9 @@ public class AISettingsPanel extends JPanel implements SettingsUI {
                 + "</body></html>";
     }
 
+    /**
+     * Updates the log preview pane to reflect current settings
+     */
     private void updateLogPreview() {
         int fontSize = (int) logFontSizeSpinner.getValue();
         logFontPreviewPane.setText(generateLogPreviewHTML(fontSize));

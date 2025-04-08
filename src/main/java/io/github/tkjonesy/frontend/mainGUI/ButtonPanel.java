@@ -19,6 +19,10 @@ public class ButtonPanel extends JPanel {
     private static final Color OCEAN = new Color(55, 90, 129);
     private static final Color SUNSET = new Color(255, 40, 79);
 
+    /**
+     * Contructs a new {@link ButtonPanel} with a reference to the main application instance
+     * @param appInstance Main application instance
+     */
     public ButtonPanel(App appInstance) {
         this.appInstance = appInstance;
         initializeComponents();
@@ -26,6 +30,10 @@ public class ButtonPanel extends JPanel {
         setupLayout();
     }
 
+    /**
+     * Initializes UI components of the button panel
+     * Creates and configures the buttons displayed on the panel
+     */
     private void initializeComponents() {
         sessionButton = new JToggleButton("Start Session");
         sessionButton.setBackground(OCEAN);
@@ -36,6 +44,10 @@ public class ButtonPanel extends JPanel {
         updateDebugButtonVisibility();
     }
 
+    /**
+     * Sets up listeners for the buttons on the panel to handle user actions.
+     * This method connects the buttons to appropriate event-handling logic.
+     */
     private void initializeListeners() {
 
         sessionButton.addActionListener(
@@ -93,12 +105,18 @@ public class ButtonPanel extends JPanel {
         });
     }
 
+    /**
+     * Updates visibility of debug console button
+     */
     public void updateDebugButtonVisibility(){
         if(debugButton!= null) {
             debugButton.setVisible(ProgramSettings.getCurrentSettings().isDebugMode());
         }
     }
 
+    /**
+     * Updates the text displayed on the debug button
+     */
     public void updateDebugButtonText() {
         if (debugButton != null) {
             String debugButtonText = DebugConsole.getInstance().isVisible() ? "Hide Debug" : "Debug Console";
@@ -106,6 +124,9 @@ public class ButtonPanel extends JPanel {
         }
     }
 
+    /**
+     * Configures the layout of the button panel
+     */
     private void setupLayout() {
         GroupLayout layout = new GroupLayout(this);
         layout.setAutoCreateContainerGaps(true);

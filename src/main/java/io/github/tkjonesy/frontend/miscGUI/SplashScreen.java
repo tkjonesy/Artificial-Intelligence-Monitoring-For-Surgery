@@ -11,6 +11,9 @@ import javax.imageio.ImageIO;
 public class SplashScreen {
     private final JWindow splashScreen;
 
+    /**
+     * Initializes the splash screen window, loads image resources, and configures its display properties
+     */
     public SplashScreen() {
         splashScreen = new JWindow();
         splashScreen.setBackground(new Color(0, 0, 0, 0));
@@ -27,14 +30,24 @@ public class SplashScreen {
         splashScreen.setLocationRelativeTo(null);
     }
 
+    /**
+     * Displays splash screen to user by making it visible
+     */
     public void showSplash() {
         splashScreen.setVisible(true);
     }
 
+    /**
+     * Hides splash screen and disposes of it to free resources
+     */
     public void closeSplash() {
         splashScreen.dispose();
     }
 
+    /**
+     * Loads the image to be displayed in the splash screen
+     * @return {@link ImageIcon} representing the splash screen image. If the image resource cannot be loaded an empty {@link ImageIcon} is returned
+     */
     private ImageIcon loadImage() {
         try (InputStream stream = getClass().getResourceAsStream(Paths.LOGO_PATH)) {
             if (stream == null) {
