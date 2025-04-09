@@ -74,8 +74,10 @@ jobs:
           --win-upgrade-uuid "123e4567-e89b-12d3-a456-426614174000"
           
       - name: Rename Installer
+        shell: cmd
         run: |
-          for %f in (target\AIMs-*.exe) do ren "%f" AIMs.exe
+          for %%f in (target\AIMs-*.exe) do ren "%%f" AIMs.exe
+
 
       - name: Upload Installer
         uses: actions/upload-artifact@v4
