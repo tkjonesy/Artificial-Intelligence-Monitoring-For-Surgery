@@ -6,6 +6,7 @@ import io.github.tkjonesy.ONNX.models.OnnxOutput;
 import io.github.tkjonesy.ONNX.models.OnnxRunner;
 
 import io.github.tkjonesy.frontend.App;
+import io.github.tkjonesy.frontend.utils.cameraGrabber.CameraGrabber;
 import io.github.tkjonesy.utils.DialogManager;
 import io.github.tkjonesy.utils.logging.AIMsLogger;
 import io.github.tkjonesy.utils.models.FileSession;
@@ -132,33 +133,35 @@ public class FrameManager implements Runnable {
                     return;
                 }
 
-                if (camera != App.getCamera()) {
-                    AIMsLogger.INFO("Camera has been updated, changing to new camera");
-                    camera = App.getCamera();
+                if (!CameraGrabber.pauseCameras.get()) {
+                    if (camera != App.getCamera()) {
+                        AIMsLogger.INFO("Camera has been updated, changing to new camera");
+                        camera = App.getCamera();
 
-                    try{
-                        camera.set(CAP_PROP_FRAME_WIDTH, cameraFeed.getWidth());
-                        camera.set(CAP_PROP_FRAME_HEIGHT, cameraFeed.getHeight());
-                        camera.set(CAP_PROP_FPS, settings.getCameraFps());
-                    }catch (Exception e) {
-                        AIMsLogger.ERROR("Error updating camera: " + e.getMessage());
+                        try {
+                            camera.set(CAP_PROP_FRAME_WIDTH, cameraFeed.getWidth());
+                            camera.set(CAP_PROP_FRAME_HEIGHT, cameraFeed.getHeight());
+                            camera.set(CAP_PROP_FPS, settings.getCameraFps());
+                        } catch (Exception e) {
+                            AIMsLogger.ERROR("Error updating camera: " + e.getMessage());
+                        }
+
+
+                        AIMsLogger.INFO("Camera updated");
                     }
 
-
-                    AIMsLogger.INFO("Camera updated");
-                }
-
-                try {
-                    Mat frame = new Mat();
-                    if (camera.read(frame)) {
-                        if(!rawFrameQueue.offer(frame)){
+                    try {
+                        Mat frame = new Mat();
+                        if (camera.read(frame)) {
+                            if (!rawFrameQueue.offer(frame)) {
+                                frame.release();
+                            }
+                        } else {
                             frame.release();
                         }
-                    }else{
-                        frame.release();
+                    } catch (Exception e) {
+                        AIMsLogger.ERROR("Error capturing frame: " + e.getMessage());
                     }
-                }catch (Exception e) {
-                    AIMsLogger.ERROR("Error capturing frame: " + e.getMessage());
                 }
             }
         };
@@ -348,7 +351,7 @@ public class FrameManager implements Runnable {
             displayExecutor.awaitTermination(500, TimeUnit.MILLISECONDS);
             recordingExecutor.awaitTermination(500, TimeUnit.MILLISECONDS);
         }catch (InterruptedException e) {
-           AIMsLogger.ERROR("Error shutting down frame handler: " + e.getMessage());
+            AIMsLogger.ERROR("Error shutting down frame handler: " + e.getMessage());
         }
 
         if(!inferenceExecutor.isTerminated()) inferenceExecutor.shutdownNow();
