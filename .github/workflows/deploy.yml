@@ -72,12 +72,17 @@ jobs:
           --win-dir-chooser `
           --win-per-user-install `
           --win-upgrade-uuid "123e4567-e89b-12d3-a456-426614174000"
+          
+      - name: Rename Installer
+        run: |
+          for %f in (target\AIMs-*.exe) do ren "%f" AIMs.exe
 
       - name: Upload Installer
         uses: actions/upload-artifact@v4
         with:
           name: windows-installer
-          path: target/AIMs-*.exe
+          path: target/AIMs.exe
+
 
   #Creates jar and then uses jpackage to make installer for macOS
   build-macos-installer:
