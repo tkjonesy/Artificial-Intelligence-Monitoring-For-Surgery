@@ -6,3 +6,5 @@
 /YOLO11/
 *.pt
 *.onnx
+!Trained Models/*.onnx
+!Trained Models/*.pt
