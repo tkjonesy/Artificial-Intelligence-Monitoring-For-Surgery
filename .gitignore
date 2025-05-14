@@ -1,0 +1,7 @@
+/Cutom Dataset Raw/
+/runs/
+/Test Images/
+/Test Results/
+/YOLO11/
+*.pt
+*.onnx
